@@ -17,6 +17,8 @@
     * { font-family: 'Noto Sans JP', sans-serif; }
     body { box-sizing: border-box; }
 
+    .bg-primary       { background-color: var(--primary) !important; }
+    .bg-primary-dark  { background-color: var(--primary-dark) !important; }
     .bg-red-500, .hover\:bg-red-500:hover   { background-color: var(--primary)      !important; }
     .bg-red-600, .hover\:bg-red-600:hover   { background-color: var(--primary-mid)  !important; }
     .bg-red-700, .hover\:bg-red-700:hover   { background-color: var(--primary-dark) !important; }
@@ -43,6 +45,13 @@
     .radio-btn[data-selected="1"][data-color="amber"]  { border-color:#f59e0b; background:#fffbeb; color:#b45309; }
     .radio-btn[data-selected="1"][data-color="gray"]   { border-color:#6b7280; background:#f9fafb; color:#374151; }
     .radio-btn[data-selected="1"][data-color="purple"] { border-color:#8b5cf6; background:#f5f3ff; color:#6d28d9; }
+
+    /* 回答テーブル */
+    .resp-table th { background: #f9fafb; font-size:0.75rem; font-weight:700; color:#6b7280; padding:8px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap; }
+    .resp-table td { font-size:0.8rem; padding:8px 10px; text-align:center; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+    .resp-table tr:last-child td { border-bottom:none; }
+    .resp-table tr:hover td { background:#f9fafb; }
+    .badge { display:inline-block; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; }
   </style>
 </head>
 <body class="h-full bg-gray-50">
@@ -72,18 +81,37 @@
 
   <!-- 管理者ビュー -->
   <main id="admin-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-3">
-    <div class="flex items-center justify-between py-2">
+    <div class="flex items-center justify-between py-2 gap-2 flex-wrap">
       <h2 class="text-base font-black text-gray-700">📅 イベント一覧</h2>
-      <button id="create-event-btn" type="button"
-        class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
-        ＋ 新規作成
-      </button>
+      <div class="flex gap-2">
+        <button id="copy-parent-list-btn" type="button"
+          class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors">
+          🔗 保護者リンク
+        </button>
+        <button id="create-event-btn" type="button"
+          class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
+          ＋ 新規作成
+        </button>
+      </div>
     </div>
+    <p id="parent-list-copy-msg" class="hidden text-xs text-green-600 font-medium text-center py-1 bg-green-50 rounded-xl">✅ 保護者一覧リンクをコピーしました</p>
     <div id="event-list"></div>
+  </main>
+
+  <!-- 保護者イベント一覧ビュー -->
+  <main id="parent-list-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-3">
+    <div class="py-2">
+      <h2 class="text-base font-black text-gray-700">📅 イベント一覧</h2>
+      <p class="text-xs text-gray-400 mt-0.5">参加するイベントをタップして回答してください</p>
+    </div>
+    <div id="parent-event-list"></div>
   </main>
 
   <!-- 回答ビュー（保護者） -->
   <main id="respond-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-4">
+    <button id="back-to-list-btn" class="hidden text-sm text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1 py-1">
+      ← イベント一覧に戻る
+    </button>
     <div id="event-info-card" class="bg-white rounded-2xl shadow p-5"></div>
     <div id="form-container"></div>
   </main>
@@ -238,9 +266,9 @@
       </button>
     </div>
     <p id="detail-share-msg" class="hidden text-xs text-green-600 font-medium text-center py-2 bg-green-50">✅ リンクをクリップボードにコピーしました</p>
-    <!-- 回答一覧 -->
-    <div class="p-4">
-      <div id="response-list" class="space-y-2"></div>
+    <!-- 回答一覧（テーブル） -->
+    <div class="p-4 overflow-x-auto">
+      <div id="response-list"></div>
       <p id="no-responses" class="hidden text-center text-gray-400 text-sm py-8">まだ回答がありません</p>
     </div>
   </div>
@@ -253,14 +281,19 @@
   const STORAGE_ACTIVE_KEY = 'mrs_active_team_v1';
   const TABLE_EVENTS    = 'attendance_events';
   const TABLE_RESPONSES = 'attendance_responses';
+  const TABLE_PLAYERS   = 'app_records';  // MRSと共通
 
   let SUPABASE_CONFIG = { url: '', anonKey: '' };
   let supabaseClient  = null;
   let events = [];
+  let playersMap = {};   // { '10': '山田太郎', ... }
   let currentEventId = null;
+  let parentHashConfig = null;  // 保護者モード用config
 
-  const respondEventId = new URLSearchParams(location.search).get('respond');
+  const params = new URLSearchParams(location.search);
+  const respondEventId = params.get('respond');
   const isRespondMode  = !!respondEventId;
+  const isParentMode   = params.get('view') === 'parent';
 
   // ─── Config ──────────────────────────────────────────────────────────────
   function loadConfig() {
@@ -299,11 +332,48 @@
     root.style.setProperty('--primary-mid', mid);
   }
 
+  function parseHashConfig() {
+    const hash = location.hash.slice(1);
+    if (!hash) return null;
+    try {
+      return JSON.parse(decodeURIComponent(escape(atob(hash))));
+    } catch(e) { return null; }
+  }
+
+  function buildHashString(cfg) {
+    const payload = { u: cfg.supabase_url, k: cfg.supabase_anon_key, t: cfg.team_name || '', c: cfg.primary_color || '#c0392b' };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  }
+
+  function getBaseUrl() {
+    return (location.protocol === 'file:' || location.origin === 'null')
+      ? '' : location.origin + location.pathname;
+  }
+
   // ─── Supabase ─────────────────────────────────────────────────────────────
   function initSupabase() {
     if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) return false;
     supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
     return true;
+  }
+
+  // ─── 選手名マップ ─────────────────────────────────────────────────────────
+  async function loadPlayersMap() {
+    if (!supabaseClient) return;
+    try {
+      const { data } = await supabaseClient
+        .from(TABLE_PLAYERS)
+        .select('number, name')
+        .eq('type', 'player');
+      if (data) {
+        playersMap = {};
+        data.forEach(p => { if (p.number) playersMap[String(p.number).trim()] = p.name || ''; });
+      }
+    } catch(e) { console.warn('選手データ取得失敗:', e); }
+  }
+
+  function getPlayerName(jerseyNumber) {
+    return playersMap[String(jerseyNumber).trim()] || '';
   }
 
   // ─── 管理者：イベント一覧 ─────────────────────────────────────────────────
@@ -347,6 +417,22 @@
     }).join('');
   }
 
+  // ─── 管理者：保護者リンクコピー ───────────────────────────────────────────
+  async function copyParentListLink() {
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url) { alert('設定が見つかりません'); return; }
+    const hash = buildHashString(cfg);
+    const url  = `${getBaseUrl()}?view=parent#${hash}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch(e) {
+      prompt('以下のリンクをコピーしてください', url); return;
+    }
+    const msg = document.getElementById('parent-list-copy-msg');
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 3000);
+  }
+
   // ─── 管理者：イベント作成 / 編集 ─────────────────────────────────────────
   function openCreateEventModal(eventId = null) {
     document.getElementById('edit-event-id').value = eventId || '';
@@ -378,11 +464,11 @@
   }
 
   async function saveEvent() {
-    const btn     = document.getElementById('save-event-btn');
-    const txt     = document.getElementById('save-event-text');
-    const load    = document.getElementById('save-event-loading');
+    const btn      = document.getElementById('save-event-btn');
+    const txt      = document.getElementById('save-event-text');
+    const load     = document.getElementById('save-event-loading');
     const statusEl = document.getElementById('create-event-status');
-    const editId  = document.getElementById('edit-event-id').value;
+    const editId   = document.getElementById('edit-event-id').value;
 
     const title = document.getElementById('ev-title').value.trim();
     const date  = document.getElementById('ev-date').value;
@@ -412,7 +498,7 @@
     await loadEvents();
   }
 
-  // ─── 管理者：詳細モーダル ─────────────────────────────────────────────────
+  // ─── 管理者：詳細モーダル（テーブル表示） ────────────────────────────────
   async function openDetail(eventId) {
     currentEventId = eventId;
     const ev = events.find(e => e.id === eventId);
@@ -423,7 +509,6 @@
       [formatDate(ev.event_date), ev.event_time, ev.location].filter(Boolean).join(' ・ ');
     document.getElementById('detail-share-msg').classList.add('hidden');
 
-    // 回答取得
     const { data: responses, error } = await supabaseClient
       .from(TABLE_RESPONSES)
       .select('*')
@@ -438,25 +523,45 @@
     document.getElementById('summary-need-ride').textContent = responses.filter(r => r.transport_need === '乗せて欲しい').length;
     document.getElementById('summary-can-drive').textContent = responses.filter(r => r.carpool       === 'できる').length;
 
-    // 一覧
+    // テーブル表示
     const listEl = document.getElementById('response-list');
     const noEl   = document.getElementById('no-responses');
+
     if (responses.length === 0) {
       listEl.innerHTML = ''; noEl.classList.remove('hidden');
     } else {
       noEl.classList.add('hidden');
-      listEl.innerHTML = responses.map(r => {
-        const attendBadge = { '出席':'bg-green-100 text-green-700', '欠席':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' }[r.attendance] || 'bg-gray-100 text-gray-500';
-        const rideBadge   = r.transport_need === '乗せて欲しい' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500';
-        const driveBadge  = r.carpool === 'できる' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500';
-        return `<div class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl flex-wrap">
-          <span class="font-black text-gray-800 w-10 text-center text-sm">#${escHtml(r.jersey_number)}</span>
-          <span class="text-xs font-bold px-2 py-1 rounded-full ${attendBadge}">${r.attendance}</span>
-          <span class="text-xs font-medium px-2 py-1 rounded-full ${rideBadge}">送迎:${r.transport_need}</span>
-          <span class="text-xs font-medium px-2 py-1 rounded-full ${driveBadge}">配車:${r.carpool}</span>
-          ${r.notes ? `<span class="text-xs text-gray-400 flex-1 min-w-full mt-1 pl-12">📝 ${escHtml(r.notes)}</span>` : ''}
-        </div>`;
-      }).join('');
+
+      const attendColor  = { '出席':'bg-green-100 text-green-700', '欠席':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' };
+      const transportColor = { '乗せて欲しい':'bg-blue-100 text-blue-700', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
+      const carpoolColor   = { 'できる':'bg-amber-100 text-amber-700', '難しい':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' };
+
+      listEl.innerHTML = `
+        <table class="resp-table w-full">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="text-left">名前</th>
+              <th>出欠</th>
+              <th>送迎</th>
+              <th>配車</th>
+              <th class="text-left">備考</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${responses.map(r => {
+              const name = getPlayerName(r.jersey_number);
+              return `<tr>
+                <td class="font-black text-gray-700">${escHtml(r.jersey_number)}</td>
+                <td class="text-left font-medium text-gray-800">${escHtml(name)}</td>
+                <td><span class="badge ${attendColor[r.attendance] || 'bg-gray-100 text-gray-500'}">${r.attendance}</span></td>
+                <td><span class="badge ${transportColor[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span></td>
+                <td><span class="badge ${carpoolColor[r.carpool] || 'bg-gray-100 text-gray-500'}">${r.carpool}</span></td>
+                <td class="text-left text-gray-400 text-xs">${escHtml(r.notes || '')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
     }
     document.getElementById('detail-modal').classList.remove('hidden');
   }
@@ -479,52 +584,94 @@
     if (!currentEventId) return;
     const cfg = loadConfig();
     if (!cfg?.supabase_url) { alert('設定が見つかりません'); return; }
-    const base = (location.protocol === 'file:' || location.origin === 'null')
-      ? '' : location.origin + location.pathname;
-    const payload = { u: cfg.supabase_url, k: cfg.supabase_anon_key, t: cfg.team_name || '', c: cfg.primary_color || '#c0392b' };
-    const hash = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-    const url  = `${base}?respond=${currentEventId}#${hash}`;
+    const hash = buildHashString(cfg);
+    const url  = `${getBaseUrl()}?respond=${currentEventId}#${hash}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch(e) {
-      prompt('以下のリンクをコピーしてください', url);
-      return;
+      prompt('以下のリンクをコピーしてください', url); return;
     }
     const msg = document.getElementById('detail-share-msg');
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 3000);
   }
 
-  // ─── 回答モード ───────────────────────────────────────────────────────────
-  async function initRespondMode() {
+  // ─── 保護者：イベント一覧モード ───────────────────────────────────────────
+  async function initParentMode() {
     document.getElementById('settings-btn').classList.add('hidden');
 
-    // URLハッシュからSupabase設定を復元
-    const hash = location.hash.slice(1);
-    if (hash) {
-      try {
-        const d = JSON.parse(decodeURIComponent(escape(atob(hash))));
-        if (d.u) SUPABASE_CONFIG.url     = d.u;
-        if (d.k) SUPABASE_CONFIG.anonKey = d.k;
-        if (d.t) document.getElementById('app-team-name').textContent = d.t + ' 出欠確認';
-        if (d.c) applyColor(d.c);
-      } catch(e) { console.warn('設定解析エラー', e); }
+    const d = parseHashConfig();
+    if (d) {
+      if (d.u) SUPABASE_CONFIG.url     = d.u;
+      if (d.k) SUPABASE_CONFIG.anonKey = d.k;
+      if (d.t) document.getElementById('app-team-name').textContent = d.t + ' 出欠確認';
+      if (d.c) applyColor(d.c);
+      parentHashConfig = d;
     }
 
     if (!initSupabase()) {
       showFatalError('設定情報が不正です。管理者にお問い合わせください。'); return;
     }
 
-    // イベント情報取得
-    const { data: ev, error } = await supabaseClient
-      .from(TABLE_EVENTS).select('*').eq('id', respondEventId).single();
+    await loadPlayersMap();
 
-    if (error || !ev) {
-      showFatalError('イベントが見つかりません。URLを確認してください。'); return;
+    const { data, error } = await supabaseClient
+      .from(TABLE_EVENTS)
+      .select('*')
+      .order('event_date', { ascending: false });
+
+    if (error) { showFatalError('イベントの読み込みに失敗しました。'); return; }
+
+    const listEl = document.getElementById('parent-event-list');
+    if (!data || data.length === 0) {
+      listEl.innerHTML = '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow">現在、予定されているイベントはありません</div>';
+    } else {
+      listEl.innerHTML = data.map(ev => `
+        <div class="bg-white rounded-2xl shadow p-4">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${ev.category}</span>` : ''}
+                <p class="font-black text-gray-800">${escHtml(ev.title)}</p>
+              </div>
+              <div class="text-sm text-gray-500 space-y-0.5">
+                ${ev.event_date ? `<p>📆 ${formatDate(ev.event_date)}${ev.event_time ? ' ' + escHtml(ev.event_time) : ''}</p>` : ''}
+                ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
+                ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
+              </div>
+              ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
+            </div>
+          </div>
+          <button onclick="openParentRespond('${ev.id}')"
+            class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">
+            ✏️ 回答する
+          </button>
+        </div>`).join('');
     }
 
-    // イベント情報カード
-    document.getElementById('event-info-card').innerHTML = `
+    document.getElementById('parent-list-view').classList.remove('hidden');
+  }
+
+  function openParentRespond(eventId) {
+    // 保護者一覧から個別イベントの回答フォームを開く
+    const ev = document.querySelector(`[onclick="openParentRespond('${eventId}')"]`)
+                 ?.closest('.bg-white');
+
+    // イベント情報カードを生成
+    const allData = (window._parentEvents || []).find(e => e.id === eventId);
+    if (allData) {
+      document.getElementById('event-info-card').innerHTML = buildEventInfoHtml(allData);
+    }
+
+    document.getElementById('parent-list-view').classList.add('hidden');
+    document.getElementById('back-to-list-btn').classList.remove('hidden');
+    renderRespondForm(eventId);
+    document.getElementById('respond-view').classList.remove('hidden');
+    window.scrollTo(0, 0);
+  }
+
+  function buildEventInfoHtml(ev) {
+    return `
       <h2 class="text-lg font-black text-gray-800 mb-3">📅 ${escHtml(ev.title)}</h2>
       <div class="space-y-1.5 text-sm text-gray-600">
         ${ev.event_date ? `<p>📆 ${formatDate(ev.event_date)}</p>` : ''}
@@ -533,20 +680,51 @@
         ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
         ${ev.memo       ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
       </div>`;
+  }
 
+  // ─── 回答モード（直URLアクセス） ──────────────────────────────────────────
+  async function initRespondMode() {
+    document.getElementById('settings-btn').classList.add('hidden');
+
+    const d = parseHashConfig();
+    if (d) {
+      if (d.u) SUPABASE_CONFIG.url     = d.u;
+      if (d.k) SUPABASE_CONFIG.anonKey = d.k;
+      if (d.t) document.getElementById('app-team-name').textContent = d.t + ' 出欠確認';
+      if (d.c) applyColor(d.c);
+    }
+
+    if (!initSupabase()) {
+      showFatalError('設定情報が不正です。管理者にお問い合わせください。'); return;
+    }
+
+    await loadPlayersMap();
+
+    const { data: ev, error } = await supabaseClient
+      .from(TABLE_EVENTS).select('*').eq('id', respondEventId).single();
+
+    if (error || !ev) {
+      showFatalError('イベントが見つかりません。URLを確認してください。'); return;
+    }
+
+    document.getElementById('event-info-card').innerHTML = buildEventInfoHtml(ev);
     renderRespondForm(respondEventId);
     document.getElementById('respond-view').classList.remove('hidden');
   }
 
+  // ─── 回答フォーム ─────────────────────────────────────────────────────────
   function renderRespondForm(eventId, prefillJersey = '') {
     document.getElementById('form-container').innerHTML = `
       <form id="attend-form" class="bg-white rounded-2xl shadow p-5 space-y-6">
 
         <div>
           <label class="block text-gray-700 font-bold mb-2">背番号 <span class="text-red-500">*</span></label>
-          <input type="number" id="f-jersey" min="1" max="99" inputmode="numeric"
-            class="w-28 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-red-400 text-2xl font-black text-center"
-            placeholder="10">
+          <div class="flex items-center gap-3">
+            <input type="number" id="f-jersey" min="1" max="99" inputmode="numeric"
+              class="w-28 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-red-400 text-2xl font-black text-center"
+              placeholder="10" oninput="onJerseyInput(this.value)">
+            <p id="f-player-name" class="text-lg font-black text-gray-700"></p>
+          </div>
         </div>
 
         <div>
@@ -598,8 +776,18 @@
     // 修正モード：背番号を引き継ぐ
     if (prefillJersey) {
       const jerseyInput = document.getElementById('f-jersey');
-      if (jerseyInput) jerseyInput.value = prefillJersey;
+      if (jerseyInput) {
+        jerseyInput.value = prefillJersey;
+        onJerseyInput(prefillJersey);
+      }
     }
+  }
+
+  function onJerseyInput(val) {
+    const nameEl = document.getElementById('f-player-name');
+    if (!nameEl) return;
+    const name = getPlayerName(String(val).trim());
+    nameEl.textContent = name || '';
   }
 
   function radios(name, opts) {
@@ -654,10 +842,12 @@
     }
 
     // 完了画面
+    const name = getPlayerName(jersey);
     document.getElementById('form-container').innerHTML = `
       <div class="bg-white rounded-2xl shadow p-10 text-center space-y-4">
         <div class="text-6xl">✅</div>
         <h3 class="text-xl font-black text-gray-800">回答を送信しました</h3>
+        ${name ? `<p class="text-gray-500 font-bold">#${escHtml(jersey)} ${escHtml(name)}</p>` : ''}
         <p class="text-gray-400 text-sm">ありがとうございました</p>
         <button type="button" onclick="renderRespondForm('${eventId}')"
           class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-2xl text-base transition-colors">
@@ -725,6 +915,7 @@
     setStatus(statusEl, '✅ 接続OK！保存しました', 'success');
     setTimeout(async () => {
       document.getElementById('setup-modal').classList.add('hidden');
+      await loadPlayersMap();
       await loadEvents();
     }, 800);
   }
@@ -761,8 +952,25 @@
   // ─── 起動 ─────────────────────────────────────────────────────────────────
   (async () => {
     try {
+      // 保護者：個別イベント回答モード
       if (isRespondMode) {
         await initRespondMode();
+        document.getElementById('loading-screen').classList.add('hidden');
+        return;
+      }
+
+      // 保護者：イベント一覧モード
+      if (isParentMode) {
+        await initParentMode();
+
+        // 「戻る」ボタン
+        document.getElementById('back-to-list-btn').addEventListener('click', () => {
+          document.getElementById('respond-view').classList.add('hidden');
+          document.getElementById('back-to-list-btn').classList.add('hidden');
+          document.getElementById('parent-list-view').classList.remove('hidden');
+          window.scrollTo(0, 0);
+        });
+
         document.getElementById('loading-screen').classList.add('hidden');
         return;
       }
@@ -770,6 +978,7 @@
       // 管理者モード
       document.getElementById('settings-btn').addEventListener('click', openSetupModal);
       document.getElementById('create-event-btn').addEventListener('click', () => openCreateEventModal());
+      document.getElementById('copy-parent-list-btn').addEventListener('click', copyParentListLink);
       document.getElementById('save-event-btn').addEventListener('click', saveEvent);
       document.getElementById('setup-save-btn').addEventListener('click', handleSetupSave);
       document.getElementById('detail-share-btn').addEventListener('click', copyShareLink);
@@ -785,7 +994,10 @@
 
       if (cfg?.supabase_url) {
         applyConfig(cfg);
-        if (initSupabase()) await loadEvents();
+        if (initSupabase()) {
+          await loadPlayersMap();
+          await loadEvents();
+        }
       } else {
         openSetupModal();
       }
