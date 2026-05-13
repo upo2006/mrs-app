@@ -533,7 +533,7 @@
       const activeId = localStorage.getItem(STORAGE_ACTIVE_KEY);
       const active = teams.find(t => t.id === activeId) || teams[0];
       if (active?.supabase_url) {
-        return { supabase_url: active.supabase_url, supabase_anon_key: active.supabase_anon_key, team_name: active.team_name, primary_color: active.primary_color };
+        return { supabase_url: active.supabase_url, supabase_anon_key: active.supabase_anon_key, team_name: active.team_name, primary_color: active.primary_color, footer_text: active.footer_text };
       }
       const raw = localStorage.getItem(STORAGE_CONFIG_KEY);
       return raw ? JSON.parse(raw) : null;
@@ -541,7 +541,21 @@
   }
 
   function saveConfig(cfg) {
-    try { localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(cfg)); } catch(e) {}
+    try {
+      localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(cfg));
+      // STORAGE_TEAMS_KEY のアクティブチームも同期更新（MRSと共通ストレージのため）
+      const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+      const activeId = localStorage.getItem(STORAGE_ACTIVE_KEY);
+      const idx = activeId
+        ? teams.findIndex(t => t.id === activeId)
+        : teams.findIndex(t => t.supabase_url === cfg.supabase_url);
+      if (idx >= 0) {
+        if (cfg.primary_color) teams[idx].primary_color = cfg.primary_color;
+        if (cfg.team_name)     teams[idx].team_name     = cfg.team_name;
+        if (cfg.footer_text)   teams[idx].footer_text   = cfg.footer_text;
+        localStorage.setItem(STORAGE_TEAMS_KEY, JSON.stringify(teams));
+      }
+    } catch(e) {}
   }
 
   function applyConfig(cfg) {
