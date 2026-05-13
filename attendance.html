@@ -16,6 +16,9 @@
     }
     * { font-family: 'Noto Sans JP', sans-serif; }
     body { box-sizing: border-box; }
+    .modal-backdrop { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+    .btn-primary { transition: all 0.2s ease; }
+    .btn-primary:hover { transform: scale(1.02); }
 
     .bg-primary       { background-color: var(--primary) !important; }
     .bg-primary-dark  { background-color: var(--primary-dark) !important; }
@@ -113,8 +116,38 @@
       <div id="event-list"></div>
     </div>
     <!-- 選手管理 -->
-    <div id="admin-players-section" class="hidden space-y-3">
-      <div id="player-list-container"></div>
+    <div id="admin-players-section" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3">
+          <h3 class="text-sm font-bold">👕 カテゴリー別選手数</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-0 py-3 text-center text-sm font-bold text-gray-700">U7</th>
+                <th class="px-0 py-3 text-center text-sm font-bold text-gray-700">U8</th>
+                <th class="px-0 py-3 text-center text-sm font-bold text-gray-700">U9</th>
+                <th class="px-0 py-3 text-center text-sm font-bold text-gray-700">U10</th>
+                <th class="px-0 py-3 text-center text-sm font-bold text-gray-700">U11</th>
+                <th class="px-0 py-3 text-center text-sm font-bold text-gray-700">U12</th>
+                <th class="px-0 py-3 text-center text-sm font-bold text-gray-700 border-l-2 border-gray-400">合計</th>
+              </tr>
+            </thead>
+            <tbody id="player-category-stats">
+              <tr class="border-b border-gray-200 text-center">
+                <td colspan="7" class="px-4 py-6 text-gray-500 text-sm">選手情報がまだありません</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="player-list" class="space-y-3"></div>
+      <div id="player-empty-state" class="text-center py-12 bg-white rounded-xl shadow-lg">
+        <span class="text-6xl mb-4 block">👥</span>
+        <p class="text-gray-600 text-lg">選手がまだ登録されていません</p>
+        <p class="text-gray-500 text-sm mt-2">上のボタンから選手を登録しましょう</p>
+      </div>
     </div>
   </main>
 
@@ -149,38 +182,59 @@
 
 <!-- ══ 選手追加・編集モーダル ══════════════════════════════════════════ -->
 <div id="player-modal" class="fixed inset-0 z-[100] hidden">
-  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closePlayerModal()"></div>
-  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
-    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-      <h2 id="player-modal-title" class="text-xl font-black">👕 選手を追加</h2>
-      <button onclick="closePlayerModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+  <div class="modal-backdrop absolute inset-0" onclick="closePlayerModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 id="player-modal-title" class="text-xl font-bold text-gray-800">選手を追加</h2>
+        <button onclick="closePlayerModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      <div class="space-y-4">
+        <input type="hidden" id="player-edit-id">
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-1">カテゴリー</label>
+          <select id="player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <option value="">未設定</option>
+            <option value="U7">U7</option>
+            <option value="U8">U8</option>
+            <option value="U9">U9</option>
+            <option value="U10">U10</option>
+            <option value="U11">U11</option>
+            <option value="U12">U12</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-1">背番号</label>
+          <input type="number" id="player-number" min="0" max="99" placeholder="背番号を入力" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-1">選手名</label>
+          <input type="text" id="player-name" placeholder="選手の名前" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <p id="player-modal-error" class="hidden text-sm text-red-600 font-medium"></p>
+        <button onclick="savePlayer()" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-4 rounded-xl shadow-lg transition-colors">
+          <span id="player-save-label">選手を登録</span>
+        </button>
+      </div>
     </div>
-    <div class="p-6 space-y-4">
-      <input type="hidden" id="player-edit-id">
-      <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">カテゴリー</label>
-        <select id="player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-          <option value="">未設定</option>
-          <option value="U7">U7</option>
-          <option value="U8">U8</option>
-          <option value="U9">U9</option>
-          <option value="U10">U10</option>
-          <option value="U11">U11</option>
-          <option value="U12">U12</option>
-        </select>
+  </div>
+</div>
+
+<!-- ══ 選手削除確認モーダル ════════════════════════════════════════════ -->
+<div id="player-delete-modal" class="fixed inset-0 z-[110] hidden">
+  <div class="modal-backdrop absolute inset-0" onclick="closeDeletePlayerModal()"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+    <div class="text-center">
+      <span class="text-5xl mb-4 block">🗑️</span>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">この選手を削除しますか？</h3>
+      <p class="text-gray-600 text-sm mb-6">この操作は取り消せません</p>
+      <div class="flex gap-3">
+        <button onclick="closeDeletePlayerModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 rounded-xl transition-colors">キャンセル</button>
+        <button onclick="handleDeletePlayer()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-colors">
+          <span id="player-delete-text">削除する</span>
+          <span id="player-delete-loading" class="hidden">削除中...</span>
+        </button>
       </div>
-      <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">背番号 <span class="text-red-500">*</span></label>
-        <input type="number" id="player-number" min="0" max="99" placeholder="例：10" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 text-center text-xl font-black focus:outline-none focus:ring-2 focus:ring-red-500">
-      </div>
-      <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">選手名 <span class="text-red-500">*</span></label>
-        <input type="text" id="player-name" placeholder="例：山田 太郎" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-      </div>
-      <p id="player-modal-error" class="hidden text-sm text-red-600 font-medium"></p>
-      <button onclick="savePlayer()" class="w-full bg-gradient-to-r from-red-700 to-red-600 hover:from-red-800 hover:to-red-700 text-white font-black py-3 rounded-xl transition-colors">
-        <span id="player-save-label">保存する</span>
-      </button>
     </div>
   </div>
 </div>
@@ -470,7 +524,9 @@
   }
 
   // ─── 選手管理 ─────────────────────────────────────────────────────────────
-  let playerRecords = [];  // { id, payload: { number, name, category } }
+  let playerRecords = [];
+  let playerAccordionState = { section: null };
+  let playerToDelete = null;
 
   function showAdminTab(tab) {
     const isEvents = tab === 'events';
@@ -480,7 +536,7 @@
     document.getElementById('add-player-btn').classList.toggle('hidden', isEvents);
     document.getElementById('tab-events-btn').className  = `px-4 py-2 rounded-xl text-sm font-bold transition-colors ${isEvents  ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
     document.getElementById('tab-players-btn').className = `px-4 py-2 rounded-xl text-sm font-bold transition-colors ${!isEvents ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-    if (!isEvents && playerRecords.length === 0) loadPlayers();
+    if (!isEvents) loadPlayers();
   }
 
   async function loadPlayers() {
@@ -489,60 +545,107 @@
       .from(TABLE_PLAYERS).select('id, payload').eq('type', 'player');
     if (error) { console.error('loadPlayers:', error); return; }
     playerRecords = data || [];
-    renderPlayerList();
     // playersMap も更新
     playersMap = {};
     playerRecords.forEach(p => {
       if (p.payload?.number) playersMap[String(p.payload.number).trim()] = p.payload.name || '';
     });
+    updatePlayerCategoryStats();
+    renderPlayerList();
+  }
+
+  function updatePlayerCategoryStats() {
+    const tbody = document.getElementById('player-category-stats');
+    if (!tbody) return;
+    const counts = Object.fromEntries(CATEGORY_ORDER.map(cat => [cat, 0]));
+    playerRecords.forEach(p => {
+      const cat = p.payload?.category?.trim();
+      if (cat && counts[cat] !== undefined) counts[cat]++;
+    });
+    const total = Object.values(counts).reduce((s, v) => s + v, 0);
+    tbody.innerHTML = `<tr class="border-b border-gray-200 text-center">
+      ${CATEGORY_ORDER.map(cat => `<td class="px-0 py-4 font-black text-gray-800">${counts[cat]}</td>`).join('')}
+      <td class="px-0 py-4 font-black text-gray-800 border-l-2 border-gray-300">${total}</td>
+    </tr>`;
   }
 
   function renderPlayerList() {
-    const container = document.getElementById('player-list-container');
-    if (!container) return;
+    const listEl  = document.getElementById('player-list');
+    const emptyEl = document.getElementById('player-empty-state');
+    if (!listEl) return;
     if (playerRecords.length === 0) {
-      container.innerHTML = '<p class="text-center text-gray-400 text-sm py-10">選手がまだ登録されていません<br>「＋ 選手を追加」から登録しましょう</p>';
+      listEl.innerHTML = '';
+      emptyEl?.classList.remove('hidden');
       return;
     }
-    const sorted = [...playerRecords].sort((a, b) => {
-      const na = parseInt(a.payload?.number || 99999);
-      const nb = parseInt(b.payload?.number || 99999);
-      return na - nb;
+    emptyEl?.classList.add('hidden');
+
+    const grouped = Object.fromEntries(CATEGORY_ORDER.map(cat => [cat, []]));
+    const uncategorized = [];
+    playerRecords.forEach(p => {
+      const cat = p.payload?.category?.trim() || '';
+      if (cat && grouped[cat] !== undefined) grouped[cat].push(p);
+      else uncategorized.push(p);
     });
-    container.innerHTML = sorted.map(p => {
-      const num  = escHtml(p.payload?.number || '?');
-      const name = escHtml(p.payload?.name   || '');
-      const cat  = escHtml(p.payload?.category || '');
-      return `<div class="bg-white rounded-2xl shadow p-4 flex items-center gap-3">
-        <div class="bg-red-500 text-white font-black text-xl rounded-xl w-12 h-12 flex items-center justify-center shrink-0">${num}</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-black text-gray-800">${name}</p>
-          ${cat ? `<p class="text-xs text-gray-400 mt-0.5">${cat}</p>` : ''}
-        </div>
-        <div class="flex gap-2">
-          <button onclick="openPlayerModal('${p.id}')" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-xl transition-colors">編集</button>
-          <button onclick="confirmDeletePlayer('${p.id}')" class="text-sm bg-red-100 hover:bg-red-200 text-red-600 font-bold px-3 py-2 rounded-xl transition-colors">削除</button>
-        </div>
-      </div>`;
-    }).join('');
+
+    listEl.innerHTML = '';
+
+    const renderSection = (label, list) => {
+      if (list.length === 0) return;
+      const section = document.createElement('div');
+      section.className = 'space-y-2';
+      const header = document.createElement('button');
+      const body   = document.createElement('div');
+      const isOpen = playerAccordionState.section === label;
+      body.className = `pl-3 space-y-2${isOpen ? '' : ' hidden'}`;
+      header.className = 'w-full text-left bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-3 rounded-lg font-semibold flex items-center justify-between';
+      header.innerHTML = `<span>${label}（${list.length}人）</span><span>▶</span>`;
+      header.addEventListener('click', () => {
+        const willOpen = body.classList.contains('hidden');
+        playerAccordionState.section = willOpen ? label : null;
+        renderPlayerList();
+      });
+      list.sort((a, b) => Number(a.payload?.number || 0) - Number(b.payload?.number || 0))
+        .forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'bg-white rounded-xl shadow p-4 cursor-pointer hover:bg-gray-50 transition-colors';
+          card.innerHTML = `<div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center justify-center min-w-[48px] px-2 py-1 rounded-lg bg-red-600 text-white text-sm font-black shadow">#${escHtml(p.payload?.number || '')}</span>
+              <span class="font-bold text-gray-800">${escHtml(p.payload?.name || '')}</span>
+            </div>
+            <div class="flex gap-2">
+              <button type="button" class="edit-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-3 py-2 rounded-lg transition-colors">編集</button>
+              <button type="button" class="del-btn bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors">削除</button>
+            </div>
+          </div>`;
+          card.querySelector('.edit-btn').addEventListener('click', (e) => { e.stopPropagation(); openPlayerModal(p.id); });
+          card.querySelector('.del-btn').addEventListener('click',  (e) => { e.stopPropagation(); openDeletePlayerModal(p); });
+          body.appendChild(card);
+        });
+      section.appendChild(header);
+      section.appendChild(body);
+      listEl.appendChild(section);
+    };
+
+    CATEGORY_ORDER.forEach(cat => renderSection(cat, grouped[cat]));
+    if (uncategorized.length > 0) renderSection('未設定', uncategorized);
   }
 
   function openPlayerModal(id) {
     document.getElementById('player-modal-error').classList.add('hidden');
     if (id) {
-      // 編集
       const rec = playerRecords.find(p => p.id === id);
       if (!rec) return;
-      document.getElementById('player-modal-title').textContent = '👕 選手を編集';
+      document.getElementById('player-modal-title').textContent = '選手を編集';
       document.getElementById('player-save-label').textContent  = '保存する';
       document.getElementById('player-edit-id').value    = id;
       document.getElementById('player-number').value     = rec.payload?.number   || '';
       document.getElementById('player-name').value       = rec.payload?.name     || '';
       document.getElementById('player-category').value   = rec.payload?.category || '';
     } else {
-      // 新規
-      document.getElementById('player-modal-title').textContent = '👕 選手を追加';
-      document.getElementById('player-save-label').textContent  = '追加する';
+      document.getElementById('player-modal-title').textContent = '選手を追加';
+      document.getElementById('player-save-label').textContent  = '選手を登録';
       document.getElementById('player-edit-id').value  = '';
       document.getElementById('player-number').value   = '';
       document.getElementById('player-name').value     = '';
@@ -562,21 +665,16 @@
     const category = document.getElementById('player-category').value;
     const errEl    = document.getElementById('player-modal-error');
     errEl.classList.add('hidden');
-
     if (!number) { errEl.textContent = '背番号を入力してください'; errEl.classList.remove('hidden'); return; }
     if (!name)   { errEl.textContent = '選手名を入力してください'; errEl.classList.remove('hidden'); return; }
-
     const payload = { number, name, category };
     document.getElementById('player-save-label').textContent = '保存中...';
-
     try {
       if (id) {
-        const { error } = await supabaseClient
-          .from(TABLE_PLAYERS).update({ payload }).eq('id', id);
+        const { error } = await supabaseClient.from(TABLE_PLAYERS).update({ payload }).eq('id', id);
         if (error) throw error;
       } else {
-        const { error } = await supabaseClient
-          .from(TABLE_PLAYERS).insert({ type: 'player', payload });
+        const { error } = await supabaseClient.from(TABLE_PLAYERS).insert({ type: 'player', payload });
         if (error) throw error;
       }
       closePlayerModal();
@@ -585,18 +683,31 @@
       errEl.textContent = '保存に失敗しました: ' + (e.message || e);
       errEl.classList.remove('hidden');
     } finally {
-      document.getElementById('player-save-label').textContent = '保存する';
+      document.getElementById('player-save-label').textContent = id ? '保存する' : '選手を登録';
     }
   }
 
-  async function confirmDeletePlayer(id) {
-    const rec = playerRecords.find(p => p.id === id);
-    if (!rec) return;
-    const name = rec.payload?.name || '選手';
-    const num  = rec.payload?.number || '';
-    if (!confirm(`#${num} ${name} を削除しますか？`)) return;
-    const { error } = await supabaseClient.from(TABLE_PLAYERS).delete().eq('id', id);
+  function openDeletePlayerModal(p) {
+    playerToDelete = p;
+    document.getElementById('player-delete-modal').classList.remove('hidden');
+  }
+
+  function closeDeletePlayerModal() {
+    playerToDelete = null;
+    document.getElementById('player-delete-modal').classList.add('hidden');
+  }
+
+  async function handleDeletePlayer() {
+    if (!playerToDelete) return;
+    const textEl    = document.getElementById('player-delete-text');
+    const loadingEl = document.getElementById('player-delete-loading');
+    textEl.classList.add('hidden');
+    loadingEl.classList.remove('hidden');
+    const { error } = await supabaseClient.from(TABLE_PLAYERS).delete().eq('id', playerToDelete.id);
+    textEl.classList.remove('hidden');
+    loadingEl.classList.add('hidden');
     if (error) { alert('削除に失敗しました'); return; }
+    closeDeletePlayerModal();
     await loadPlayers();
   }
 
@@ -706,8 +817,21 @@
 
   // ─── URL短縮（is.gd） ─────────────────────────────────────────────────────
   async function shortenUrl(url) {
+    // TinyURL（CORS対応・無料）
     try {
-      const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`);
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
+      clearTimeout(t);
+      const text = await res.text();
+      if (text.startsWith('https://tinyurl.com/')) return text.trim();
+    } catch(e) {}
+    // is.gd（フォールバック）
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
+      clearTimeout(t);
       const text = await res.text();
       if (text.startsWith('https://is.gd/')) return text.trim();
     } catch(e) {}
