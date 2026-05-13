@@ -109,15 +109,27 @@
     <div id="form-container"></div>
   </main>
 
+  <footer class="mt-6 pb-4">
+    <div class="max-w-[750px] mx-auto px-4">
+      <div class="py-6 text-center bg-gradient-to-r from-red-700 to-red-600 text-white rounded-xl shadow-lg">
+        <img id="footer-image" src="" alt="footer image" class="hidden mx-auto mb-4 max-h-20 w-auto object-contain">
+        <p id="footer-text" class="text-xs text-white/90 mt-1">© ATTENDANCE SYSTEM</p>
+      </div>
+    </div>
+  </footer>
+
 </div><!-- /app -->
 
 <!-- ══ 接続設定モーダル ══════════════════════════════════════════════ -->
 <div id="setup-modal" class="fixed inset-0 z-[100] hidden">
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
   <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
-    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl">
-      <h2 class="text-xl font-black">⚙️ 接続設定</h2>
-      <p class="text-sm text-white/80 mt-1">Supabaseの接続情報を入力してください</p>
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-start justify-between">
+      <div>
+        <h2 class="text-xl font-black">⚙️ 接続設定</h2>
+        <p class="text-sm text-white/80 mt-1">Supabaseの接続情報を入力してください</p>
+      </div>
+      <button onclick="document.getElementById('setup-modal').classList.add('hidden')" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
     </div>
     <div class="p-6 space-y-4">
       <div>
@@ -292,7 +304,11 @@
 
   function applyConfig(cfg) {
     if (!cfg) return;
-    if (cfg.team_name) document.getElementById('app-team-name').textContent = cfg.team_name + ' 出欠確認';
+    if (cfg.team_name) {
+      document.getElementById('app-team-name').textContent = cfg.team_name + ' 出欠確認';
+      const footerEl = document.getElementById('footer-text');
+      if (footerEl) footerEl.textContent = `© ${cfg.team_name}`;
+    }
     if (cfg.primary_color) applyColor(cfg.primary_color);
     if (cfg.supabase_url)      SUPABASE_CONFIG.url     = cfg.supabase_url;
     if (cfg.supabase_anon_key) SUPABASE_CONFIG.anonKey = cfg.supabase_anon_key;
@@ -411,19 +427,33 @@
     }).join('')}</div>`;
   }
 
+  // ─── URL短縮（is.gd） ─────────────────────────────────────────────────────
+  async function shortenUrl(url) {
+    try {
+      const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`);
+      const text = await res.text();
+      if (text.startsWith('https://is.gd/')) return text.trim();
+    } catch(e) {}
+    return null; // 失敗時はnull
+  }
+
   // ─── 管理者：イベント個別リンクコピー ────────────────────────────────────
   async function copyEventShareLink(eventId) {
     const cfg = loadConfig();
     if (!cfg?.supabase_url) { alert('設定が見つかりません'); return; }
     const hash = buildHashString(cfg);
-    const url  = `${getBaseUrl()}?respond=${eventId}#${hash}`;
+    const fullUrl = `${getBaseUrl()}?respond=${eventId}#${hash}`;
+
+    showCardMsg(eventId, '🔄 短縮URL生成中...');
+    const short = await shortenUrl(fullUrl);
+    const finalUrl = short || fullUrl;
+
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(finalUrl);
     } catch(e) {
-      prompt('以下のリンクをコピーしてください', url); return;
+      prompt('以下のリンクをコピーしてください', finalUrl); return;
     }
-    // コピー完了メッセージをカード内に表示
-    showCardMsg(eventId, '✅ リンクをコピーしました');
+    showCardMsg(eventId, short ? `✅ 短縮URLをコピー: ${short}` : '✅ URLをコピーしました');
   }
 
   function showCardMsg(eventId, msg) {
@@ -453,15 +483,23 @@
     const cfg = loadConfig();
     if (!cfg?.supabase_url) { alert('設定が見つかりません'); return; }
     const hash = buildHashString(cfg);
-    const url  = `${getBaseUrl()}?view=parent#${hash}`;
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch(e) {
-      prompt('以下のリンクをコピーしてください', url); return;
-    }
+    const fullUrl = `${getBaseUrl()}?view=parent#${hash}`;
+
     const msg = document.getElementById('parent-list-copy-msg');
+    msg.textContent = '🔄 短縮URL生成中...';
     msg.classList.remove('hidden');
-    setTimeout(() => msg.classList.add('hidden'), 3000);
+
+    const short = await shortenUrl(fullUrl);
+    const finalUrl = short || fullUrl;
+
+    try {
+      await navigator.clipboard.writeText(finalUrl);
+    } catch(e) {
+      prompt('以下のリンクをコピーしてください', finalUrl);
+      msg.classList.add('hidden'); return;
+    }
+    msg.textContent = short ? `✅ 短縮URLをコピーしました: ${short}` : '✅ URLをコピーしました';
+    setTimeout(() => msg.classList.add('hidden'), 4000);
   }
 
   // ─── 管理者：イベント作成 / 編集 ─────────────────────────────────────────
