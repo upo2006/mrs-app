@@ -234,6 +234,7 @@
                   <button id="backup-json-btn" type="button" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">バックアップJSON</button>
                   <button id="open-team-manager-btn" type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-blue-600 font-bold">🏟️ チーム管理</button>
                   <button id="open-setup-btn" type="button" onclick="openSetupModal('edit')" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">⚙️ 接続設定</button>
+                  <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
                   <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 保護者リンクを発行</button>
                 </div>
               </div>
@@ -3926,6 +3927,67 @@ ${error?.message || ''}`);
       selectedSeason = String(parseInt(getCurrentFiscalYear().replace('年度', ''), 10));
     }
 
+    // ── 管理者リンク発行 ─────────────────────────────────────────────
+    function openAdminLinkModal() {
+      document.getElementById('settings-menu')?.classList.add('hidden');
+      const modal = document.getElementById('admin-link-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      const teams = loadTeams();
+      const activeId = getActiveTeamId();
+      const select = document.getElementById('admin-link-team-select');
+      if (select) {
+        select.innerHTML = teams.map(t =>
+          `<option value="${t.id}"${t.id === activeId ? ' selected' : ''}>${escapeHtml(t.team_name)}</option>`
+        ).join('');
+      }
+      const base = (location.origin === 'null' || location.protocol === 'file:')
+        ? '' : location.origin + location.pathname;
+      const input = document.getElementById('admin-link-base-url');
+      if (input) { input.value = base; updateAdminLink(); }
+    }
+
+    function closeAdminLinkModal() {
+      document.getElementById('admin-link-modal')?.classList.add('hidden');
+    }
+
+    function updateAdminLink() {
+      const base = document.getElementById('admin-link-base-url')?.value.trim();
+      const result = document.getElementById('admin-link-result');
+      if (!base) { result?.classList.add('hidden'); return; }
+      const select = document.getElementById('admin-link-team-select');
+      const selectedId = select?.value;
+      const teams = loadTeams();
+      const team = teams.find(t => t.id === selectedId) || teams[0];
+      if (!team?.supabase_url || !team?.supabase_anon_key) { result?.classList.add('hidden'); return; }
+      const payload = { u: team.supabase_url, k: team.supabase_anon_key, t: team.team_name || '', c: team.primary_color || '#c0392b' };
+      const hash = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+      const url = base.replace(/\/?$/, '') + '#' + hash;
+      const linkInput = document.getElementById('admin-link-url');
+      if (linkInput) linkInput.value = url;
+      result?.classList.remove('hidden');
+      document.getElementById('admin-link-copy-msg')?.classList.add('hidden');
+    }
+
+    async function copyAdminLink() {
+      const url = document.getElementById('admin-link-url')?.value;
+      if (!url) return;
+      const msg = document.getElementById('admin-link-copy-msg');
+      if (msg) { msg.textContent = '🔄 短縮URL生成中...'; msg.classList.remove('hidden'); }
+      const short = await shortenUrl(url);
+      const finalUrl = short || url;
+      try {
+        await navigator.clipboard.writeText(finalUrl);
+      } catch(e) {
+        document.getElementById('admin-link-url')?.select();
+      }
+      if (msg) {
+        msg.textContent = short ? `✅ 短縮URLをコピー: ${short}` : '✅ クリップボードにコピーしました';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+      }
+    }
+
     function openParentLinkModal() {
       document.getElementById('settings-menu')?.classList.add('hidden');
       const modal = document.getElementById('parent-link-modal');
@@ -3969,17 +4031,32 @@ ${error?.message || ''}`);
       document.getElementById('parent-link-copy-msg')?.classList.add('hidden');
     }
 
+    async function shortenUrl(url) {
+      try {
+        const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`);
+        const text = await res.text();
+        if (text.startsWith('https://is.gd/')) return text.trim();
+      } catch(e) {}
+      return null;
+    }
+
     async function copyParentLink() {
       const url = document.getElementById('parent-link-url')?.value;
       if (!url) return;
+      const msg = document.getElementById('parent-link-copy-msg');
+      if (msg) { msg.textContent = '🔄 短縮URL生成中...'; msg.classList.remove('hidden'); }
+      const short = await shortenUrl(url);
+      const finalUrl = short || url;
       try {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(finalUrl);
       } catch(e) {
         document.getElementById('parent-link-url')?.select();
       }
-      const msg = document.getElementById('parent-link-copy-msg');
-      msg?.classList.remove('hidden');
-      setTimeout(() => msg?.classList.add('hidden'), 2500);
+      if (msg) {
+        msg.textContent = short ? `✅ 短縮URLをコピー: ${short}` : '✅ クリップボードにコピーしました';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+      }
     }
 
     // ── セットアップモーダル ───────────────────────────────────────────
@@ -4212,6 +4289,30 @@ ${error?.message || ''}`);
           } catch(e) { console.warn('保護者リンク解析エラー:', e); }
         }
 
+        // 管理者モード: URLハッシュから接続設定を自動読み込み
+        if (!isParentMode && location.hash) {
+          try {
+            const hash = location.hash.slice(1);
+            const d = JSON.parse(decodeURIComponent(escape(atob(hash))));
+            if (d.u && d.k) {
+              const teams = loadTeams();
+              let team = teams.find(t => t.supabase_url === d.u);
+              if (!team) {
+                team = { id: 'team_' + Date.now(), team_name: d.t || 'チーム', supabase_url: d.u, supabase_anon_key: d.k, primary_color: d.c || '#c0392b' };
+                saveTeams([...teams, team]);
+              }
+              setActiveTeamId(team.id);
+              history.replaceState(null, '', location.pathname + location.search);
+              const cfg = teamCfgToStorageCfg(team);
+              saveConfig(cfg);
+              applyConfigValues(cfg);
+              applyConfig(defaultConfig);
+              await initData();
+              return;
+            }
+          } catch(e) { console.warn('管理者リンク解析エラー:', e); }
+        }
+
         // 設定読み込み: localStorageを優先、なければconfig.jsonを試みる
         let cfg = loadConfigFromStorage();
 
@@ -4262,9 +4363,12 @@ ${error?.message || ''}`);
     <div id="setup-modal" class="fixed inset-0 z-[100] hidden">
       <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
       <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
-        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl">
-          <h2 class="text-xl font-black">⚙️ 初期設定</h2>
-          <p class="text-sm text-white/80 mt-1">Supabaseの接続情報とチーム名を入力してください</p>
+        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-black">⚙️ 初期設定</h2>
+            <p class="text-sm text-white/80 mt-1">Supabaseの接続情報とチーム名を入力してください</p>
+          </div>
+          <button onclick="document.getElementById('setup-modal').classList.add('hidden')" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
         </div>
         <div class="p-6 space-y-4">
           <div>
@@ -4361,6 +4465,40 @@ ${error?.message || ''}`);
           <button type="button" onclick="numpadBackspace()" class="numpad-key bg-gray-200 text-gray-600 text-xl">⌫</button>
         </div>
         <button type="button" id="numpad-confirm-btn" onclick="numpadConfirm()" class="w-full h-12 rounded-xl text-white font-bold text-base transition-colors">追加</button>
+      </div>
+    </div>
+
+    <!-- ══ 管理者リンク発行モーダル ══════════════════════════════════════ -->
+    <div id="admin-link-modal" class="fixed inset-0 z-[100] hidden">
+      <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeAdminLinkModal()"></div>
+      <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+          <h2 class="text-xl font-black">🔧 管理者リンクを発行</h2>
+          <button onclick="closeAdminLinkModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-1">🏟️ チームを選択</label>
+            <select id="admin-link-team-select" onchange="updateAdminLink()" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"></select>
+          </div>
+          <p class="text-sm text-gray-600">接続設定済みの管理者用リンクを生成します。このリンクを開くと接続設定なしで即座に使用できます。</p>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-1">アプリの公開URL <span class="text-red-500">*</span></label>
+            <input type="url" id="admin-link-base-url" placeholder="https://your-name.github.io/repo/" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500" oninput="updateAdminLink()">
+          </div>
+          <div id="admin-link-result" class="hidden space-y-2">
+            <label class="block text-gray-700 text-sm font-bold">生成されたリンク</label>
+            <div class="flex gap-2">
+              <input type="text" id="admin-link-url" readonly class="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 font-mono">
+              <button onclick="copyAdminLink()" class="shrink-0 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors">コピー</button>
+            </div>
+            <p id="admin-link-copy-msg" class="hidden text-xs text-green-600 font-medium">✅ クリップボードにコピーしました</p>
+          </div>
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 space-y-1">
+            <p class="font-bold">⚠️ セキュリティについて</p>
+            <p>このリンクにはSupabase接続情報が含まれます。信頼できる管理者のみに共有してください。リンクを開いた人は試合記録の追加・編集・削除が可能です。</p>
+          </div>
+        </div>
       </div>
     </div>
 
