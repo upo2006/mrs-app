@@ -74,7 +74,13 @@
           <h1 id="app-team-name" class="text-xl font-black leading-tight truncate">出欠確認システム</h1>
           <p class="text-xs text-white/80 tracking-widest mt-0.5">ATTENDANCE SYSTEM</p>
         </div>
-        <button id="settings-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors shrink-0">⚙️</button>
+        <div class="relative shrink-0">
+          <button id="settings-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors">⚙️</button>
+          <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
+            <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-red-600 font-bold">⚙️ 接続設定</button>
+            <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -119,6 +125,36 @@
   </footer>
 
 </div><!-- /app -->
+
+<!-- ══ 管理者リンク発行モーダル ══════════════════════════════════════ -->
+<div id="admin-link-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeAdminLinkModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+      <h2 class="text-xl font-black">🔧 管理者リンクを発行</h2>
+      <button onclick="closeAdminLinkModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="p-6 space-y-4">
+      <p class="text-sm text-gray-600">接続設定済みの管理者用リンクを生成します。このリンクを開くと接続設定なしで即座に使用できます。</p>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">アプリの公開URL <span class="text-red-500">*</span></label>
+        <input type="url" id="admin-link-base-url" placeholder="https://your-name.github.io/mrs-app/attendance.html" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500" oninput="updateAdminLink()">
+      </div>
+      <div id="admin-link-result" class="hidden space-y-2">
+        <label class="block text-gray-700 text-sm font-bold">生成されたリンク</label>
+        <div class="flex gap-2">
+          <input type="text" id="admin-link-url" readonly class="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 font-mono">
+          <button onclick="copyAdminLink()" class="shrink-0 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors">コピー</button>
+        </div>
+        <p id="admin-link-copy-msg" class="hidden text-xs text-green-600 font-medium">✅ クリップボードにコピーしました</p>
+      </div>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 space-y-1">
+        <p class="font-bold">⚠️ セキュリティについて</p>
+        <p>このリンクにはSupabase接続情報が含まれます。信頼できる管理者のみに共有してください。リンクを開いた人はイベントの追加・編集・削除が可能です。</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ 接続設定モーダル ══════════════════════════════════════════════ -->
 <div id="setup-modal" class="fixed inset-0 z-[100] hidden">
@@ -428,13 +464,65 @@
   }
 
   // ─── URL短縮（is.gd） ─────────────────────────────────────────────────────
+  // URL内の # より前の部分だけ短縮し、# 以降はそのまま末尾に付ける
   async function shortenUrl(url) {
     try {
-      const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`);
+      const hashIdx = url.indexOf('#');
+      const baseUrl  = hashIdx >= 0 ? url.slice(0, hashIdx) : url;
+      const fragment = hashIdx >= 0 ? url.slice(hashIdx) : '';   // '#xxx...'
+      const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(baseUrl)}`);
       const text = await res.text();
-      if (text.startsWith('https://is.gd/')) return text.trim();
+      if (text.startsWith('https://is.gd/')) return text.trim() + fragment;
     } catch(e) {}
-    return null; // 失敗時はnull
+    return null;
+  }
+
+  // ─── 管理者リンク発行 ─────────────────────────────────────────────────────
+  function openAdminLinkModal() {
+    document.getElementById('settings-menu')?.classList.add('hidden');
+    const modal = document.getElementById('admin-link-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    const base = getBaseUrl();
+    const input = document.getElementById('admin-link-base-url');
+    if (input) { input.value = base; updateAdminLink(); }
+  }
+
+  function closeAdminLinkModal() {
+    document.getElementById('admin-link-modal')?.classList.add('hidden');
+  }
+
+  function updateAdminLink() {
+    const base = document.getElementById('admin-link-base-url')?.value.trim();
+    const result = document.getElementById('admin-link-result');
+    if (!base) { result?.classList.add('hidden'); return; }
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url || !cfg?.supabase_anon_key) { result?.classList.add('hidden'); return; }
+    const hash = buildHashString(cfg);
+    const url = base.replace(/\/?$/, '') + '#' + hash;
+    const linkInput = document.getElementById('admin-link-url');
+    if (linkInput) linkInput.value = url;
+    result?.classList.remove('hidden');
+    document.getElementById('admin-link-copy-msg')?.classList.add('hidden');
+  }
+
+  async function copyAdminLink() {
+    const url = document.getElementById('admin-link-url')?.value;
+    if (!url) return;
+    const msg = document.getElementById('admin-link-copy-msg');
+    if (msg) { msg.textContent = '🔄 短縮URL生成中...'; msg.classList.remove('hidden'); }
+    const short = await shortenUrl(url);
+    const finalUrl = short || url;
+    try {
+      await navigator.clipboard.writeText(finalUrl);
+    } catch(e) {
+      document.getElementById('admin-link-url')?.select();
+    }
+    if (msg) {
+      msg.textContent = short ? `✅ 短縮URLをコピー: ${short}` : '✅ クリップボードにコピーしました';
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 3000);
+    }
   }
 
   // ─── 管理者：イベント個別リンクコピー ────────────────────────────────────
@@ -1125,14 +1213,48 @@
       }
 
       // 管理者モード
-      document.getElementById('settings-btn').addEventListener('click', openSetupModal);
+      const settingsBtnEl = document.getElementById('settings-btn');
+      const settingsMenuEl = document.getElementById('settings-menu');
+      if (settingsBtnEl && settingsMenuEl) {
+        settingsBtnEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          settingsMenuEl.classList.toggle('hidden');
+        });
+        document.addEventListener('click', (e) => {
+          if (!settingsMenuEl.contains(e.target) && !settingsBtnEl.contains(e.target)) {
+            settingsMenuEl.classList.add('hidden');
+          }
+        });
+        document.getElementById('open-setup-menu-btn')?.addEventListener('click', () => {
+          settingsMenuEl.classList.add('hidden');
+          openSetupModal();
+        });
+      }
       document.getElementById('create-event-btn').addEventListener('click', () => openCreateEventModal());
       document.getElementById('save-event-btn').addEventListener('click', saveEvent);
       document.getElementById('setup-save-btn').addEventListener('click', handleSetupSave);
 
-      const cfg = loadConfig();
       document.getElementById('admin-view').classList.remove('hidden');
 
+      // URLハッシュから接続設定を自動読み込み（管理者リンク経由）
+      if (location.hash) {
+        try {
+          const d = parseHashConfig();
+          if (d?.u && d?.k) {
+            const newCfg = { supabase_url: d.u, supabase_anon_key: d.k, team_name: d.t || '', primary_color: d.c || '#c0392b' };
+            saveConfig(newCfg);
+            history.replaceState(null, '', location.pathname + location.search);
+            applyConfig(newCfg);
+            if (initSupabase()) {
+              await loadPlayersMap();
+              await loadEvents();
+            }
+            return;
+          }
+        } catch(e) { console.warn('管理者リンク解析エラー:', e); }
+      }
+
+      const cfg = loadConfig();
       if (cfg?.supabase_url) {
         applyConfig(cfg);
         if (initSupabase()) {
