@@ -767,13 +767,19 @@
       modal.className = 'fixed inset-0 z-[100]';
       document.body.appendChild(modal);
     }
+    const _categoryTitle = [ev.category, ev.title].filter(Boolean).join('  ／  ');
+    const _dateShort = ev.event_date
+      ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' })
+      : '';
+    const _subtitle = [_dateShort, ev.event_time, ev.location].filter(Boolean).join('  ／  ');
+
     modal.innerHTML = `
       <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="document.getElementById('parent-result-modal').classList.add('hidden')"></div>
       <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
         <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
           <div class="min-w-0">
-            <h2 class="text-lg font-black truncate">${escHtml(ev.title)}</h2>
-            <p class="text-sm text-white/80 mt-0.5">📊 回答結果</p>
+            <h2 class="text-xl font-black truncate leading-tight">${escHtml(_categoryTitle)}</h2>
+            ${_subtitle ? `<p class="text-sm text-white/80 mt-1">${escHtml(_subtitle)}</p>` : ''}
           </div>
           <button onclick="document.getElementById('parent-result-modal').classList.add('hidden')" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
         </div>
