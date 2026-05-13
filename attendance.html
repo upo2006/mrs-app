@@ -81,20 +81,13 @@
 
   <!-- 管理者ビュー -->
   <main id="admin-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-3">
-    <div class="flex items-center justify-between py-2 gap-2 flex-wrap">
+    <div class="flex items-center justify-between py-2">
       <h2 class="text-base font-black text-gray-700">📅 イベント一覧</h2>
-      <div class="flex gap-2">
-        <button id="copy-parent-list-btn" type="button"
-          class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors">
-          🔗 保護者リンク
-        </button>
-        <button id="create-event-btn" type="button"
-          class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
-          ＋ 新規作成
-        </button>
-      </div>
+      <button id="create-event-btn" type="button"
+        class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
+        ＋ 新規作成
+      </button>
     </div>
-    <p id="parent-list-copy-msg" class="hidden text-xs text-green-600 font-medium text-center py-1 bg-green-50 rounded-xl">✅ 保護者一覧リンクをコピーしました</p>
     <div id="event-list"></div>
   </main>
 
@@ -250,22 +243,6 @@
         </div>
       </div>
     </div>
-    <!-- アクション -->
-    <div class="px-4 py-3 flex gap-2 border-b border-gray-100 flex-wrap">
-      <button id="detail-share-btn" type="button"
-        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-xl text-sm transition-colors">
-        🔗 回答リンクをコピー
-      </button>
-      <button id="detail-edit-btn" type="button"
-        class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors">
-        ✏️ 編集
-      </button>
-      <button id="detail-delete-btn" type="button"
-        class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 px-4 rounded-xl text-sm transition-colors">
-        🗑️ 削除
-      </button>
-    </div>
-    <p id="detail-share-msg" class="hidden text-xs text-green-600 font-medium text-center py-2 bg-green-50">✅ リンクをクリップボードにコピーしました</p>
     <!-- 回答一覧（テーブル） -->
     <div class="p-4 overflow-x-auto">
       <div id="response-list"></div>
@@ -396,7 +373,7 @@
     el.innerHTML = `<div class="space-y-3">${events.map(ev => {
       const count   = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
       const dateStr = formatDate(ev.event_date);
-      return `<div class="bg-white rounded-2xl shadow p-4">
+      return `<div class="bg-white rounded-2xl shadow p-4" data-event-id="${ev.id}">
         <div class="mb-3">
           <div class="flex items-center gap-2 flex-wrap mb-1">
             ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${ev.category}</span>` : ''}
@@ -409,21 +386,66 @@
           </div>
           ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
         </div>
-        <div class="flex gap-2 items-center">
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <button onclick="copyEventShareLink('${ev.id}')"
+            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">
+            🔗 リンクをコピー
+          </button>
           <button onclick="openDetail('${ev.id}')"
-            class="flex-1 bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">
-            📊 回答確認（${count}件）
+            class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-colors">
+            📊 回答を確認（${count}件）
           </button>
           <button onclick="openCreateEventModal('${ev.id}')"
-            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-colors">
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs transition-colors">
             ✏️ 編集
+          </button>
+          <button onclick="deleteEventById('${ev.id}')"
+            class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs transition-colors">
+            🗑️ 削除
           </button>
         </div>
       </div>`;
     }).join('')}</div>`;
   }
 
-  // ─── 管理者：保護者リンクコピー ───────────────────────────────────────────
+  // ─── 管理者：イベント個別リンクコピー ────────────────────────────────────
+  async function copyEventShareLink(eventId) {
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url) { alert('設定が見つかりません'); return; }
+    const hash = buildHashString(cfg);
+    const url  = `${getBaseUrl()}?respond=${eventId}#${hash}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch(e) {
+      prompt('以下のリンクをコピーしてください', url); return;
+    }
+    // コピー完了メッセージをカード内に表示
+    showCardMsg(eventId, '✅ リンクをコピーしました');
+  }
+
+  function showCardMsg(eventId, msg) {
+    const id = `card-msg-${eventId}`;
+    let el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement('p');
+      el.id = id;
+      el.className = 'text-xs text-green-600 font-medium text-center mt-1';
+      const card = document.querySelector(`[data-event-id="${eventId}"]`);
+      if (card) card.appendChild(el);
+    }
+    el.textContent = msg;
+    setTimeout(() => { el.textContent = ''; }, 2500);
+  }
+
+  // ─── 管理者：イベント削除（カードから直接） ───────────────────────────────
+  async function deleteEventById(eventId) {
+    if (!confirm('このイベントと全ての回答を削除しますか？\nこの操作は取り消せません。')) return;
+    const { error } = await supabaseClient.from(TABLE_EVENTS).delete().eq('id', eventId);
+    if (error) { alert('削除に失敗しました: ' + error.message); return; }
+    await loadEvents();
+  }
+
+  // ─── 管理者：保護者一覧リンクコピー ──────────────────────────────────────
   async function copyParentListLink() {
     const cfg = loadConfig();
     if (!cfg?.supabase_url) { alert('設定が見つかりません'); return; }
@@ -1053,16 +1075,8 @@
       // 管理者モード
       document.getElementById('settings-btn').addEventListener('click', openSetupModal);
       document.getElementById('create-event-btn').addEventListener('click', () => openCreateEventModal());
-      document.getElementById('copy-parent-list-btn').addEventListener('click', copyParentListLink);
       document.getElementById('save-event-btn').addEventListener('click', saveEvent);
       document.getElementById('setup-save-btn').addEventListener('click', handleSetupSave);
-      document.getElementById('detail-share-btn').addEventListener('click', copyShareLink);
-      document.getElementById('detail-edit-btn').addEventListener('click', () => {
-        const id = currentEventId;
-        closeDetailModal();
-        openCreateEventModal(id);
-      });
-      document.getElementById('detail-delete-btn').addEventListener('click', deleteEvent);
 
       const cfg = loadConfig();
       document.getElementById('admin-view').classList.remove('hidden');
