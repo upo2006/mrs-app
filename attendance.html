@@ -151,7 +151,7 @@
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCreateEventModal()"></div>
   <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
     <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-      <h2 id="create-modal-title" class="text-xl font-black">📅 イベントを作成</h2>
+      <h2 id="create-modal-title" class="text-xl font-black">⚽ イベントを作成</h2>
       <button onclick="closeCreateEventModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
     </div>
     <div class="p-6 space-y-4">
@@ -217,8 +217,8 @@
   <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
     <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
       <div class="min-w-0">
-        <h2 id="detail-title" class="text-xl font-black truncate"></h2>
-        <p id="detail-subtitle" class="text-sm text-white/80 mt-0.5 truncate"></p>
+        <h2 id="detail-title" class="text-xl font-black truncate leading-tight"></h2>
+        <p id="detail-subtitle" class="text-sm text-white/80 mt-1"></p>
       </div>
       <button onclick="closeDetailModal()" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
     </div>
@@ -378,12 +378,12 @@
       const dateStr = formatDate(ev.event_date);
       return `<div class="bg-white rounded-2xl shadow p-4" data-event-id="${ev.id}">
         <div class="mb-3">
-          <div class="flex items-center gap-2 flex-wrap mb-1">
-            ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${ev.category}</span>` : ''}
-            <p class="font-black text-gray-800">${escHtml(ev.title)}</p>
-          </div>
+          <p class="font-black text-gray-800 mb-1.5">
+            ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}
+          </p>
           <div class="text-sm text-gray-500 space-y-0.5">
-            ${dateStr ? `<p>📆 ${escHtml(dateStr)}${ev.event_time ? ' ' + escHtml(ev.event_time) : ''}</p>` : ''}
+            ${dateStr ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
+            ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
             ${ev.location ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
             ${ev.transport ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
           </div>
@@ -467,7 +467,7 @@
   // ─── 管理者：イベント作成 / 編集 ─────────────────────────────────────────
   function openCreateEventModal(eventId = null) {
     document.getElementById('edit-event-id').value = eventId || '';
-    document.getElementById('create-modal-title').textContent = eventId ? '📅 イベントを編集' : '📅 イベントを作成';
+    document.getElementById('create-modal-title').textContent = eventId ? '⚽ イベントを編集' : '⚽ イベントを作成';
     document.getElementById('create-event-status').classList.add('hidden');
 
     if (eventId) {
@@ -535,9 +535,16 @@
     const ev = events.find(e => e.id === eventId);
     if (!ev) return;
 
-    document.getElementById('detail-title').textContent    = ev.title;
+    // 1行目：カテゴリ ／ タイトル
+    const titleEl = document.getElementById('detail-title');
+    titleEl.textContent = [ev.category, ev.title].filter(Boolean).join('  ／  ');
+
+    // 2行目：日付（月日（曜））／ 時間 ／ 場所
+    const dateShort = ev.event_date
+      ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' })
+      : '';
     document.getElementById('detail-subtitle').textContent =
-      [formatDate(ev.event_date), ev.event_time, ev.location].filter(Boolean).join(' ・ ');
+      [dateShort, ev.event_time, ev.location].filter(Boolean).join('  ／  ');
 
     const { data: responses, error } = await supabaseClient
       .from(TABLE_RESPONSES)
@@ -658,12 +665,12 @@
       listEl.innerHTML = `<div class="space-y-3">${data.map(ev => `
         <div class="bg-white rounded-2xl shadow p-4">
           <div class="mb-3">
-            <div class="flex items-center gap-2 flex-wrap mb-1">
-              ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${ev.category}</span>` : ''}
-              <p class="font-black text-gray-800">${escHtml(ev.title)}</p>
-            </div>
+            <p class="font-black text-gray-800 mb-1.5">
+              ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}
+            </p>
             <div class="text-sm text-gray-500 space-y-0.5">
-              ${ev.event_date ? `<p>📆 ${formatDate(ev.event_date)}${ev.event_time ? ' ' + escHtml(ev.event_time) : ''}</p>` : ''}
+              ${ev.event_date ? `<p>📆 ${formatDate(ev.event_date)}</p>` : ''}
+              ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
               ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
               ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
             </div>
