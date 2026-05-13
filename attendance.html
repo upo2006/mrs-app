@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="ja" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>出欠確認システム</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:      #c0392b;
+      --primary-dark: #922b21;
+      --primary-mid:  #a93226;
+      --primary-light:#e74c3c;
+    }
+    * { font-family: 'Noto Sans JP', sans-serif; }
+    body { box-sizing: border-box; }
+
+    .bg-red-500, .hover\:bg-red-500:hover   { background-color: var(--primary)      !important; }
+    .bg-red-600, .hover\:bg-red-600:hover   { background-color: var(--primary-mid)  !important; }
+    .bg-red-700, .hover\:bg-red-700:hover   { background-color: var(--primary-dark) !important; }
+    .from-red-700 { --tw-gradient-from: var(--primary-dark) !important; }
+    .from-red-600 { --tw-gradient-from: var(--primary-mid)  !important; }
+    .to-red-500   { --tw-gradient-to:   var(--primary)      !important; }
+    .to-red-600   { --tw-gradient-to:   var(--primary-mid)  !important; }
+    .text-red-600 { color: var(--primary-mid) !important; }
+    .text-red-500 { color: var(--primary)     !important; }
+    .focus\:ring-red-500:focus { --tw-ring-color: var(--primary) !important; }
+    .border-red-500 { border-color: var(--primary) !important; }
+
+    /* ラジオボタン */
+    .radio-btn {
+      width: 100%; padding: 0.75rem 0.5rem; border-radius: 0.75rem;
+      border: 2px solid #e5e7eb; background: #fff; color: #4b5563;
+      font-weight: 700; font-size: 0.875rem; cursor: pointer;
+      transition: all 0.15s; text-align: center; display: block;
+    }
+    .radio-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+    .radio-btn[data-selected="1"][data-color="green"]  { border-color:#22c55e; background:#f0fdf4; color:#15803d; }
+    .radio-btn[data-selected="1"][data-color="red"]    { border-color:#ef4444; background:#fef2f2; color:#dc2626; }
+    .radio-btn[data-selected="1"][data-color="blue"]   { border-color:#3b82f6; background:#eff6ff; color:#1d4ed8; }
+    .radio-btn[data-selected="1"][data-color="amber"]  { border-color:#f59e0b; background:#fffbeb; color:#b45309; }
+    .radio-btn[data-selected="1"][data-color="gray"]   { border-color:#6b7280; background:#f9fafb; color:#374151; }
+    .radio-btn[data-selected="1"][data-color="purple"] { border-color:#8b5cf6; background:#f5f3ff; color:#6d28d9; }
+  </style>
+</head>
+<body class="h-full bg-gray-50">
+<div id="app" class="min-h-full">
+
+  <!-- ローディング -->
+  <div id="loading-screen" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+    <div class="text-center space-y-3">
+      <div class="text-5xl">📋</div>
+      <p class="text-gray-400 text-sm font-medium">読み込み中...</p>
+    </div>
+  </div>
+
+  <!-- ヘッダー -->
+  <header class="p-4">
+    <div class="max-w-[750px] mx-auto bg-gradient-to-r from-red-700 to-red-600 text-white p-5 shadow-lg rounded-2xl">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">📋</span>
+        <div class="flex-1 min-w-0">
+          <h1 id="app-team-name" class="text-xl font-black leading-tight truncate">出欠確認システム</h1>
+          <p class="text-xs text-white/80 tracking-widest mt-0.5">ATTENDANCE SYSTEM</p>
+        </div>
+        <button id="settings-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors shrink-0">⚙️</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 管理者ビュー -->
+  <main id="admin-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-3">
+    <div class="flex items-center justify-between py-2">
+      <h2 class="text-base font-black text-gray-700">📅 イベント一覧</h2>
+      <button id="create-event-btn" type="button"
+        class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
+        ＋ 新規作成
+      </button>
+    </div>
+    <div id="event-list"></div>
+  </main>
+
+  <!-- 回答ビュー（保護者） -->
+  <main id="respond-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-4">
+    <div id="event-info-card" class="bg-white rounded-2xl shadow p-5"></div>
+    <div id="form-container"></div>
+  </main>
+
+</div><!-- /app -->
+
+<!-- ══ 接続設定モーダル ══════════════════════════════════════════════ -->
+<div id="setup-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl">
+      <h2 class="text-xl font-black">⚙️ 接続設定</h2>
+      <p class="text-sm text-white/80 mt-1">Supabaseの接続情報を入力してください</p>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">チーム名 <span class="text-red-500">*</span></label>
+        <input type="text" id="setup-team-name" placeholder="○○サッカースクール"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+      </div>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">Supabase URL <span class="text-red-500">*</span></label>
+        <input type="url" id="setup-url" placeholder="https://xxxxxxxxxx.supabase.co"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-red-500" spellcheck="false">
+      </div>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">anon public キー <span class="text-red-500">*</span></label>
+        <input type="text" id="setup-anon-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-red-500" spellcheck="false">
+      </div>
+      <div id="setup-status" class="hidden text-sm rounded-lg px-4 py-3 font-medium"></div>
+      <button id="setup-save-btn" type="button"
+        class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-xl transition-colors">
+        <span id="setup-save-text">接続テスト＆保存</span>
+        <span id="setup-save-loading" class="hidden">接続テスト中...</span>
+      </button>
+      <p class="text-xs text-gray-400 text-center">MRSアプリと同じSupabaseプロジェクトを使う場合、<br>同じURL・キーを入力してください</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ イベント作成／編集モーダル ══════════════════════════════════════ -->
+<div id="create-event-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCreateEventModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+      <h2 id="create-modal-title" class="text-xl font-black">📅 イベントを作成</h2>
+      <button onclick="closeCreateEventModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="edit-event-id">
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">タイトル <span class="text-red-500">*</span></label>
+        <input type="text" id="ev-title" placeholder="例：U11 5.10 試合"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-1">日付 <span class="text-red-500">*</span></label>
+          <input type="date" id="ev-date"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-1">時間</label>
+          <input type="text" id="ev-time" placeholder="例：AM / 13:00〜"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-1">カテゴリ</label>
+          <select id="ev-category"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <option value="">未設定</option>
+            <option value="U7">U7</option>
+            <option value="U8">U8</option>
+            <option value="U9">U9</option>
+            <option value="U10">U10</option>
+            <option value="U11">U11</option>
+            <option value="U12">U12</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-1">移動手段</label>
+          <input type="text" id="ev-transport" placeholder="例：車"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">場所</label>
+        <input type="text" id="ev-location" placeholder="例：伊丹市立桜台小学校"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+      </div>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">メモ（保護者へのお知らせ）</label>
+        <textarea id="ev-memo" rows="2" placeholder="任意"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"></textarea>
+      </div>
+      <div id="create-event-status" class="hidden text-sm rounded-lg px-4 py-3 font-medium"></div>
+      <button id="save-event-btn" type="button"
+        class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-xl transition-colors">
+        <span id="save-event-text">保存する</span>
+        <span id="save-event-loading" class="hidden">保存中...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ イベント詳細モーダル ══════════════════════════════════════════ -->
+<div id="detail-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeDetailModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+      <div class="min-w-0">
+        <h2 id="detail-title" class="text-xl font-black truncate"></h2>
+        <p id="detail-subtitle" class="text-sm text-white/80 mt-0.5 truncate"></p>
+      </div>
+      <button onclick="closeDetailModal()" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
+    </div>
+    <!-- 集計 -->
+    <div class="px-4 py-4 bg-gray-50 border-b border-gray-200">
+      <div class="grid grid-cols-4 gap-2 text-center">
+        <div class="bg-white rounded-xl p-3 shadow-sm">
+          <p class="text-xs text-gray-400 mb-1">回答数</p>
+          <p id="summary-total" class="text-2xl font-black text-gray-700">0</p>
+        </div>
+        <div class="bg-green-50 rounded-xl p-3">
+          <p class="text-xs text-gray-400 mb-1">出席</p>
+          <p id="summary-attend" class="text-2xl font-black text-green-600">0</p>
+        </div>
+        <div class="bg-blue-50 rounded-xl p-3">
+          <p class="text-xs text-gray-400 mb-1">乗せて欲しい</p>
+          <p id="summary-need-ride" class="text-2xl font-black text-blue-600">0</p>
+        </div>
+        <div class="bg-amber-50 rounded-xl p-3">
+          <p class="text-xs text-gray-400 mb-1">配車できる</p>
+          <p id="summary-can-drive" class="text-2xl font-black text-amber-600">0</p>
+        </div>
+      </div>
+    </div>
+    <!-- アクション -->
+    <div class="px-4 py-3 flex gap-2 border-b border-gray-100 flex-wrap">
+      <button id="detail-share-btn" type="button"
+        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-xl text-sm transition-colors">
+        🔗 回答リンクをコピー
+      </button>
+      <button id="detail-edit-btn" type="button"
+        class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors">
+        ✏️ 編集
+      </button>
+      <button id="detail-delete-btn" type="button"
+        class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 px-4 rounded-xl text-sm transition-colors">
+        🗑️ 削除
+      </button>
+    </div>
+    <p id="detail-share-msg" class="hidden text-xs text-green-600 font-medium text-center py-2 bg-green-50">✅ リンクをクリップボードにコピーしました</p>
+    <!-- 回答一覧 -->
+    <div class="p-4">
+      <div id="response-list" class="space-y-2"></div>
+      <p id="no-responses" class="hidden text-center text-gray-400 text-sm py-8">まだ回答がありません</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── 定数・設定 ──────────────────────────────────────────────────────────
+  const STORAGE_CONFIG_KEY = 'mrs_app_config_v1';
+  const STORAGE_TEAMS_KEY  = 'mrs_teams_v1';
+  const STORAGE_ACTIVE_KEY = 'mrs_active_team_v1';
+  const TABLE_EVENTS    = 'attendance_events';
+  const TABLE_RESPONSES = 'attendance_responses';
+
+  let SUPABASE_CONFIG = { url: '', anonKey: '' };
+  let supabaseClient  = null;
+  let events = [];
+  let currentEventId = null;
+
+  const respondEventId = new URLSearchParams(location.search).get('respond');
+  const isRespondMode  = !!respondEventId;
+
+  // ─── Config ──────────────────────────────────────────────────────────────
+  function loadConfig() {
+    try {
+      const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+      const activeId = localStorage.getItem(STORAGE_ACTIVE_KEY);
+      const active = teams.find(t => t.id === activeId) || teams[0];
+      if (active?.supabase_url) {
+        return { supabase_url: active.supabase_url, supabase_anon_key: active.supabase_anon_key, team_name: active.team_name, primary_color: active.primary_color };
+      }
+      const raw = localStorage.getItem(STORAGE_CONFIG_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+  }
+
+  function saveConfig(cfg) {
+    try { localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(cfg)); } catch(e) {}
+  }
+
+  function applyConfig(cfg) {
+    if (!cfg) return;
+    if (cfg.team_name) document.getElementById('app-team-name').textContent = cfg.team_name + ' 出欠確認';
+    if (cfg.primary_color) applyColor(cfg.primary_color);
+    if (cfg.supabase_url)      SUPABASE_CONFIG.url     = cfg.supabase_url;
+    if (cfg.supabase_anon_key) SUPABASE_CONFIG.anonKey = cfg.supabase_anon_key;
+  }
+
+  function applyColor(hex) {
+    if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    const dark = `rgb(${Math.round(r*.75)},${Math.round(g*.75)},${Math.round(b*.75)})`;
+    const mid  = `rgb(${Math.round(r*.88)},${Math.round(g*.88)},${Math.round(b*.88)})`;
+    const root = document.documentElement;
+    root.style.setProperty('--primary', hex);
+    root.style.setProperty('--primary-dark', dark);
+    root.style.setProperty('--primary-mid', mid);
+  }
+
+  // ─── Supabase ─────────────────────────────────────────────────────────────
+  function initSupabase() {
+    if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) return false;
+    supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    return true;
+  }
+
+  // ─── 管理者：イベント一覧 ─────────────────────────────────────────────────
+  async function loadEvents() {
+    const { data, error } = await supabaseClient
+      .from(TABLE_EVENTS)
+      .select(`*, ${TABLE_RESPONSES}(count)`)
+      .order('event_date', { ascending: false });
+    if (error) { console.error('loadEvents:', error); return; }
+    events = data || [];
+    renderEvents();
+  }
+
+  function renderEvents() {
+    const el = document.getElementById('event-list');
+    if (events.length === 0) {
+      el.innerHTML = '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow">イベントがありません<br><span class="text-xs mt-1 block">「新規作成」からイベントを追加してください</span></div>';
+      return;
+    }
+    el.innerHTML = events.map(ev => {
+      const count   = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
+      const dateStr = formatDate(ev.event_date);
+      return `<div class="bg-white rounded-2xl shadow p-4 cursor-pointer hover:bg-gray-50 transition-colors active:bg-gray-100"
+          onclick="openDetail('${ev.id}')">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${ev.category}</span>` : ''}
+              <p class="font-black text-gray-800">${escHtml(ev.title)}</p>
+            </div>
+            <p class="text-sm text-gray-500 truncate">
+              ${[dateStr, ev.event_time, ev.location].filter(Boolean).map(escHtml).join(' ・ ')}
+            </p>
+          </div>
+          <div class="shrink-0 text-right">
+            <p class="text-2xl font-black text-red-600">${count}</p>
+            <p class="text-xs text-gray-400">回答</p>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ─── 管理者：イベント作成 / 編集 ─────────────────────────────────────────
+  function openCreateEventModal(eventId = null) {
+    document.getElementById('edit-event-id').value = eventId || '';
+    document.getElementById('create-modal-title').textContent = eventId ? '📅 イベントを編集' : '📅 イベントを作成';
+    document.getElementById('create-event-status').classList.add('hidden');
+
+    if (eventId) {
+      const ev = events.find(e => e.id === eventId);
+      if (ev) {
+        document.getElementById('ev-title').value     = ev.title || '';
+        document.getElementById('ev-date').value      = ev.event_date || '';
+        document.getElementById('ev-time').value      = ev.event_time || '';
+        document.getElementById('ev-category').value  = ev.category || '';
+        document.getElementById('ev-transport').value = ev.transport || '';
+        document.getElementById('ev-location').value  = ev.location || '';
+        document.getElementById('ev-memo').value      = ev.memo || '';
+      }
+    } else {
+      ['ev-title','ev-date','ev-time','ev-transport','ev-location','ev-memo'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('ev-category').value = '';
+    }
+    document.getElementById('create-event-modal').classList.remove('hidden');
+  }
+
+  function closeCreateEventModal() {
+    document.getElementById('create-event-modal').classList.add('hidden');
+  }
+
+  async function saveEvent() {
+    const btn     = document.getElementById('save-event-btn');
+    const txt     = document.getElementById('save-event-text');
+    const load    = document.getElementById('save-event-loading');
+    const statusEl = document.getElementById('create-event-status');
+    const editId  = document.getElementById('edit-event-id').value;
+
+    const title = document.getElementById('ev-title').value.trim();
+    const date  = document.getElementById('ev-date').value;
+    if (!title) { setStatus(statusEl, 'タイトルを入力してください', 'error'); return; }
+    if (!date)  { setStatus(statusEl, '日付を入力してください', 'error'); return; }
+
+    btn.disabled = true; txt.classList.add('hidden'); load.classList.remove('hidden');
+
+    const payload = {
+      title,
+      event_date: date,
+      event_time: document.getElementById('ev-time').value.trim()      || null,
+      category:   document.getElementById('ev-category').value          || null,
+      transport:  document.getElementById('ev-transport').value.trim()  || null,
+      location:   document.getElementById('ev-location').value.trim()   || null,
+      memo:       document.getElementById('ev-memo').value.trim()       || null,
+    };
+
+    const { error } = editId
+      ? await supabaseClient.from(TABLE_EVENTS).update(payload).eq('id', editId)
+      : await supabaseClient.from(TABLE_EVENTS).insert(payload);
+
+    btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
+
+    if (error) { setStatus(statusEl, '保存に失敗しました: ' + error.message, 'error'); return; }
+    closeCreateEventModal();
+    await loadEvents();
+  }
+
+  // ─── 管理者：詳細モーダル ─────────────────────────────────────────────────
+  async function openDetail(eventId) {
+    currentEventId = eventId;
+    const ev = events.find(e => e.id === eventId);
+    if (!ev) return;
+
+    document.getElementById('detail-title').textContent    = ev.title;
+    document.getElementById('detail-subtitle').textContent =
+      [formatDate(ev.event_date), ev.event_time, ev.location].filter(Boolean).join(' ・ ');
+    document.getElementById('detail-share-msg').classList.add('hidden');
+
+    // 回答取得
+    const { data: responses, error } = await supabaseClient
+      .from(TABLE_RESPONSES)
+      .select('*')
+      .eq('event_id', eventId)
+      .order('jersey_number');
+
+    if (error) { console.error(error); return; }
+
+    // 集計
+    document.getElementById('summary-total').textContent     = responses.length;
+    document.getElementById('summary-attend').textContent    = responses.filter(r => r.attendance    === '出席').length;
+    document.getElementById('summary-need-ride').textContent = responses.filter(r => r.transport_need === '乗せて欲しい').length;
+    document.getElementById('summary-can-drive').textContent = responses.filter(r => r.carpool       === 'できる').length;
+
+    // 一覧
+    const listEl = document.getElementById('response-list');
+    const noEl   = document.getElementById('no-responses');
+    if (responses.length === 0) {
+      listEl.innerHTML = ''; noEl.classList.remove('hidden');
+    } else {
+      noEl.classList.add('hidden');
+      listEl.innerHTML = responses.map(r => {
+        const attendBadge = { '出席':'bg-green-100 text-green-700', '欠席':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' }[r.attendance] || 'bg-gray-100 text-gray-500';
+        const rideBadge   = r.transport_need === '乗せて欲しい' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500';
+        const driveBadge  = r.carpool === 'できる' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500';
+        return `<div class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl flex-wrap">
+          <span class="font-black text-gray-800 w-10 text-center text-sm">#${escHtml(r.jersey_number)}</span>
+          <span class="text-xs font-bold px-2 py-1 rounded-full ${attendBadge}">${r.attendance}</span>
+          <span class="text-xs font-medium px-2 py-1 rounded-full ${rideBadge}">送迎:${r.transport_need}</span>
+          <span class="text-xs font-medium px-2 py-1 rounded-full ${driveBadge}">配車:${r.carpool}</span>
+          ${r.notes ? `<span class="text-xs text-gray-400 flex-1 min-w-full mt-1 pl-12">📝 ${escHtml(r.notes)}</span>` : ''}
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('detail-modal').classList.remove('hidden');
+  }
+
+  function closeDetailModal() {
+    document.getElementById('detail-modal').classList.add('hidden');
+    currentEventId = null;
+  }
+
+  async function deleteEvent() {
+    if (!currentEventId) return;
+    if (!confirm('このイベントと全ての回答を削除しますか？\nこの操作は取り消せません。')) return;
+    const { error } = await supabaseClient.from(TABLE_EVENTS).delete().eq('id', currentEventId);
+    if (error) { alert('削除に失敗しました: ' + error.message); return; }
+    closeDetailModal();
+    await loadEvents();
+  }
+
+  async function copyShareLink() {
+    if (!currentEventId) return;
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url) { alert('設定が見つかりません'); return; }
+    const base = (location.protocol === 'file:' || location.origin === 'null')
+      ? '' : location.origin + location.pathname;
+    const payload = { u: cfg.supabase_url, k: cfg.supabase_anon_key, t: cfg.team_name || '', c: cfg.primary_color || '#c0392b' };
+    const hash = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    const url  = `${base}?respond=${currentEventId}#${hash}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch(e) {
+      prompt('以下のリンクをコピーしてください', url);
+      return;
+    }
+    const msg = document.getElementById('detail-share-msg');
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 3000);
+  }
+
+  // ─── 回答モード ───────────────────────────────────────────────────────────
+  async function initRespondMode() {
+    document.getElementById('settings-btn').classList.add('hidden');
+
+    // URLハッシュからSupabase設定を復元
+    const hash = location.hash.slice(1);
+    if (hash) {
+      try {
+        const d = JSON.parse(decodeURIComponent(escape(atob(hash))));
+        if (d.u) SUPABASE_CONFIG.url     = d.u;
+        if (d.k) SUPABASE_CONFIG.anonKey = d.k;
+        if (d.t) document.getElementById('app-team-name').textContent = d.t + ' 出欠確認';
+        if (d.c) applyColor(d.c);
+      } catch(e) { console.warn('設定解析エラー', e); }
+    }
+
+    if (!initSupabase()) {
+      showFatalError('設定情報が不正です。管理者にお問い合わせください。'); return;
+    }
+
+    // イベント情報取得
+    const { data: ev, error } = await supabaseClient
+      .from(TABLE_EVENTS).select('*').eq('id', respondEventId).single();
+
+    if (error || !ev) {
+      showFatalError('イベントが見つかりません。URLを確認してください。'); return;
+    }
+
+    // イベント情報カード
+    document.getElementById('event-info-card').innerHTML = `
+      <h2 class="text-lg font-black text-gray-800 mb-3">📅 ${escHtml(ev.title)}</h2>
+      <div class="space-y-1.5 text-sm text-gray-600">
+        ${ev.event_date ? `<p>📆 ${formatDate(ev.event_date)}</p>` : ''}
+        ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
+        ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>`   : ''}
+        ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
+        ${ev.memo       ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
+      </div>`;
+
+    renderRespondForm(respondEventId);
+    document.getElementById('respond-view').classList.remove('hidden');
+  }
+
+  function renderRespondForm(eventId) {
+    document.getElementById('form-container').innerHTML = `
+      <form id="attend-form" class="bg-white rounded-2xl shadow p-5 space-y-6">
+
+        <div>
+          <label class="block text-gray-700 font-bold mb-2">背番号 <span class="text-red-500">*</span></label>
+          <input type="number" id="f-jersey" min="1" max="99" inputmode="numeric"
+            class="w-28 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-red-400 text-2xl font-black text-center"
+            placeholder="10">
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-bold mb-3">出欠確認 <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2">
+            ${radios('f-attend', [{v:'出席',i:'✅',c:'green'},{v:'欠席',i:'❌',c:'red'},{v:'未定',i:'❓',c:'gray'}])}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-bold mb-3">送迎について <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2">
+            ${radios('f-transport', [{v:'大丈夫',i:'👍',c:'gray'},{v:'乗せて欲しい',i:'🙏',c:'blue'},{v:'未定',i:'❓',c:'gray'}])}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-bold mb-3">配車について <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2">
+            ${radios('f-carpool', [{v:'できる',i:'🚗',c:'amber'},{v:'難しい',i:'🚫',c:'red'},{v:'未定',i:'❓',c:'gray'}])}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-bold mb-2">備考（何かあれば）</label>
+          <input type="text" id="f-notes" placeholder="自由入力"
+            class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-red-400">
+        </div>
+
+        <div id="form-status" class="hidden text-sm rounded-xl px-4 py-3 font-medium"></div>
+
+        <button type="button" id="submit-btn" onclick="submitResponse('${eventId}')"
+          class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl text-lg transition-colors">
+          <span id="submit-text">回答を送信する</span>
+          <span id="submit-loading" class="hidden">送信中...</span>
+        </button>
+      </form>`;
+
+    // ラジオボタンのクリックイベント
+    document.querySelectorAll('.radio-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        document.querySelectorAll(`.radio-btn[data-name="${name}"]`).forEach(b => {
+          b.dataset.selected = (b === btn) ? '1' : '0';
+        });
+      });
+    });
+  }
+
+  function radios(name, opts) {
+    return opts.map(o =>
+      `<button type="button" class="radio-btn" data-name="${name}" data-value="${o.v}" data-color="${o.c}" data-selected="0">
+        ${o.i}<br>${o.v}
+      </button>`
+    ).join('');
+  }
+
+  function getRadioValue(name) {
+    return document.querySelector(`.radio-btn[data-name="${name}"][data-selected="1"]`)?.dataset.value || null;
+  }
+
+  async function submitResponse(eventId) {
+    const btn      = document.getElementById('submit-btn');
+    const statusEl = document.getElementById('form-status');
+
+    const jersey    = document.getElementById('f-jersey').value.trim();
+    const attend    = getRadioValue('f-attend');
+    const transport = getRadioValue('f-transport');
+    const carpool   = getRadioValue('f-carpool');
+
+    if (!jersey)    { setStatus(statusEl, '背番号を入力してください', 'error'); return; }
+    if (!attend)    { setStatus(statusEl, '出欠確認を選択してください', 'error'); return; }
+    if (!transport) { setStatus(statusEl, '送迎について選択してください', 'error'); return; }
+    if (!carpool)   { setStatus(statusEl, '配車について選択してください', 'error'); return; }
+
+    btn.disabled = true;
+    document.getElementById('submit-text').classList.add('hidden');
+    document.getElementById('submit-loading').classList.remove('hidden');
+
+    const { error } = await supabaseClient
+      .from(TABLE_RESPONSES)
+      .upsert({
+        event_id:       eventId,
+        jersey_number:  jersey,
+        attendance:     attend,
+        transport_need: transport,
+        carpool,
+        notes: document.getElementById('f-notes').value.trim() || null,
+      }, { onConflict: 'event_id,jersey_number' });
+
+    btn.disabled = false;
+    document.getElementById('submit-text').classList.remove('hidden');
+    document.getElementById('submit-loading').classList.add('hidden');
+
+    if (error) {
+      setStatus(statusEl, '送信に失敗しました。もう一度お試しください。', 'error');
+      console.error(error);
+      return;
+    }
+
+    // 完了画面
+    document.getElementById('form-container').innerHTML = `
+      <div class="bg-white rounded-2xl shadow p-10 text-center space-y-4">
+        <div class="text-6xl">✅</div>
+        <h3 class="text-xl font-black text-gray-800">回答を送信しました</h3>
+        <p class="text-gray-400 text-sm">ありがとうございました</p>
+        <button type="button" onclick="renderRespondForm('${eventId}')"
+          class="mt-2 text-sm text-red-500 underline">回答を修正する</button>
+      </div>`;
+  }
+
+  // ─── 接続設定 ─────────────────────────────────────────────────────────────
+  function openSetupModal() {
+    const cfg = loadConfig();
+    if (cfg) {
+      document.getElementById('setup-team-name').value = cfg.team_name || '';
+      document.getElementById('setup-url').value       = cfg.supabase_url || '';
+      document.getElementById('setup-anon-key').value  = cfg.supabase_anon_key || '';
+    }
+    document.getElementById('setup-status').classList.add('hidden');
+    document.getElementById('setup-modal').classList.remove('hidden');
+  }
+
+  async function handleSetupSave() {
+    const btn      = document.getElementById('setup-save-btn');
+    const txt      = document.getElementById('setup-save-text');
+    const load     = document.getElementById('setup-save-loading');
+    const statusEl = document.getElementById('setup-status');
+
+    const teamName = document.getElementById('setup-team-name').value.trim();
+    const url      = document.getElementById('setup-url').value.trim();
+    const key      = document.getElementById('setup-anon-key').value.trim();
+
+    if (!teamName) { setStatus(statusEl, 'チーム名を入力してください', 'error'); return; }
+    if (!url || !url.startsWith('https://')) { setStatus(statusEl, 'URLを正しく入力してください（https://...）', 'error'); return; }
+    if (!key || !key.startsWith('eyJ'))       { setStatus(statusEl, 'anon キーを確認してください', 'error'); return; }
+
+    btn.disabled = true; txt.classList.add('hidden'); load.classList.remove('hidden');
+    setStatus(statusEl, '接続テスト中...', 'info');
+
+    let testOk = false;
+    try {
+      const res = await fetch(`${url.replace(/\/$/, '')}/rest/v1/${TABLE_EVENTS}?select=id&limit=1`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` }
+      });
+      if (res.status === 401 || res.status === 403) {
+        setStatus(statusEl, '認証エラー：anon キーを確認してください', 'error');
+      } else if (res.status === 404) {
+        setStatus(statusEl, 'テーブルが見つかりません。先にSQLを実行してください', 'error');
+      } else {
+        testOk = true;
+      }
+    } catch(e) {
+      setStatus(statusEl, '接続できませんでした。URLを確認してください', 'error');
+    }
+
+    btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
+    if (!testOk) return;
+
+    const cfg = { team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: '#c0392b' };
+    saveConfig(cfg);
+    applyConfig(cfg);
+    supabaseClient = null;
+    initSupabase();
+
+    setStatus(statusEl, '✅ 接続OK！保存しました', 'success');
+    setTimeout(async () => {
+      document.getElementById('setup-modal').classList.add('hidden');
+      await loadEvents();
+    }, 800);
+  }
+
+  // ─── ユーティリティ ───────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr + 'T00:00:00').toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+    } catch(e) { return dateStr; }
+  }
+
+  function setStatus(el, msg, type) {
+    const cls = { error:'bg-red-50 border border-red-200 text-red-700', success:'bg-green-50 border border-green-200 text-green-700', info:'bg-blue-50 border border-blue-200 text-blue-700' };
+    el.className = `text-sm rounded-xl px-4 py-3 font-medium ${cls[type] || cls.info}`;
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  function showFatalError(msg) {
+    document.getElementById('respond-view').innerHTML = `
+      <div class="bg-white rounded-2xl shadow p-10 text-center space-y-3">
+        <div class="text-5xl">⚠️</div>
+        <p class="text-gray-600 font-bold">${msg}</p>
+      </div>`;
+    document.getElementById('respond-view').classList.remove('hidden');
+    document.getElementById('loading-screen').classList.add('hidden');
+  }
+
+  // ─── 起動 ─────────────────────────────────────────────────────────────────
+  (async () => {
+    try {
+      if (isRespondMode) {
+        await initRespondMode();
+        document.getElementById('loading-screen').classList.add('hidden');
+        return;
+      }
+
+      // 管理者モード
+      document.getElementById('settings-btn').addEventListener('click', openSetupModal);
+      document.getElementById('create-event-btn').addEventListener('click', () => openCreateEventModal());
+      document.getElementById('save-event-btn').addEventListener('click', saveEvent);
+      document.getElementById('setup-save-btn').addEventListener('click', handleSetupSave);
+      document.getElementById('detail-share-btn').addEventListener('click', copyShareLink);
+      document.getElementById('detail-edit-btn').addEventListener('click', () => {
+        const id = currentEventId;
+        closeDetailModal();
+        openCreateEventModal(id);
+      });
+      document.getElementById('detail-delete-btn').addEventListener('click', deleteEvent);
+
+      const cfg = loadConfig();
+      document.getElementById('admin-view').classList.remove('hidden');
+
+      if (cfg?.supabase_url) {
+        applyConfig(cfg);
+        if (initSupabase()) await loadEvents();
+      } else {
+        openSetupModal();
+      }
+    } catch(e) {
+      console.error('起動エラー:', e);
+    } finally {
+      document.getElementById('loading-screen').classList.add('hidden');
+    }
+  })();
+</script>
+</body>
+</html>
