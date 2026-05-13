@@ -336,10 +336,56 @@
         <label class="block text-gray-700 text-sm font-bold mb-1">フッターテキスト</label>
         <input type="text" id="setup-footer-text" placeholder="入力なし → © ATTENDANCE SYSTEM"
           class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-        <p class="text-xs text-gray-500 mt-1.5 space-y-0.5">
+        <p class="text-xs text-gray-500 mt-1.5">
           💡 例：<span class="font-medium">© ○○FC Since 2018</span><br>
           💡 例：<span class="font-medium">"全員で上を目指す"</span>
         </p>
+      </div>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-2">メインカラー</label>
+        <div class="flex items-center gap-2 mb-3 p-2 bg-gray-50 rounded-xl border border-gray-200">
+          <div id="att-color-preview-swatch" class="w-9 h-9 rounded-lg border border-gray-300 shadow-inner shrink-0" style="background:#c0392b"></div>
+          <span id="att-color-preview-hex" class="text-sm font-mono font-bold text-gray-700 flex-1 uppercase">#C0392B</span>
+          <label class="flex items-center gap-1.5 cursor-pointer bg-white border border-gray-300 hover:bg-gray-100 rounded-lg px-2.5 py-1.5 text-xs font-bold text-gray-600 transition-colors shrink-0">
+            🎨 カスタム
+            <input type="color" id="setup-primary-color" value="#c0392b" class="w-5 h-5 cursor-pointer border-0 p-0 bg-transparent">
+          </label>
+        </div>
+        <div class="grid grid-cols-8 gap-1.5">
+          <button type="button" onclick="attSetPresetColor('#b71c1c')" data-color="#b71c1c" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#b71c1c" title="ダークレッド"></button>
+          <button type="button" onclick="attSetPresetColor('#c0392b')" data-color="#c0392b" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#c0392b" title="レッド"></button>
+          <button type="button" onclick="attSetPresetColor('#e53935')" data-color="#e53935" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#e53935" title="ブライトレッド"></button>
+          <button type="button" onclick="attSetPresetColor('#f44336')" data-color="#f44336" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#f44336" title="ライトレッド"></button>
+          <button type="button" onclick="attSetPresetColor('#880e4f')" data-color="#880e4f" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#880e4f" title="ダークピンク"></button>
+          <button type="button" onclick="attSetPresetColor('#ad1457')" data-color="#ad1457" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#ad1457" title="ピンク"></button>
+          <button type="button" onclick="attSetPresetColor('#e91e63')" data-color="#e91e63" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#e91e63" title="ローズ"></button>
+          <button type="button" onclick="attSetPresetColor('#f06292')" data-color="#f06292" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#f06292" title="ライトピンク"></button>
+          <button type="button" onclick="attSetPresetColor('#4a148c')" data-color="#4a148c" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#4a148c" title="ダークパープル"></button>
+          <button type="button" onclick="attSetPresetColor('#7b1fa2')" data-color="#7b1fa2" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#7b1fa2" title="パープル"></button>
+          <button type="button" onclick="attSetPresetColor('#8e44ad')" data-color="#8e44ad" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#8e44ad" title="バイオレット"></button>
+          <button type="button" onclick="attSetPresetColor('#5e35b1')" data-color="#5e35b1" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#5e35b1" title="インディゴ"></button>
+          <button type="button" onclick="attSetPresetColor('#1a237e')" data-color="#1a237e" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#1a237e" title="ダークネイビー"></button>
+          <button type="button" onclick="attSetPresetColor('#1565c0')" data-color="#1565c0" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#1565c0" title="ダークブルー"></button>
+          <button type="button" onclick="attSetPresetColor('#0d47a1')" data-color="#0d47a1" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#0d47a1" title="ロイヤルブルー"></button>
+          <button type="button" onclick="attSetPresetColor('#2980b9')" data-color="#2980b9" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#2980b9" title="ブルー"></button>
+          <button type="button" onclick="attSetPresetColor('#006064')" data-color="#006064" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#006064" title="ダークシアン"></button>
+          <button type="button" onclick="attSetPresetColor('#00695c')" data-color="#00695c" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#00695c" title="ティール"></button>
+          <button type="button" onclick="attSetPresetColor('#004d40')" data-color="#004d40" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#004d40" title="ダークグリーン"></button>
+          <button type="button" onclick="attSetPresetColor('#1b5e20')" data-color="#1b5e20" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#1b5e20" title="フォレスト"></button>
+          <button type="button" onclick="attSetPresetColor('#1a6b3c')" data-color="#1a6b3c" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#1a6b3c" title="グリーン"></button>
+          <button type="button" onclick="attSetPresetColor('#2e7d32')" data-color="#2e7d32" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#2e7d32" title="ミドルグリーン"></button>
+          <button type="button" onclick="attSetPresetColor('#388e3c')" data-color="#388e3c" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#388e3c" title="ライトグリーン"></button>
+          <button type="button" onclick="attSetPresetColor('#43a047')" data-color="#43a047" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#43a047" title="ブライトグリーン"></button>
+          <button type="button" onclick="attSetPresetColor('#e65100')" data-color="#e65100" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#e65100" title="ダークオレンジ"></button>
+          <button type="button" onclick="attSetPresetColor('#d35400')" data-color="#d35400" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#d35400" title="オレンジ"></button>
+          <button type="button" onclick="attSetPresetColor('#e67e22')" data-color="#e67e22" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#e67e22" title="ライトオレンジ"></button>
+          <button type="button" onclick="attSetPresetColor('#f39c12')" data-color="#f39c12" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#f39c12" title="アンバー"></button>
+          <button type="button" onclick="attSetPresetColor('#b07d1a')" data-color="#b07d1a" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#b07d1a" title="ゴールド"></button>
+          <button type="button" onclick="attSetPresetColor('#6d4c41')" data-color="#6d4c41" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#6d4c41" title="ブラウン"></button>
+          <button type="button" onclick="attSetPresetColor('#37474f')" data-color="#37474f" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#37474f" title="スレート"></button>
+          <button type="button" onclick="attSetPresetColor('#333333')" data-color="#333333" class="att-color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#333333" title="ブラック"></button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">ヘッダー・ボタン等のカラーを変更できます</p>
       </div>
       <div id="setup-status" class="hidden text-sm rounded-lg px-4 py-3 font-medium"></div>
       <button id="setup-save-btn" type="button"
@@ -1503,6 +1549,36 @@
       </div>`;
   }
 
+  // ─── カラーピッカー ──────────────────────────────────────────────────────
+  function attSetPresetColor(hex) {
+    const cp = document.getElementById('setup-primary-color');
+    if (cp) cp.value = hex;
+    applyColor(hex);
+    attUpdateColorPanelUI(hex);
+  }
+
+  function attUpdateColorPanelUI(hex) {
+    if (!hex) return;
+    const normalized = hex.toLowerCase();
+    document.querySelectorAll('.att-color-preset-btn').forEach(btn => {
+      const isSelected = btn.dataset.color === normalized;
+      btn.style.outline      = isSelected ? '3px solid #111' : '';
+      btn.style.outlineOffset = isSelected ? '2px' : '';
+      btn.style.transform    = isSelected ? 'scale(1.18)' : '';
+    });
+    const swatch = document.getElementById('att-color-preview-swatch');
+    if (swatch) swatch.style.background = hex;
+    const label = document.getElementById('att-color-preview-hex');
+    if (label) label.textContent = hex.toUpperCase();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('setup-primary-color')?.addEventListener('input', e => {
+      applyColor(e.target.value);
+      attUpdateColorPanelUI(e.target.value);
+    });
+  });
+
   // ─── 接続設定 ─────────────────────────────────────────────────────────────
   function openSetupModal() {
     const cfg = loadConfig();
@@ -1511,6 +1587,10 @@
       document.getElementById('setup-url').value         = cfg.supabase_url || '';
       document.getElementById('setup-anon-key').value    = cfg.supabase_anon_key || '';
       document.getElementById('setup-footer-text').value = cfg.footer_text || '';
+      const color = cfg.primary_color || '#c0392b';
+      const cp = document.getElementById('setup-primary-color');
+      if (cp) cp.value = color;
+      attUpdateColorPanelUI(color);
     }
     document.getElementById('setup-status').classList.add('hidden');
     document.getElementById('setup-modal').classList.remove('hidden');
@@ -1553,7 +1633,8 @@
     btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
     if (!testOk) return;
 
-    const cfg = { team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: '#c0392b', footer_text: footerText || '© ATTENDANCE SYSTEM' };
+    const primaryColor = document.getElementById('setup-primary-color')?.value || '#c0392b';
+    const cfg = { team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: primaryColor, footer_text: footerText || '© ATTENDANCE SYSTEM' };
     saveConfig(cfg);
     applyConfig(cfg);
     supabaseClient = null;

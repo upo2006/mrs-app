@@ -4401,6 +4401,15 @@ ${error?.message || ''}`);
             <p class="text-xs text-gray-500 mt-1">Supabase → Project Settings → API → anon public</p>
           </div>
           <div>
+            <label class="block text-gray-700 text-sm font-bold mb-1">フッターテキスト</label>
+            <input type="text" id="setup-footer-text" placeholder="入力なし → © MATCH RECORD SYSTEM"
+              class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <p class="text-xs text-gray-500 mt-1.5">
+              💡 例：<span class="font-medium">© ○○FC Since 2018</span><br>
+              💡 例：<span class="font-medium">"全員で上を目指す"</span>
+            </p>
+          </div>
+          <div>
             <label class="block text-gray-700 text-sm font-bold mb-2">メインカラー</label>
             <div class="flex items-center gap-2 mb-3 p-2 bg-gray-50 rounded-xl border border-gray-200">
               <div id="color-preview-swatch" class="w-9 h-9 rounded-lg border border-gray-300 shadow-inner shrink-0" style="background:#c0392b"></div>
@@ -4445,15 +4454,6 @@ ${error?.message || ''}`);
               <button type="button" onclick="setPresetColor('#333333')" data-color="#333333" class="color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#333333" title="ブラック"></button>
             </div>
             <p class="text-xs text-gray-500 mt-2">ヘッダー・ボタン等のカラーを変更できます</p>
-          </div>
-          <div>
-            <label class="block text-gray-700 text-sm font-bold mb-1">フッターテキスト</label>
-            <input type="text" id="setup-footer-text" placeholder="入力なし → © MATCH RECORD SYSTEM"
-              class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-            <p class="text-xs text-gray-500 mt-1.5">
-              💡 例：<span class="font-medium">© ○○FC Since 2018</span><br>
-              💡 例：<span class="font-medium">"全員で上を目指す"</span>
-            </p>
           </div>
           <div id="setup-status" class="hidden text-sm rounded-lg px-4 py-3 font-medium"></div>
           <button id="setup-save-btn" type="button" onclick="handleSetupSave()" class="w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-4 rounded-xl shadow-lg hover:from-red-700 hover:to-red-600 transition-all">
