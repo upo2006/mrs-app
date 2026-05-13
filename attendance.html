@@ -82,6 +82,7 @@
           <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
             <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-red-600 font-bold">⚙️ 接続設定</button>
             <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
+            <button type="button" onclick="openScheduleLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-blue-600 font-bold">📅 閲覧専用リンクを発行</button>
           </div>
         </div>
       </div>
@@ -158,6 +159,15 @@
       <p class="text-xs text-gray-400 mt-0.5">参加するイベントをタップして回答してください</p>
     </div>
     <div id="parent-event-list"></div>
+  </main>
+
+  <!-- 閲覧専用ビュー（スケジュール） -->
+  <main id="schedule-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-3">
+    <div class="py-2">
+      <h2 class="text-base font-black text-gray-700">📅 イベント一覧</h2>
+      <p class="text-xs text-gray-400 mt-0.5">スケジュールをご確認ください</p>
+    </div>
+    <div id="schedule-event-list"></div>
   </main>
 
   <!-- 回答ビュー（保護者） -->
@@ -264,6 +274,40 @@
       <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 space-y-1">
         <p class="font-bold">⚠️ セキュリティについて</p>
         <p>このリンクにはSupabase接続情報が含まれます。信頼できる管理者のみに共有してください。リンクを開いた人はイベントの追加・編集・削除が可能です。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 閲覧専用リンク発行モーダル ════════════════════════════════════ -->
+<div id="schedule-link-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeScheduleLinkModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-blue-700 to-blue-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-black">📅 閲覧専用リンクを発行</h2>
+        <p class="text-sm text-white/80 mt-1">イベント一覧を見るだけのリンク</p>
+      </div>
+      <button onclick="closeScheduleLinkModal()" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
+    </div>
+    <div class="p-6 space-y-4">
+      <p class="text-sm text-gray-600">このリンクを開くと、回答ボタンなしでイベント一覧だけを閲覧できます。スケジュールの確認や掲示板などへの貼り付けにご利用ください。</p>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">アプリの公開URL <span class="text-red-500">*</span></label>
+        <input type="url" id="schedule-link-base-url" placeholder="https://your-name.github.io/mrs-app/attendance.html" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="updateScheduleLink()">
+      </div>
+      <div id="schedule-link-result" class="hidden space-y-2">
+        <label class="block text-gray-700 text-sm font-bold">生成されたリンク</label>
+        <div class="flex gap-2">
+          <input type="text" id="schedule-link-url" readonly class="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 font-mono">
+          <button onclick="copyScheduleLink()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors">コピー</button>
+        </div>
+        <p id="schedule-link-copy-msg" class="hidden text-xs text-green-600 font-medium">✅ クリップボードにコピーしました</p>
+      </div>
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700 space-y-1">
+        <p class="font-bold">ℹ️ このリンクでできること</p>
+        <p>✅ イベント一覧の閲覧（カテゴリー別）</p>
+        <p>❌ 出欠の回答・編集・削除はできません</p>
       </div>
     </div>
   </div>
@@ -432,6 +476,7 @@
   const respondEventId = params.get('respond');
   const isRespondMode  = !!respondEventId;
   const isParentMode   = params.get('view') === 'parent';
+  const isScheduleMode = params.get('view') === 'schedule';
 
   const CATEGORY_ORDER = ['U7','U8','U9','U10','U11','U12'];
 
@@ -796,9 +841,9 @@
         <button onclick="toggleCategorySection('${sk}')"
           class="w-full text-left bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-3 rounded-xl font-bold border border-gray-200 transition-colors flex items-center justify-between">
           <span>⚽ ${escHtml(key)}（${evs.length}件）</span>
-          <span id="cat-icon-${sk}" class="text-gray-500 text-sm">▼</span>
+          <span id="cat-icon-${sk}" class="text-gray-500 text-sm">▶</span>
         </button>
-        <div id="cat-body-${sk}" class="pt-2 space-y-3">
+        <div id="cat-body-${sk}" class="pt-2 space-y-3 hidden">
           ${evs.map(cardFn).join('')}
         </div>
       </div>`;
@@ -1154,6 +1199,94 @@
     }
 
     document.getElementById('parent-list-view').classList.remove('hidden');
+  }
+
+  // ─── 閲覧専用モード（スケジュール） ──────────────────────────────────────
+  function buildScheduleEventCard(ev) {
+    const dateStr = formatDate(ev.event_date);
+    return `<div class="bg-white rounded-2xl shadow p-4">
+      <p class="font-black text-gray-800 mb-1.5">${escHtml(ev.title)}</p>
+      <div class="text-sm text-gray-500 space-y-0.5">
+        ${dateStr       ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
+        ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
+        ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
+        ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
+      </div>
+      ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
+    </div>`;
+  }
+
+  async function initScheduleMode() {
+    document.getElementById('settings-btn').classList.add('hidden');
+    const d = parseHashConfig();
+    if (d) {
+      if (d.u) SUPABASE_CONFIG.url     = d.u;
+      if (d.k) SUPABASE_CONFIG.anonKey = d.k;
+      if (d.t) document.getElementById('app-team-name').textContent = d.t + ' イベント一覧';
+      if (d.c) applyColor(d.c);
+    }
+    if (!initSupabase()) { showFatalError('設定情報が不正です。管理者にお問い合わせください。'); return; }
+
+    const { data, error } = await supabaseClient
+      .from(TABLE_EVENTS).select('*').order('event_date', { ascending: false });
+    if (error) { showFatalError('イベントの読み込みに失敗しました。'); return; }
+
+    const listEl = document.getElementById('schedule-event-list');
+    if (!data || data.length === 0) {
+      listEl.innerHTML = '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow">現在、予定されているイベントはありません</div>';
+    } else {
+      const groups = groupByCategory(data);
+      listEl.innerHTML = buildCategoryGroupHtml(groups, buildScheduleEventCard);
+    }
+    document.getElementById('schedule-view').classList.remove('hidden');
+  }
+
+  // ─── 閲覧専用リンク発行 ────────────────────────────────────────────────────
+  function openScheduleLinkModal() {
+    document.getElementById('settings-menu')?.classList.add('hidden');
+    const modal = document.getElementById('schedule-link-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    const base = getBaseUrl();
+    const input = document.getElementById('schedule-link-base-url');
+    if (input) { input.value = base; updateScheduleLink(); }
+  }
+
+  function closeScheduleLinkModal() {
+    document.getElementById('schedule-link-modal')?.classList.add('hidden');
+  }
+
+  function updateScheduleLink() {
+    const base   = document.getElementById('schedule-link-base-url')?.value.trim();
+    const result = document.getElementById('schedule-link-result');
+    if (!base) { result?.classList.add('hidden'); return; }
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url || !cfg?.supabase_anon_key) { result?.classList.add('hidden'); return; }
+    const hash = buildHashString(cfg);
+    const url  = base.replace(/\/?$/, '') + '?view=schedule#' + hash;
+    const linkInput = document.getElementById('schedule-link-url');
+    if (linkInput) linkInput.value = url;
+    result?.classList.remove('hidden');
+    document.getElementById('schedule-link-copy-msg')?.classList.add('hidden');
+  }
+
+  async function copyScheduleLink() {
+    const url = document.getElementById('schedule-link-url')?.value;
+    if (!url) return;
+    const msg = document.getElementById('schedule-link-copy-msg');
+    if (msg) { msg.textContent = '🔄 短縮URL生成中...'; msg.classList.remove('hidden'); }
+    const short = await shortenUrl(url);
+    const finalUrl = short || url;
+    try {
+      await navigator.clipboard.writeText(finalUrl);
+    } catch(e) {
+      document.getElementById('schedule-link-url')?.select();
+    }
+    if (msg) {
+      msg.textContent = short ? `✅ 短縮URLをコピー: ${short}` : '✅ クリップボードにコピーしました';
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 3000);
+    }
   }
 
   function openParentRespond(eventId) {
@@ -1530,6 +1663,13 @@
       // 保護者：個別イベント回答モード
       if (isRespondMode) {
         await initRespondMode();
+        document.getElementById('loading-screen').classList.add('hidden');
+        return;
+      }
+
+      // 閲覧専用モード（スケジュール）
+      if (isScheduleMode) {
+        await initScheduleMode();
         document.getElementById('loading-screen').classList.add('hidden');
         return;
       }
