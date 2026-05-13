@@ -676,14 +676,14 @@
             </div>
             ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
           </div>
-          <div class="flex gap-2">
+          <div class="grid grid-cols-2 gap-2">
             <button onclick="openParentRespond('${ev.id}')"
-              class="flex-1 bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">
+              class="bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">
               ✏️ 回答する
             </button>
             <button onclick="showParentResults('${ev.id}')"
-              class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-colors">
-              📊 結果
+              class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">
+              📊 結果を見る
             </button>
           </div>
         </div>`).join('')}</div>`;
@@ -773,8 +773,10 @@
 
   function buildEventInfoHtml(ev) {
     return `
-      <h2 class="text-lg font-black text-gray-800 mb-3">📅 ${escHtml(ev.title)}</h2>
-      <div class="space-y-1.5 text-sm text-gray-600">
+      <p class="font-black text-gray-800 mb-1.5">
+        ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}
+      </p>
+      <div class="text-sm text-gray-500 space-y-0.5">
         ${ev.event_date ? `<p>📆 ${formatDate(ev.event_date)}</p>` : ''}
         ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
         ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>`   : ''}
