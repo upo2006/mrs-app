@@ -535,7 +535,6 @@
     document.getElementById('detail-title').textContent    = ev.title;
     document.getElementById('detail-subtitle').textContent =
       [formatDate(ev.event_date), ev.event_time, ev.location].filter(Boolean).join(' ・ ');
-    document.getElementById('detail-share-msg').classList.add('hidden');
 
     const { data: responses, error } = await supabaseClient
       .from(TABLE_RESPONSES)
@@ -619,9 +618,6 @@
     } catch(e) {
       prompt('以下のリンクをコピーしてください', url); return;
     }
-    const msg = document.getElementById('detail-share-msg');
-    msg.classList.remove('hidden');
-    setTimeout(() => msg.classList.add('hidden'), 3000);
   }
 
   // ─── 保護者：イベント一覧モード ───────────────────────────────────────────
