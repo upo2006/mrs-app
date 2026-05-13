@@ -464,15 +464,11 @@
   }
 
   // ─── URL短縮（is.gd） ─────────────────────────────────────────────────────
-  // URL内の # より前の部分だけ短縮し、# 以降はそのまま末尾に付ける
   async function shortenUrl(url) {
     try {
-      const hashIdx = url.indexOf('#');
-      const baseUrl  = hashIdx >= 0 ? url.slice(0, hashIdx) : url;
-      const fragment = hashIdx >= 0 ? url.slice(hashIdx) : '';   // '#xxx...'
-      const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(baseUrl)}`);
+      const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`);
       const text = await res.text();
-      if (text.startsWith('https://is.gd/')) return text.trim() + fragment;
+      if (text.startsWith('https://is.gd/')) return text.trim();
     } catch(e) {}
     return null;
   }
