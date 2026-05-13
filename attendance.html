@@ -87,14 +87,35 @@
 
   <!-- 管理者ビュー -->
   <main id="admin-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-3">
-    <div class="flex items-center justify-between py-2">
-      <h2 class="text-base font-black text-gray-700">⚽ イベント一覧</h2>
+    <!-- タブナビ -->
+    <div class="bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex gap-2">
+        <button id="tab-events-btn" onclick="showAdminTab('events')"
+          class="px-4 py-2 rounded-xl text-sm font-bold bg-red-500 text-white transition-colors">
+          ⚽ イベント
+        </button>
+        <button id="tab-players-btn" onclick="showAdminTab('players')"
+          class="px-4 py-2 rounded-xl text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+          👕 選手管理
+        </button>
+      </div>
       <button id="create-event-btn" type="button"
         class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
         ＋ 新規作成
       </button>
+      <button id="add-player-btn" type="button" onclick="openPlayerModal()"
+        class="hidden bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
+        ＋ 選手を追加
+      </button>
     </div>
-    <div id="event-list"></div>
+    <!-- イベント一覧 -->
+    <div id="admin-events-section">
+      <div id="event-list"></div>
+    </div>
+    <!-- 選手管理 -->
+    <div id="admin-players-section" class="hidden space-y-3">
+      <div id="player-list-container"></div>
+    </div>
   </main>
 
   <!-- 保護者イベント一覧ビュー -->
@@ -125,6 +146,44 @@
   </footer>
 
 </div><!-- /app -->
+
+<!-- ══ 選手追加・編集モーダル ══════════════════════════════════════════ -->
+<div id="player-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closePlayerModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+      <h2 id="player-modal-title" class="text-xl font-black">👕 選手を追加</h2>
+      <button onclick="closePlayerModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="player-edit-id">
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">カテゴリー</label>
+        <select id="player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          <option value="">未設定</option>
+          <option value="U7">U7</option>
+          <option value="U8">U8</option>
+          <option value="U9">U9</option>
+          <option value="U10">U10</option>
+          <option value="U11">U11</option>
+          <option value="U12">U12</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">背番号 <span class="text-red-500">*</span></label>
+        <input type="number" id="player-number" min="0" max="99" placeholder="例：10" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 text-center text-xl font-black focus:outline-none focus:ring-2 focus:ring-red-500">
+      </div>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">選手名 <span class="text-red-500">*</span></label>
+        <input type="text" id="player-name" placeholder="例：山田 太郎" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+      </div>
+      <p id="player-modal-error" class="hidden text-sm text-red-600 font-medium"></p>
+      <button onclick="savePlayer()" class="w-full bg-gradient-to-r from-red-700 to-red-600 hover:from-red-800 hover:to-red-700 text-white font-black py-3 rounded-xl transition-colors">
+        <span id="player-save-label">保存する</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ 管理者リンク発行モーダル ══════════════════════════════════════ -->
 <div id="admin-link-modal" class="fixed inset-0 z-[100] hidden">
@@ -320,6 +379,8 @@
   const isRespondMode  = !!respondEventId;
   const isParentMode   = params.get('view') === 'parent';
 
+  const CATEGORY_ORDER = ['U7','U8','U9','U10','U11','U12'];
+
   // ─── Config ──────────────────────────────────────────────────────────────
   function loadConfig() {
     try {
@@ -408,6 +469,137 @@
     return playersMap[String(jerseyNumber).trim()] || '';
   }
 
+  // ─── 選手管理 ─────────────────────────────────────────────────────────────
+  let playerRecords = [];  // { id, payload: { number, name, category } }
+
+  function showAdminTab(tab) {
+    const isEvents = tab === 'events';
+    document.getElementById('admin-events-section').classList.toggle('hidden', !isEvents);
+    document.getElementById('admin-players-section').classList.toggle('hidden', isEvents);
+    document.getElementById('create-event-btn').classList.toggle('hidden', !isEvents);
+    document.getElementById('add-player-btn').classList.toggle('hidden', isEvents);
+    document.getElementById('tab-events-btn').className  = `px-4 py-2 rounded-xl text-sm font-bold transition-colors ${isEvents  ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+    document.getElementById('tab-players-btn').className = `px-4 py-2 rounded-xl text-sm font-bold transition-colors ${!isEvents ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+    if (!isEvents && playerRecords.length === 0) loadPlayers();
+  }
+
+  async function loadPlayers() {
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from(TABLE_PLAYERS).select('id, payload').eq('type', 'player');
+    if (error) { console.error('loadPlayers:', error); return; }
+    playerRecords = data || [];
+    renderPlayerList();
+    // playersMap も更新
+    playersMap = {};
+    playerRecords.forEach(p => {
+      if (p.payload?.number) playersMap[String(p.payload.number).trim()] = p.payload.name || '';
+    });
+  }
+
+  function renderPlayerList() {
+    const container = document.getElementById('player-list-container');
+    if (!container) return;
+    if (playerRecords.length === 0) {
+      container.innerHTML = '<p class="text-center text-gray-400 text-sm py-10">選手がまだ登録されていません<br>「＋ 選手を追加」から登録しましょう</p>';
+      return;
+    }
+    const sorted = [...playerRecords].sort((a, b) => {
+      const na = parseInt(a.payload?.number || 99999);
+      const nb = parseInt(b.payload?.number || 99999);
+      return na - nb;
+    });
+    container.innerHTML = sorted.map(p => {
+      const num  = escHtml(p.payload?.number || '?');
+      const name = escHtml(p.payload?.name   || '');
+      const cat  = escHtml(p.payload?.category || '');
+      return `<div class="bg-white rounded-2xl shadow p-4 flex items-center gap-3">
+        <div class="bg-red-500 text-white font-black text-xl rounded-xl w-12 h-12 flex items-center justify-center shrink-0">${num}</div>
+        <div class="flex-1 min-w-0">
+          <p class="font-black text-gray-800">${name}</p>
+          ${cat ? `<p class="text-xs text-gray-400 mt-0.5">${cat}</p>` : ''}
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openPlayerModal('${p.id}')" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-xl transition-colors">編集</button>
+          <button onclick="confirmDeletePlayer('${p.id}')" class="text-sm bg-red-100 hover:bg-red-200 text-red-600 font-bold px-3 py-2 rounded-xl transition-colors">削除</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function openPlayerModal(id) {
+    document.getElementById('player-modal-error').classList.add('hidden');
+    if (id) {
+      // 編集
+      const rec = playerRecords.find(p => p.id === id);
+      if (!rec) return;
+      document.getElementById('player-modal-title').textContent = '👕 選手を編集';
+      document.getElementById('player-save-label').textContent  = '保存する';
+      document.getElementById('player-edit-id').value    = id;
+      document.getElementById('player-number').value     = rec.payload?.number   || '';
+      document.getElementById('player-name').value       = rec.payload?.name     || '';
+      document.getElementById('player-category').value   = rec.payload?.category || '';
+    } else {
+      // 新規
+      document.getElementById('player-modal-title').textContent = '👕 選手を追加';
+      document.getElementById('player-save-label').textContent  = '追加する';
+      document.getElementById('player-edit-id').value  = '';
+      document.getElementById('player-number').value   = '';
+      document.getElementById('player-name').value     = '';
+      document.getElementById('player-category').value = '';
+    }
+    document.getElementById('player-modal').classList.remove('hidden');
+  }
+
+  function closePlayerModal() {
+    document.getElementById('player-modal').classList.add('hidden');
+  }
+
+  async function savePlayer() {
+    const id       = document.getElementById('player-edit-id').value;
+    const number   = document.getElementById('player-number').value.trim();
+    const name     = document.getElementById('player-name').value.trim();
+    const category = document.getElementById('player-category').value;
+    const errEl    = document.getElementById('player-modal-error');
+    errEl.classList.add('hidden');
+
+    if (!number) { errEl.textContent = '背番号を入力してください'; errEl.classList.remove('hidden'); return; }
+    if (!name)   { errEl.textContent = '選手名を入力してください'; errEl.classList.remove('hidden'); return; }
+
+    const payload = { number, name, category };
+    document.getElementById('player-save-label').textContent = '保存中...';
+
+    try {
+      if (id) {
+        const { error } = await supabaseClient
+          .from(TABLE_PLAYERS).update({ payload }).eq('id', id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient
+          .from(TABLE_PLAYERS).insert({ type: 'player', payload });
+        if (error) throw error;
+      }
+      closePlayerModal();
+      await loadPlayers();
+    } catch(e) {
+      errEl.textContent = '保存に失敗しました: ' + (e.message || e);
+      errEl.classList.remove('hidden');
+    } finally {
+      document.getElementById('player-save-label').textContent = '保存する';
+    }
+  }
+
+  async function confirmDeletePlayer(id) {
+    const rec = playerRecords.find(p => p.id === id);
+    if (!rec) return;
+    const name = rec.payload?.name || '選手';
+    const num  = rec.payload?.number || '';
+    if (!confirm(`#${num} ${name} を削除しますか？`)) return;
+    const { error } = await supabaseClient.from(TABLE_PLAYERS).delete().eq('id', id);
+    if (error) { alert('削除に失敗しました'); return; }
+    await loadPlayers();
+  }
+
   // ─── 管理者：イベント一覧 ─────────────────────────────────────────────────
   async function loadEvents() {
     const { data, error } = await supabaseClient
@@ -419,48 +611,97 @@
     renderEvents();
   }
 
+  // カテゴリー別にグループ化（CATEGORY_ORDER 順 → その他 → 未設定）
+  function groupByCategory(evList) {
+    const groups = {};
+    evList.forEach(ev => {
+      const cat = ev.category?.trim() || '未設定';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(ev);
+    });
+    const known   = CATEGORY_ORDER.filter(k => groups[k]);
+    const unknown = Object.keys(groups).filter(k => !CATEGORY_ORDER.includes(k) && k !== '未設定').sort();
+    const nocat   = groups['未設定'] ? ['未設定'] : [];
+    return [...known, ...unknown, ...nocat].map(key => ({ key, evs: groups[key] }));
+  }
+
+  function toggleCategorySection(safeKey) {
+    const body = document.getElementById('cat-body-' + safeKey);
+    const icon = document.getElementById('cat-icon-' + safeKey);
+    if (!body) return;
+    const isHidden = body.classList.toggle('hidden');
+    if (icon) icon.textContent = isHidden ? '▶' : '▼';
+  }
+
+  function safeKey(cat) { return cat.replace(/[^a-zA-Z0-9]/g, '_'); }
+
+  function buildAdminEventCard(ev) {
+    const count   = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
+    const dateStr = formatDate(ev.event_date);
+    return `<div class="bg-white rounded-2xl shadow p-4" data-event-id="${ev.id}">
+      <div class="mb-3">
+        <p class="font-black text-gray-800 mb-1.5">${escHtml(ev.title)}</p>
+        <div class="text-sm text-gray-500 space-y-0.5">
+          ${dateStr        ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
+          ${ev.event_time  ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
+          ${ev.location    ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
+          ${ev.transport   ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
+        </div>
+        ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
+      </div>
+      <div class="grid grid-cols-2 gap-2 mt-1">
+        <button onclick="copyEventShareLink('${ev.id}')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">🔗 リンクをコピー</button>
+        <button onclick="openDetail('${ev.id}')"         class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-colors">📊 回答を確認（${count}件）</button>
+        <button onclick="openCreateEventModal('${ev.id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs transition-colors">✏️ 編集</button>
+        <button onclick="deleteEventById('${ev.id}')"    class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs transition-colors">🗑️ 削除</button>
+      </div>
+    </div>`;
+  }
+
+  function buildParentEventCard(ev) {
+    const dateStr = formatDate(ev.event_date);
+    return `<div class="bg-white rounded-2xl shadow p-4">
+      <div class="mb-3">
+        <p class="font-black text-gray-800 mb-1.5">${escHtml(ev.title)}</p>
+        <div class="text-sm text-gray-500 space-y-0.5">
+          ${dateStr       ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
+          ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
+          ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
+          ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
+        </div>
+        ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="openParentRespond('${ev.id}')"  class="bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">✏️ 回答する</button>
+        <button onclick="showParentResults('${ev.id}')"  class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">📊 結果を見る</button>
+      </div>
+    </div>`;
+  }
+
+  function buildCategoryGroupHtml(groups, cardFn) {
+    return groups.map(({ key, evs }) => {
+      const sk = safeKey(key);
+      return `<div class="mb-3">
+        <button onclick="toggleCategorySection('${sk}')"
+          class="w-full text-left bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-3 rounded-xl font-bold border border-gray-200 transition-colors flex items-center justify-between">
+          <span>⚽ ${escHtml(key)}（${evs.length}件）</span>
+          <span id="cat-icon-${sk}" class="text-gray-500 text-sm">▼</span>
+        </button>
+        <div id="cat-body-${sk}" class="pt-2 space-y-3">
+          ${evs.map(cardFn).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   function renderEvents() {
     const el = document.getElementById('event-list');
     if (events.length === 0) {
       el.innerHTML = '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow">イベントがありません<br><span class="text-xs mt-1 block">「新規作成」からイベントを追加してください</span></div>';
       return;
     }
-    el.innerHTML = `<div class="space-y-3">${events.map(ev => {
-      const count   = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
-      const dateStr = formatDate(ev.event_date);
-      return `<div class="bg-white rounded-2xl shadow p-4" data-event-id="${ev.id}">
-        <div class="mb-3">
-          <p class="font-black text-gray-800 mb-1.5">
-            ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}
-          </p>
-          <div class="text-sm text-gray-500 space-y-0.5">
-            ${dateStr ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
-            ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
-            ${ev.location ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-            ${ev.transport ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
-          </div>
-          ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
-        </div>
-        <div class="grid grid-cols-2 gap-2 mt-1">
-          <button onclick="copyEventShareLink('${ev.id}')"
-            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">
-            🔗 リンクをコピー
-          </button>
-          <button onclick="openDetail('${ev.id}')"
-            class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-colors">
-            📊 回答を確認（${count}件）
-          </button>
-          <button onclick="openCreateEventModal('${ev.id}')"
-            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs transition-colors">
-            ✏️ 編集
-          </button>
-          <button onclick="deleteEventById('${ev.id}')"
-            class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs transition-colors">
-            🗑️ 削除
-          </button>
-        </div>
-      </div>`;
-    }).join('')}</div>`;
+    const groups = groupByCategory(events);
+    el.innerHTML = buildCategoryGroupHtml(groups, buildAdminEventCard);
   }
 
   // ─── URL短縮（is.gd） ─────────────────────────────────────────────────────
@@ -784,31 +1025,8 @@
     if (!data || data.length === 0) {
       listEl.innerHTML = '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow">現在、予定されているイベントはありません</div>';
     } else {
-      listEl.innerHTML = `<div class="space-y-3">${data.map(ev => `
-        <div class="bg-white rounded-2xl shadow p-4">
-          <div class="mb-3">
-            <p class="font-black text-gray-800 mb-1.5">
-              ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}
-            </p>
-            <div class="text-sm text-gray-500 space-y-0.5">
-              ${ev.event_date ? `<p>📆 ${formatDate(ev.event_date)}</p>` : ''}
-              ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
-              ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-              ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
-            </div>
-            ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="openParentRespond('${ev.id}')"
-              class="bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">
-              ✏️ 回答する
-            </button>
-            <button onclick="showParentResults('${ev.id}')"
-              class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">
-              📊 結果を見る
-            </button>
-          </div>
-        </div>`).join('')}</div>`;
+      const groups = groupByCategory(data);
+      listEl.innerHTML = buildCategoryGroupHtml(groups, buildParentEventCard);
     }
 
     document.getElementById('parent-list-view').classList.remove('hidden');
