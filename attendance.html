@@ -538,7 +538,7 @@
     document.getElementById('respond-view').classList.remove('hidden');
   }
 
-  function renderRespondForm(eventId) {
+  function renderRespondForm(eventId, prefillJersey = '') {
     document.getElementById('form-container').innerHTML = `
       <form id="attend-form" class="bg-white rounded-2xl shadow p-5 space-y-6">
 
@@ -594,6 +594,12 @@
         });
       });
     });
+
+    // 修正モード：背番号を引き継ぐ
+    if (prefillJersey) {
+      const jerseyInput = document.getElementById('f-jersey');
+      if (jerseyInput) jerseyInput.value = prefillJersey;
+    }
   }
 
   function radios(name, opts) {
@@ -654,7 +660,11 @@
         <h3 class="text-xl font-black text-gray-800">回答を送信しました</h3>
         <p class="text-gray-400 text-sm">ありがとうございました</p>
         <button type="button" onclick="renderRespondForm('${eventId}')"
-          class="mt-2 text-sm text-red-500 underline">回答を修正する</button>
+          class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-2xl text-base transition-colors">
+          👨‍👩‍👦 兄弟・別の選手の回答をする
+        </button>
+        <button type="button" onclick="renderRespondForm('${eventId}', '${jersey}')"
+          class="mt-1 text-sm text-gray-400 underline">この背番号の回答を修正する</button>
       </div>`;
   }
 
