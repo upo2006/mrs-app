@@ -914,7 +914,7 @@
       } catch(e) {}
     }
     function teamCfgToStorageCfg(team) {
-      return { team_name: team.team_name, supabase_url: team.supabase_url, supabase_anon_key: team.supabase_anon_key, supabase_table: 'app_records', footer_text: `© ${team.team_name}`, page_title: `${team.team_name} MATCH RECORD SYSTEM`, primary_color: team.primary_color || '#c0392b' };
+      return { team_name: team.team_name, supabase_url: team.supabase_url, supabase_anon_key: team.supabase_anon_key, supabase_table: 'app_records', footer_text: team.footer_text || '© MATCH RECORD SYSTEM', page_title: `${team.team_name} MATCH RECORD SYSTEM`, primary_color: team.primary_color || '#c0392b' };
     }
     function openTeamManager() {
       document.getElementById('settings-menu')?.classList.add('hidden');
@@ -4032,8 +4032,21 @@ ${error?.message || ''}`);
     }
 
     async function shortenUrl(url) {
+      // TinyURL（CORS対応・無料）
       try {
-        const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`);
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 6000);
+        const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
+        clearTimeout(t);
+        const text = await res.text();
+        if (text.startsWith('https://tinyurl.com/')) return text.trim();
+      } catch(e) {}
+      // is.gd（フォールバック）
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 6000);
+        const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
+        clearTimeout(t);
         const text = await res.text();
         if (text.startsWith('https://is.gd/')) return text.trim();
       } catch(e) {}
@@ -4084,9 +4097,10 @@ ${error?.message || ''}`);
         setupModalTeamId = target?.id || null;
         const saved = target || loadConfigFromStorage();
         if (saved) {
-          document.getElementById('setup-team-name').value = saved.team_name || '';
-          document.getElementById('setup-url').value = saved.supabase_url || '';
-          document.getElementById('setup-anon-key').value = saved.supabase_anon_key || '';
+          document.getElementById('setup-team-name').value   = saved.team_name || '';
+          document.getElementById('setup-url').value         = saved.supabase_url || '';
+          document.getElementById('setup-anon-key').value    = saved.supabase_anon_key || '';
+          document.getElementById('setup-footer-text').value = saved.footer_text || '';
           const color = saved.primary_color || '#c0392b';
           const cp = document.getElementById('setup-primary-color');
           if (cp) cp.value = color;
@@ -4149,9 +4163,10 @@ ${error?.message || ''}`);
       const load = document.getElementById('setup-save-loading');
 
       try {
-        const teamName = document.getElementById('setup-team-name').value.trim();
-        const url      = document.getElementById('setup-url').value.trim();
-        const key      = document.getElementById('setup-anon-key').value.trim();
+        const teamName   = document.getElementById('setup-team-name').value.trim();
+        const url        = document.getElementById('setup-url').value.trim();
+        const key        = document.getElementById('setup-anon-key').value.trim();
+        const footerText = document.getElementById('setup-footer-text').value.trim();
 
         if (!teamName) { setSetupStatus('チーム名を入力してください', 'error'); return; }
         if (!url || !url.startsWith('https://')) { setSetupStatus('URLを正しく入力してください（https://...）', 'error'); return; }
@@ -4192,11 +4207,11 @@ ${error?.message || ''}`);
         const teams = loadTeams();
         let team;
         if (setupModalMode === 'new' || !setupModalTeamId) {
-          team = { id: 'team_' + Date.now(), team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: primaryColor };
+          team = { id: 'team_' + Date.now(), team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: primaryColor, footer_text: footerText };
           teams.push(team);
         } else {
           const idx = teams.findIndex(t => t.id === setupModalTeamId);
-          team = { id: setupModalTeamId, team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: primaryColor };
+          team = { id: setupModalTeamId, team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: primaryColor, footer_text: footerText };
           if (idx >= 0) teams[idx] = team; else teams.push(team);
         }
         saveTeams(teams);
@@ -4430,6 +4445,15 @@ ${error?.message || ''}`);
               <button type="button" onclick="setPresetColor('#333333')" data-color="#333333" class="color-preset-btn w-full aspect-square rounded-md border border-black/10 hover:scale-110 transition-transform" style="background:#333333" title="ブラック"></button>
             </div>
             <p class="text-xs text-gray-500 mt-2">ヘッダー・ボタン等のカラーを変更できます</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-1">フッターテキスト</label>
+            <input type="text" id="setup-footer-text" placeholder="入力なし → © MATCH RECORD SYSTEM"
+              class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <p class="text-xs text-gray-500 mt-1.5">
+              💡 例：<span class="font-medium">© ○○FC Since 2018</span><br>
+              💡 例：<span class="font-medium">"全員で上を目指す"</span>
+            </p>
           </div>
           <div id="setup-status" class="hidden text-sm rounded-lg px-4 py-3 font-medium"></div>
           <button id="setup-save-btn" type="button" onclick="handleSetupSave()" class="w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-4 rounded-xl shadow-lg hover:from-red-700 hover:to-red-600 transition-all">

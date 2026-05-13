@@ -332,6 +332,15 @@
         <input type="text" id="setup-anon-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-red-500" spellcheck="false">
       </div>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">フッターテキスト</label>
+        <input type="text" id="setup-footer-text" placeholder="入力なし → © ATTENDANCE SYSTEM"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        <p class="text-xs text-gray-500 mt-1.5 space-y-0.5">
+          💡 例：<span class="font-medium">© ○○FC Since 2018</span><br>
+          💡 例：<span class="font-medium">"全員で上を目指す"</span>
+        </p>
+      </div>
       <div id="setup-status" class="hidden text-sm rounded-lg px-4 py-3 font-medium"></div>
       <button id="setup-save-btn" type="button"
         class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-xl transition-colors">
@@ -492,10 +501,10 @@
   function applyConfig(cfg) {
     if (!cfg) return;
     if (cfg.team_name) {
-      document.getElementById('app-team-name').textContent = cfg.team_name + ' 出欠確認';
-      const footerEl = document.getElementById('footer-text');
-      if (footerEl) footerEl.textContent = `© ${cfg.team_name}`;
+      document.getElementById('app-team-name').textContent = cfg.team_name;
     }
+    const footerEl = document.getElementById('footer-text');
+    if (footerEl) footerEl.textContent = cfg.footer_text || '© ATTENDANCE SYSTEM';
     if (cfg.primary_color) applyColor(cfg.primary_color);
     if (cfg.supabase_url)      SUPABASE_CONFIG.url     = cfg.supabase_url;
     if (cfg.supabase_anon_key) SUPABASE_CONFIG.anonKey = cfg.supabase_anon_key;
@@ -1185,7 +1194,7 @@
     if (d) {
       if (d.u) SUPABASE_CONFIG.url     = d.u;
       if (d.k) SUPABASE_CONFIG.anonKey = d.k;
-      if (d.t) document.getElementById('app-team-name').textContent = d.t + ' 出欠確認';
+      if (d.t) document.getElementById('app-team-name').textContent = d.t;
       if (d.c) applyColor(d.c);
       parentHashConfig = d;
     }
@@ -1324,7 +1333,7 @@
     if (d) {
       if (d.u) SUPABASE_CONFIG.url     = d.u;
       if (d.k) SUPABASE_CONFIG.anonKey = d.k;
-      if (d.t) document.getElementById('app-team-name').textContent = d.t + ' 出欠確認';
+      if (d.t) document.getElementById('app-team-name').textContent = d.t;
       if (d.c) applyColor(d.c);
     }
 
@@ -1498,9 +1507,10 @@
   function openSetupModal() {
     const cfg = loadConfig();
     if (cfg) {
-      document.getElementById('setup-team-name').value = cfg.team_name || '';
-      document.getElementById('setup-url').value       = cfg.supabase_url || '';
-      document.getElementById('setup-anon-key').value  = cfg.supabase_anon_key || '';
+      document.getElementById('setup-team-name').value   = cfg.team_name || '';
+      document.getElementById('setup-url').value         = cfg.supabase_url || '';
+      document.getElementById('setup-anon-key').value    = cfg.supabase_anon_key || '';
+      document.getElementById('setup-footer-text').value = cfg.footer_text || '';
     }
     document.getElementById('setup-status').classList.add('hidden');
     document.getElementById('setup-modal').classList.remove('hidden');
@@ -1512,9 +1522,10 @@
     const load     = document.getElementById('setup-save-loading');
     const statusEl = document.getElementById('setup-status');
 
-    const teamName = document.getElementById('setup-team-name').value.trim();
-    const url      = document.getElementById('setup-url').value.trim();
-    const key      = document.getElementById('setup-anon-key').value.trim();
+    const teamName   = document.getElementById('setup-team-name').value.trim();
+    const url        = document.getElementById('setup-url').value.trim();
+    const key        = document.getElementById('setup-anon-key').value.trim();
+    const footerText = document.getElementById('setup-footer-text').value.trim();
 
     if (!teamName) { setStatus(statusEl, 'チーム名を入力してください', 'error'); return; }
     if (!url || !url.startsWith('https://')) { setStatus(statusEl, 'URLを正しく入力してください（https://...）', 'error'); return; }
@@ -1542,7 +1553,7 @@
     btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
     if (!testOk) return;
 
-    const cfg = { team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: '#c0392b' };
+    const cfg = { team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: '#c0392b', footer_text: footerText || '© ATTENDANCE SYSTEM' };
     saveConfig(cfg);
     applyConfig(cfg);
     supabaseClient = null;
