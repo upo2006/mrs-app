@@ -766,20 +766,14 @@
             <div>
               <label class="block text-gray-700 text-sm font-medium mb-1">得点者<span id="scorer-limit-message" class="text-red-600 ml-2"></span></label>
               <div id="scorers-container" class="space-y-2">
-                <div class="flex gap-2">
-                  <input type="text" id="scorer-input" readonly placeholder="背番号をタップ" onclick="showNumpad('scorer')" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 text-center text-base font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500">
-                  <button type="button" id="add-scorer-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">追加</button>
-                </div>
+                <input type="text" id="scorer-input" readonly placeholder="背番号をタップ" onclick="showNumpad('scorer')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 text-center text-base font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500">
                 <div id="scorers-list" class="flex flex-wrap gap-2"></div>
               </div>
             </div>
             <div>
               <label class="block text-gray-700 text-sm font-medium mb-1">出場選手</label>
               <div class="space-y-2">
-                <div class="flex gap-2">
-                  <input type="text" id="attendee-input" readonly placeholder="背番号をタップ" onclick="showNumpad('attendee')" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 text-center text-base font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500">
-                  <button type="button" id="add-attendee-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">追加</button>
-                </div>
+                <input type="text" id="attendee-input" readonly placeholder="背番号をタップ" onclick="showNumpad('attendee')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 text-center text-base font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <div id="attendees-list" class="flex flex-wrap gap-2"></div>
               </div>
             </div>
@@ -1840,6 +1834,23 @@
       });
     }
 
+    function updateNumpadPlayerName() {
+      const nameEl = document.getElementById('numpad-player-name');
+      if (!nameEl) return;
+      if (!numpadTarget || numpadTarget === 'player') { nameEl.textContent = ''; return; }
+      const input = document.getElementById(numpadInputId());
+      const num = String(input?.value || '').trim();
+      if (!num) { nameEl.textContent = ''; return; }
+      const p = players.find(pl => String(pl.number) === num);
+      if (p) {
+        nameEl.textContent = p.name || '';
+        nameEl.className = 'text-center text-sm min-h-[20px] -mt-1 text-emerald-600 font-bold';
+      } else {
+        nameEl.textContent = '（未登録）';
+        nameEl.className = 'text-center text-sm min-h-[20px] -mt-1 text-gray-400';
+      }
+    }
+
     function adjustScore(id, delta) {
       const input = document.getElementById(id);
       if (!input) return;
@@ -1963,6 +1974,7 @@
       document.getElementById('numpad-display').textContent = input.value || '—';
       const labels = { scorer: '得点者', attendee: '出場選手', player: '背番号' };
       document.getElementById('numpad-label').textContent = labels[target] || '';
+      updateNumpadPlayerName();
       const btn = document.getElementById('numpad-confirm-btn');
       btn.className = btn.className.replace(/bg-\S+|hover:bg-\S+/g, '').trim();
       if (target === 'scorer') btn.classList.add('bg-red-500', 'hover:bg-red-600');
@@ -2004,6 +2016,7 @@
       if (current === '' && digit === '0') return;
       input.value = current + digit;
       document.getElementById('numpad-display').textContent = input.value;
+      updateNumpadPlayerName();
     }
 
     function numpadBackspace() {
@@ -2011,19 +2024,27 @@
       const input = document.getElementById(numpadInputId());
       input.value = input.value.slice(0, -1);
       document.getElementById('numpad-display').textContent = input.value || '—';
+      updateNumpadPlayerName();
     }
 
     function numpadClear() {
       if (!numpadTarget) return;
       document.getElementById(numpadInputId()).value = '';
       document.getElementById('numpad-display').textContent = '—';
+      updateNumpadPlayerName();
     }
 
     function numpadConfirm() {
       if (!numpadTarget) return;
-      if (numpadTarget === 'scorer') { addScorer(); document.getElementById('numpad-display').textContent = '—'; }
-      else if (numpadTarget === 'attendee') { addAttendee(); document.getElementById('numpad-display').textContent = '—'; }
-      else { numpadClose(); }
+      if (numpadTarget === 'scorer') {
+        addScorer();
+        document.getElementById('numpad-display').textContent = '—';
+        updateNumpadPlayerName();
+      } else if (numpadTarget === 'attendee') {
+        addAttendee();
+        document.getElementById('numpad-display').textContent = '—';
+        updateNumpadPlayerName();
+      } else { numpadClose(); }
     }
 
     function addScorer() {
@@ -2106,17 +2127,15 @@
         : 'text-yellow-700 bg-yellow-100 border-yellow-300';
       card.className = `match-card ${result} bg-white rounded-xl shadow cursor-pointer hover:bg-gray-50 transition-colors`;
       card.innerHTML = `
-        <div class="p-4 flex flex-col gap-1.5">
-          <div class="flex items-center justify-between gap-2">
-            <div class="font-bold text-gray-800 truncate">⚽ ${match.opponent || '対戦相手未設定'}</div>
-            ${isParentMode ? '' : `<div class="flex gap-2 shrink-0">
-              <button type="button" class="edit-match-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-3 py-2 rounded-lg transition-colors">編集</button>
-              <button type="button" class="delete-match-btn bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors">削除</button>
-            </div>`}
-          </div>
+        <div class="p-4 flex flex-col gap-1">
+          <div class="font-bold text-gray-800 truncate">⚽ ${match.opponent || '対戦相手未設定'}</div>
           <div class="flex items-center gap-2">
             <span class="text-base font-black text-gray-800">${ourScore} - ${oppScore}</span>
             <span class="text-xs font-bold px-2 py-0.5 rounded-full border ${badgeColor}">${resultLabel}</span>
+            ${isParentMode ? '' : `<div class="flex gap-1.5 ml-auto shrink-0">
+              <button type="button" class="edit-match-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">編集</button>
+              <button type="button" class="delete-match-btn bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">削除</button>
+            </div>`}
           </div>
         </div>
       `;
@@ -4699,6 +4718,7 @@ ${error?.message || ''}`);
           <button type="button" onclick="numpadClose()" class="text-gray-400 hover:text-gray-600 text-xl leading-none px-1">×</button>
         </div>
         <div id="numpad-display" class="bg-gray-100 rounded-xl text-center text-4xl font-black text-gray-800 py-2 min-h-[56px] flex items-center justify-center tracking-widest">—</div>
+        <div id="numpad-player-name" class="text-center text-sm min-h-[20px] -mt-1 text-gray-400"></div>
         <div class="grid grid-cols-3 gap-2">
           <button type="button" onclick="numpadPress('1')" class="numpad-key">1</button>
           <button type="button" onclick="numpadPress('2')" class="numpad-key">2</button>
