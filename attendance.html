@@ -947,15 +947,15 @@
       activeCategoryTab = (groups.find(g => g.evs.length > 0) || groups[0])?.key || null;
     }
     const tabBar = `
-      <div class="bg-white rounded-xl shadow border border-gray-200 mb-3 overflow-hidden">
-        <div class="flex overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch">
-          ${groups.map(({ key, evs }) => {
+      <div class="bg-white rounded-2xl shadow border border-gray-200 p-2 mb-3">
+        <div class="flex gap-1 overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch">
+          ${groups.map(({ key }) => {
             const sk = safeKey(key);
             const active = key === activeCategoryTab;
             return `<button id="tab-btn-${sk}" onclick="switchCategoryTab('${sk}')"
-              class="shrink-0 flex-1 px-3 py-2.5 text-sm font-bold whitespace-nowrap transition-colors
-                ${active ? 'text-red-600 border-b-2 border-red-500' : 'text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50'}"
-            >${escHtml(key)}<span class="ml-1 text-xs font-normal ${active ? 'text-red-400' : 'text-gray-400'}">${evs.length}</span></button>`;
+              class="shrink-0 flex-1 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors
+                ${active ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+            >${escHtml(key)}</button>`;
           }).join('')}
         </div>
       </div>`;
@@ -987,10 +987,8 @@
       const active = s === sk;
       if (panel) panel.classList.toggle('hidden', !active);
       if (btn) {
-        btn.className = `shrink-0 flex-1 px-3 py-2.5 text-sm font-bold whitespace-nowrap transition-colors
-          ${active ? 'text-red-600 border-b-2 border-red-500' : 'text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50'}`;
-        const span = btn.querySelector('span');
-        if (span) span.className = `ml-1 text-xs font-normal ${active ? 'text-red-400' : 'text-gray-400'}`;
+        btn.className = `shrink-0 flex-1 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors
+          ${active ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
       }
     });
   }
