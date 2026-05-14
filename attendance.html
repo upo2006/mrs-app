@@ -1821,7 +1821,7 @@
             </div>
             ${!isActive ? `<button onclick="switchToAttTeam('${team.id}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors">切替</button>` : ''}
             <button onclick="editAttTeam('${team.id}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-colors">編集</button>
-            ${!isActive ? `<button onclick="deleteAttTeam('${team.id}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 text-xs font-bold transition-colors">削除</button>` : ''}
+            <button onclick="deleteAttTeam('${team.id}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 text-xs font-bold transition-colors">削除</button>
           </div>`;
         }).join('')
     ) + `<button onclick="openSetupModal('new')" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-blue-300 text-blue-600 font-bold hover:bg-blue-50 transition-colors mt-1">＋ チームを追加</button>`;
@@ -1845,14 +1845,20 @@
     closeTeamManager();
     openSetupModal('edit-team', teamId);
   }
-  function deleteAttTeam(teamId) {
+  async function deleteAttTeam(teamId) {
     const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
     const team  = teams.find(t => t.id === teamId);
     if (!team) return;
+    if (teams.length === 1) { alert('最後のチームは削除できません'); return; }
     if (!confirm(`「${team.team_name}」を削除しますか？`)) return;
     const newTeams = teams.filter(t => t.id !== teamId);
     localStorage.setItem(STORAGE_TEAMS_KEY, JSON.stringify(newTeams));
-    renderAttTeamList();
+    // 使用中チームを削除した場合は先頭チームへ自動切替
+    if ((localStorage.getItem(STORAGE_ACTIVE_KEY) || teams[0]?.id) === teamId) {
+      await switchToAttTeam(newTeams[0].id);
+    } else {
+      renderAttTeamList();
+    }
   }
 
   function openSetupModal(mode = 'edit', teamId = null) {
