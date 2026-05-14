@@ -1272,17 +1272,18 @@
     const dateShort = ev.event_date
       ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' })
       : '';
-    const row2 = [
-      dateShort   ? `📆 ${escHtml(dateShort)}`       : '',
-      ev.location ? `📍 ${escHtml(ev.location)}`     : '',
-    ].filter(Boolean);
-    const row3 = [
-      ev.event_time ? `🕐 ${escHtml(ev.event_time)}`        : '',
-      ev.transport  ? `🚗 移動：${escHtml(ev.transport)}`  : '',
-    ].filter(Boolean);
-    const rows = [...(row2.length ? [row2.join('　')] : []), ...(row3.length ? [row3.join('　')] : [])];
+    const col1 = [
+      dateShort     ? `📆 ${escHtml(dateShort)}`          : '',
+      ev.event_time ? `🕐 ${escHtml(ev.event_time)}`      : '',
+    ];
+    const col2 = [
+      ev.location  ? `📍 ${escHtml(ev.location)}`         : '',
+      ev.transport ? `🚗 移動：${escHtml(ev.transport)}` : '',
+    ];
+    const gridItems = [col1[0], col2[0], col1[1], col2[1]]
+      .map(s => `<div>${s}</div>`).join('');
     document.getElementById('detail-subtitle').innerHTML =
-      rows.map(r => `<div>${r}</div>`).join('');
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px 6px">${gridItems}</div>`;
 
     const { data: responses, error } = await supabaseClient
       .from(TABLE_RESPONSES)
