@@ -2003,7 +2003,18 @@
     }
 
     function numpadClose() {
+      // 未確定の入力をリセット
+      if (numpadTarget === 'scorer') {
+        const el = document.getElementById('scorer-input');
+        if (el) el.value = '';
+      } else if (numpadTarget === 'attendee') {
+        const el = document.getElementById('attendee-input');
+        if (el) el.value = '';
+      }
       numpadTarget = null;
+      document.getElementById('numpad-display').textContent = '—';
+      const nameEl = document.getElementById('numpad-player-name');
+      if (nameEl) nameEl.textContent = '';
       document.getElementById('numpad-panel').classList.add('hidden');
       document.getElementById('numpad-backdrop').classList.add('hidden');
     }
@@ -2128,14 +2139,14 @@
       card.className = `match-card ${result} bg-white rounded-xl shadow cursor-pointer hover:bg-gray-50 transition-colors`;
       card.innerHTML = `
         <div class="p-4 flex flex-col gap-1">
-          <div class="font-bold text-gray-800 truncate">⚽ ${match.opponent || '対戦相手未設定'}</div>
+          <div class="font-bold text-gray-800 truncate">${match.opponent || '対戦相手未設定'}</div>
           <div class="flex items-center gap-2">
             <span class="text-base font-black text-gray-800">${ourScore} - ${oppScore}</span>
             <span class="text-xs font-bold px-2 py-0.5 rounded-full border ${badgeColor}">${resultLabel}</span>
-            ${isParentMode ? '' : `<div class="flex gap-1.5 ml-auto shrink-0">
+            <div class="flex gap-1.5 ml-auto shrink-0">
               <button type="button" class="edit-match-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">編集</button>
-              <button type="button" class="delete-match-btn bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">削除</button>
-            </div>`}
+              ${isParentMode ? '' : `<button type="button" class="delete-match-btn bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">削除</button>`}
+            </div>
           </div>
         </div>
       `;
@@ -2143,8 +2154,8 @@
         if (e.target.closest('.edit-match-btn') || e.target.closest('.delete-match-btn')) return;
         openMatchDetailModal(match);
       });
+      card.querySelector('.edit-match-btn').addEventListener('click', () => openEditMatchModal(match));
       if (!isParentMode) {
-        card.querySelector('.edit-match-btn').addEventListener('click', () => openEditMatchModal(match));
         card.querySelector('.delete-match-btn').addEventListener('click', () => openDeleteMatchModal(match));
       }
       return card;
