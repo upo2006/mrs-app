@@ -1364,23 +1364,17 @@
         <span class="text-3xl font-black text-white/30">${escHtml(String(d.jersey_number))}</span>
         <span class="text-xl font-black">${escHtml(name)}</span>
       </div>
-      <div class="space-y-0">
-        <div class="flex items-center justify-between py-3 border-b border-gray-100">
-          <span class="text-sm font-medium text-gray-500">出欠</span>
-          <span class="badge ${ATTEND_COLOR[d.attendance] || 'bg-gray-100 text-gray-500'}">${escHtml(d.attendance || '—')}</span>
-        </div>
-        <div class="flex items-center justify-between py-3 border-b border-gray-100">
-          <span class="text-sm font-medium text-gray-500">送迎</span>
-          ${rideHtml}
-        </div>
-        <div class="flex items-center justify-between py-3 border-b border-gray-100">
-          <span class="text-sm font-medium text-gray-500">配車</span>
-          <span class="badge ${CARPOOL_COLOR[d.carpool] || 'bg-gray-100 text-gray-500'}">${escHtml(d.carpool || '—')}</span>
-        </div>
-        <div class="pt-3">
-          <span class="text-sm font-medium text-gray-500 block mb-1">備考</span>
-          <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[1.5rem]">${escHtml(d.notes || '')}</p>
-        </div>
+      <div class="grid grid-cols-3 gap-2 text-center mb-3">
+        <div class="text-xs font-medium text-gray-400">出欠</div>
+        <div class="text-xs font-medium text-gray-400">送迎</div>
+        <div class="text-xs font-medium text-gray-400">配車</div>
+        <div><span class="badge ${ATTEND_COLOR[d.attendance] || 'bg-gray-100 text-gray-500'}">${escHtml(d.attendance || '—')}</span></div>
+        <div>${rideHtml}</div>
+        <div><span class="badge ${CARPOOL_COLOR[d.carpool] || 'bg-gray-100 text-gray-500'}">${escHtml(d.carpool || '—')}</span></div>
+      </div>
+      <div class="border-t border-gray-100 pt-3">
+        <span class="text-xs font-medium text-gray-400 block mb-1">備考</span>
+        <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[1.5rem]">${escHtml(d.notes || '')}</p>
       </div>`;
     document.getElementById('memo-popup').classList.remove('hidden');
   }
