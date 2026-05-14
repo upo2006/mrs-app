@@ -92,23 +92,23 @@
   <!-- 管理者ビュー -->
   <main id="admin-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-3">
     <!-- タブナビ -->
-    <div class="bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
-      <div class="flex gap-2">
+    <div class="bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center gap-2">
+      <div class="flex gap-2 flex-1 min-w-0">
         <button id="tab-events-btn" onclick="showAdminTab('events')"
-          class="px-4 py-2 rounded-xl text-sm font-bold bg-red-500 text-white transition-colors">
+          class="flex-1 px-3 py-2.5 rounded-xl text-sm font-bold bg-red-500 text-white transition-colors whitespace-nowrap">
           ⚽ イベント
         </button>
         <button id="tab-players-btn" onclick="showAdminTab('players')"
-          class="px-4 py-2 rounded-xl text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+          class="flex-1 px-3 py-2.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors whitespace-nowrap">
           👕 選手管理
         </button>
       </div>
       <button id="create-event-btn" type="button"
-        class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
+        class="shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2.5 rounded-xl text-sm transition-colors whitespace-nowrap">
         ＋ 新規作成
       </button>
       <button id="add-player-btn" type="button" onclick="openPlayerModal()"
-        class="hidden bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors">
+        class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2.5 rounded-xl text-sm transition-colors whitespace-nowrap">
         ＋ 選手を追加
       </button>
     </div>
@@ -641,8 +641,8 @@
     document.getElementById('admin-players-section').classList.toggle('hidden', isEvents);
     document.getElementById('create-event-btn').classList.toggle('hidden', !isEvents);
     document.getElementById('add-player-btn').classList.toggle('hidden', isEvents);
-    document.getElementById('tab-events-btn').className  = `px-4 py-2 rounded-xl text-sm font-bold transition-colors ${isEvents  ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-    document.getElementById('tab-players-btn').className = `px-4 py-2 rounded-xl text-sm font-bold transition-colors ${!isEvents ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+    document.getElementById('tab-events-btn').className  = `flex-1 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap ${isEvents  ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+    document.getElementById('tab-players-btn').className = `flex-1 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap ${!isEvents ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
     if (!isEvents) loadPlayers();
   }
 
@@ -698,7 +698,6 @@
     listEl.innerHTML = '';
 
     const renderSection = (label, list) => {
-      if (list.length === 0) return;
       const section = document.createElement('div');
       section.className = 'space-y-2';
       const header = document.createElement('button');
