@@ -563,9 +563,9 @@
   const isParentMode   = params.get('view') === 'parent';
 
   const CATEGORY_ORDER = ['U7','U8','U9','U10','U11','U12'];
-  const ATTEND_COLOR    = { '出席':'bg-green-100 text-green-700', '欠席':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
-  const TRANSPORT_COLOR = { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
-  const CARPOOL_COLOR   = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
+  const ATTEND_COLOR    = { '出席':'bg-green-100 text-green-700', '欠席':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
+  const TRANSPORT_COLOR = { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
+  const CARPOOL_COLOR   = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
   let activeCategoryTab       = localStorage.getItem('att_active_tab')        || null;
   let activeParentCategoryTab = localStorage.getItem('att_parent_active_tab') || null;
 
@@ -1339,9 +1339,9 @@
 
   // ─── 回答テーブル ソート ──────────────────────────────────────────────────
   const SORT_ORDER = {
-    attendance:     { '出席':0, '未定':1, '欠席':2 },
-    transport_need: { '乗せて欲しい':0, '未定':1, '大丈夫':2 },
-    carpool:        { 'できる':0, '未定':1, '難しい':2 },
+    attendance:     { '出席':0, '欠席':1, '未定':2 },
+    transport_need: { '乗せて欲しい':0, '大丈夫':1, '未定':2 },
+    carpool:        { 'できる':0, '難しい':1, '未定':2 },
   };
   function applySortResponses(arr, col, asc) {
     if (!col) return arr;
