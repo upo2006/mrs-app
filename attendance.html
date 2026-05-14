@@ -610,10 +610,9 @@
 
   // ─── 選手名マップ ─────────────────────────────────────────────────────────
   async function loadPlayersMap() {
-    const client = authClient || supabaseClient;
-    if (!client) return;
+    if (!supabaseClient) return;
     try {
-      const { data } = await client
+      const { data } = await supabaseClient
         .from(TABLE_PLAYERS)
         .select('payload')
         .eq('type', 'player');
@@ -648,9 +647,8 @@
   }
 
   async function loadPlayers() {
-    const client = authClient || supabaseClient;
-    if (!client) return;
-    const { data, error } = await client
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
       .from(TABLE_PLAYERS).select('id, payload').eq('type', 'player');
     if (error) { console.error('loadPlayers:', error); return; }
     playerRecords = data || [];
