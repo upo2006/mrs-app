@@ -109,7 +109,7 @@
       </button>
       <button id="add-player-btn" type="button" onclick="openPlayerModal()"
         class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2.5 rounded-xl text-sm transition-colors whitespace-nowrap">
-        ＋ 選手を追加
+        ＋ 選手追加
       </button>
     </div>
     <!-- イベント一覧 -->
@@ -526,6 +526,30 @@
 
   const CATEGORY_ORDER = ['U7','U8','U9','U10','U11','U12'];
 
+  // ─── カテゴリー動的計算ヘルパー ────────────────────────────────────────────
+  function currentFiscalYear() {
+    const now = new Date();
+    return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  }
+  function fiscalYearFromDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+  }
+  function playerCurrentCategory(p) {
+    const payload = p.payload || {};
+    const base = (payload.base_category || payload.category || '').trim();
+    const baseIdx = CATEGORY_ORDER.indexOf(base);
+    if (baseIdx === -1) return base || '未設定';
+    const entryYear = payload.entry_fiscal_year
+      ? Number(payload.entry_fiscal_year)
+      : (p.created_at ? fiscalYearFromDate(p.created_at) : currentFiscalYear());
+    const diff = currentFiscalYear() - entryYear;
+    const idx  = baseIdx + diff;
+    if (idx < 0) return '未入会';
+    if (idx >= CATEGORY_ORDER.length) return '卒業生';
+    return CATEGORY_ORDER[idx];
+  }
+
   // ─── Config ──────────────────────────────────────────────────────────────
   function loadConfig() {
     try {
@@ -649,7 +673,7 @@
   async function loadPlayers() {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient
-      .from(TABLE_PLAYERS).select('id, payload').eq('type', 'player');
+      .from(TABLE_PLAYERS).select('id, payload, created_at').eq('type', 'player');
     if (error) { console.error('loadPlayers:', error); return; }
     playerRecords = data || [];
     // playersMap も更新
@@ -666,7 +690,7 @@
     if (!tbody) return;
     const counts = Object.fromEntries(CATEGORY_ORDER.map(cat => [cat, 0]));
     playerRecords.forEach(p => {
-      const cat = p.payload?.category?.trim();
+      const cat = playerCurrentCategory(p);
       if (cat && counts[cat] !== undefined) counts[cat]++;
     });
     const total = Object.values(counts).reduce((s, v) => s + v, 0);
@@ -690,7 +714,7 @@
     const grouped = Object.fromEntries(CATEGORY_ORDER.map(cat => [cat, []]));
     const uncategorized = [];
     playerRecords.forEach(p => {
-      const cat = p.payload?.category?.trim() || '';
+      const cat = playerCurrentCategory(p);
       if (cat && grouped[cat] !== undefined) grouped[cat].push(p);
       else uncategorized.push(p);
     });
