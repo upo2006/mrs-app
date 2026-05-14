@@ -66,9 +66,7 @@
     }
 
     #team-name {
-      white-space: nowrap;
-      overflow: hidden;
-      max-width: 100%;
+      /* truncate クラスで制御 */
     }
     #settings-menu,
     #settings-menu button {
@@ -185,11 +183,6 @@
     }
 
     @media (max-width: 767px) {
-      #team-name {
-        font-size: clamp(0.85rem, 4.5vw, 2.2rem);
-      }
-
-
 
       .ranking-rank-wrap,
       .ranking-rank-cell {
@@ -217,19 +210,14 @@
 <body class="h-full bg-white">
   <div id="app" class="h-full w-full overflow-auto">
     <header class="p-4">
-      <div class="max-w-[750px] mx-auto bg-gradient-to-r from-red-700 to-red-600 text-white p-6 shadow-lg rounded-2xl">
-        <div class="flex items-center gap-3 mb-2">
-          <span class="text-4xl shrink-0">⚽</span>
+      <div class="max-w-[750px] mx-auto bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 shadow-lg rounded-2xl">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl shrink-0">⚽</span>
           <div class="flex-1 min-w-0">
-            <div class="space-y-1">
-              <h1 id="team-name" class="text-[clamp(0.85rem,4.5vw,2.45rem)] font-black tracking-[0.02em] leading-tight max-w-full">MATCH RECORD SYSTEM</h1>
-              <p class="text-[clamp(0.92rem,2.5vw,1.18rem)] font-semibold tracking-[0.22em] text-white/90 uppercase">MATCH RECORD SYSTEM</p>
-              <p class="text-[0.72rem] md:text-[0.82rem] font-medium text-white/80 tracking-[0.08em]"></p>
-            </div>
-            <div class="mt-3 flex justify-end">
-              <button id="settings-toggle-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors" aria-label="設定">⚙️</button>
-            </div>
+            <h1 id="team-name" class="text-xl font-black leading-tight truncate">MATCH RECORD SYSTEM</h1>
+            <p class="text-[0.7rem] font-semibold tracking-[0.18em] text-white/80 uppercase">MATCH RECORD SYSTEM</p>
           </div>
+          <button id="settings-toggle-btn" type="button" class="shrink-0 bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors" aria-label="設定">⚙️</button>
         </div>
       </div>
     </header>
