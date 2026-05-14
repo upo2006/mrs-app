@@ -852,18 +852,22 @@
     renderEvents();
   }
 
-  // カテゴリー別にグループ化（CATEGORY_ORDER 順 → その他 → 未設定）
+  // カテゴリー別にグループ化（CATEGORY_ORDER 全カテゴリー常に表示 → その他 → 未設定）
   function groupByCategory(evList) {
-    const groups = {};
+    const groups = Object.fromEntries(CATEGORY_ORDER.map(cat => [cat, []]));
+    const extra = {};
     evList.forEach(ev => {
       const cat = ev.category?.trim() || '未設定';
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(ev);
+      if (groups[cat] !== undefined) groups[cat].push(ev);
+      else { if (!extra[cat]) extra[cat] = []; extra[cat].push(ev); }
     });
-    const known   = CATEGORY_ORDER.filter(k => groups[k]);
-    const unknown = Object.keys(groups).filter(k => !CATEGORY_ORDER.includes(k) && k !== '未設定').sort();
-    const nocat   = groups['未設定'] ? ['未設定'] : [];
-    return [...known, ...unknown, ...nocat].map(key => ({ key, evs: groups[key] }));
+    const unknown = Object.keys(extra).filter(k => k !== '未設定').sort();
+    const nocat   = extra['未設定'] ? ['未設定'] : [];
+    return [
+      ...CATEGORY_ORDER.map(key => ({ key, evs: groups[key] })),
+      ...unknown.map(key => ({ key, evs: extra[key] })),
+      ...nocat.map(key => ({ key, evs: extra[key] }))
+    ];
   }
 
   function toggleCategorySection(safeKey) {
@@ -937,10 +941,6 @@
 
   function renderEvents() {
     const el = document.getElementById('event-list');
-    if (events.length === 0) {
-      el.innerHTML = '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow">イベントがありません<br><span class="text-xs mt-1 block">「新規作成」からイベントを追加してください</span></div>';
-      return;
-    }
     const groups = groupByCategory(events);
     el.innerHTML = buildCategoryGroupHtml(groups, buildAdminEventCard);
   }
