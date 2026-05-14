@@ -66,11 +66,17 @@
     }
 
     #team-name {
-      text-wrap: balance;
-      word-break: keep-all;
-      line-break: strict;
+      white-space: nowrap;
+      overflow: hidden;
       max-width: 100%;
     }
+    #settings-menu,
+    #settings-menu button {
+      color: #374151;
+    }
+    #settings-menu .text-red-600   { color: #dc2626; }
+    #settings-menu .text-blue-600  { color: #2563eb; }
+    #settings-menu .text-green-600 { color: #16a34a; }
 
 
     .ranking-row {
@@ -180,8 +186,7 @@
 
     @media (max-width: 767px) {
       #team-name {
-        font-size: clamp(1.5rem, 6.4vw, 2.2rem);
-        max-width: 11.5em;
+        font-size: clamp(0.85rem, 4.5vw, 2.2rem);
       }
 
       #season-header-row {
@@ -220,7 +225,7 @@
           <span class="text-4xl">⚽</span>
           <div class="flex-1">
             <div class="space-y-1">
-              <h1 id="team-name" class="text-[clamp(1.55rem,4.9vw,2.45rem)] font-black tracking-[0.02em] leading-tight break-keep max-w-full">MATCH RECORD SYSTEM</h1>
+              <h1 id="team-name" class="text-[clamp(0.85rem,4.5vw,2.45rem)] font-black tracking-[0.02em] leading-tight max-w-full">MATCH RECORD SYSTEM</h1>
               <p class="text-[clamp(0.92rem,2.5vw,1.18rem)] font-semibold tracking-[0.22em] text-white/90 uppercase">MATCH RECORD SYSTEM</p>
               <p class="text-[0.72rem] md:text-[0.82rem] font-medium text-white/80 tracking-[0.08em]"></p>
             </div>
