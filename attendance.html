@@ -55,6 +55,16 @@
     .resp-table tr:last-child td { border-bottom:none; }
     .resp-table tr:hover td { background:#f9fafb; }
     .badge { display:inline-block; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+
+    /* 時間ピッカー */
+    .tp-digit { width:2.75rem; height:3.25rem; background:#fff; border:2px solid #d1d5db; border-radius:0.75rem; display:flex; align-items:center; justify-content:center; font-size:1.375rem; font-weight:900; color:#1f2937; transition:all .15s; }
+    .tp-digit.active { border-color:#dc2626; background:#fef2f2; color:#dc2626; }
+    .tp-row-active span.tp-row-label { color:#dc2626; font-weight:900; }
+    .tp-num { background:#f3f4f6; border:none; border-radius:0.75rem; padding:.875rem 0; font-size:1.25rem; font-weight:700; color:#1f2937; cursor:pointer; transition:all .15s; width:100%; }
+    .tp-num:active { background:#e5e7eb; transform:scale(.95); }
+    .tp-func { color:#6b7280; font-size:1.1rem; }
+    .tp-now-btn { background:#fee2e2; color:#dc2626; font-size:.85rem; font-weight:900; }
+    .tp-now-btn:active { background:#fecaca; }
   </style>
 </head>
 <body class="h-full bg-gray-50">
@@ -439,8 +449,12 @@
         </div>
         <div>
           <label class="block text-gray-700 text-sm font-bold mb-1">時間</label>
-          <input type="text" id="ev-time" placeholder="例：AM / 13:00〜"
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          <div class="relative">
+            <input type="text" id="ev-time" placeholder="例：9:00〜13:00" readonly
+              class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 pr-10 text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
+              onclick="openTimePicker()">
+            <button type="button" onclick="openTimePicker()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 text-lg leading-none">🕐</button>
+          </div>
         </div>
       </div>
       <!-- Row3: 場所 / 移動手段 -->
@@ -522,6 +536,62 @@
     </div>
     <div class="p-4 space-y-3">
       <div id="att-team-list" class="space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 時間ピッカー -->
+<div id="time-picker-modal" class="hidden fixed inset-0 z-[210] flex items-end sm:items-center justify-center">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTimePicker()"></div>
+  <div class="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+    <!-- ヘッダー -->
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 flex items-center gap-3">
+      <span class="text-xl">🕐</span>
+      <h3 class="text-lg font-black">時間設定</h3>
+    </div>
+    <!-- デジット表示 -->
+    <div class="px-5 pt-4 pb-3 bg-gray-50 border-b border-gray-200 space-y-2.5">
+      <div id="tp-row-0" class="flex items-center gap-2 cursor-pointer" onclick="tpSelectRow(0)">
+        <span class="tp-row-label text-xs font-bold text-gray-400 w-10 shrink-0 transition-colors">開始</span>
+        <div class="flex items-center gap-1.5">
+          <div id="tp-s0" class="tp-digit">—</div>
+          <div id="tp-s1" class="tp-digit">—</div>
+          <span class="text-xl font-black text-gray-300 mx-0.5">:</span>
+          <div id="tp-s2" class="tp-digit">—</div>
+          <div id="tp-s3" class="tp-digit">—</div>
+        </div>
+      </div>
+      <div id="tp-row-1" class="flex items-center gap-2 cursor-pointer" onclick="tpSelectRow(1)">
+        <span class="tp-row-label text-xs font-bold text-gray-400 w-10 shrink-0 transition-colors">終了</span>
+        <div class="flex items-center gap-1.5">
+          <div id="tp-e0" class="tp-digit">—</div>
+          <div id="tp-e1" class="tp-digit">—</div>
+          <span class="text-xl font-black text-gray-300 mx-0.5">:</span>
+          <div id="tp-e2" class="tp-digit">—</div>
+          <div id="tp-e3" class="tp-digit">—</div>
+        </div>
+      </div>
+    </div>
+    <!-- テンキー -->
+    <div class="p-3 grid grid-cols-4 gap-2">
+      <button class="tp-num" onclick="tpInput(1)">1</button>
+      <button class="tp-num" onclick="tpInput(2)">2</button>
+      <button class="tp-num" onclick="tpInput(3)">3</button>
+      <button class="tp-num tp-func" onclick="tpBackspace()">←</button>
+      <button class="tp-num" onclick="tpInput(4)">4</button>
+      <button class="tp-num" onclick="tpInput(5)">5</button>
+      <button class="tp-num" onclick="tpInput(6)">6</button>
+      <button class="tp-num tp-now-btn" onclick="tpNow()">NOW</button>
+      <button class="tp-num" onclick="tpInput(7)">7</button>
+      <button class="tp-num" onclick="tpInput(8)">8</button>
+      <button class="tp-num" onclick="tpInput(9)">9</button>
+      <button class="tp-num" onclick="tpInput(0)">0</button>
+    </div>
+    <!-- アクションボタン -->
+    <div class="px-4 pb-5 grid grid-cols-3 gap-2">
+      <button onclick="confirmTimePicker()" class="bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-xl transition-colors">設定</button>
+      <button onclick="clearTimePicker()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-colors">クリア</button>
+      <button onclick="closeTimePicker()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-colors">戻る</button>
     </div>
   </div>
 </div>
@@ -1432,6 +1502,129 @@
   }
   function closeMemoPopup() {
     document.getElementById('memo-popup').classList.add('hidden');
+  }
+
+  // ─── 時間ピッカー ─────────────────────────────────────────────────────────
+  let tpRow    = 0;           // 0=開始行, 1=終了行
+  let tpCursor = 0;           // 0-3: 行内カーソル位置
+  let tpStart  = ['','','',''];
+  let tpEnd    = ['','','',''];
+
+  function openTimePicker() {
+    const val = (document.getElementById('ev-time').value || '').trim();
+    tpStart = ['','','',''];
+    tpEnd   = ['','','',''];
+    if (val) {
+      const parts = val.split('〜');
+      const parse = (s, arr) => {
+        const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return;
+        const h = m[1].padStart(2,'0');
+        arr[0]=h[0]; arr[1]=h[1]; arr[2]=m[2][0]; arr[3]=m[2][1];
+      };
+      if (parts[0]) parse(parts[0], tpStart);
+      if (parts[1]) parse(parts[1], tpEnd);
+    }
+    tpRow = 0;
+    tpCursor = tpStart.findIndex(d => d === '');
+    if (tpCursor < 0) tpCursor = 4;
+    updateTpDisplay();
+    document.getElementById('time-picker-modal').classList.remove('hidden');
+  }
+
+  function closeTimePicker() {
+    document.getElementById('time-picker-modal').classList.add('hidden');
+  }
+
+  function tpSelectRow(row) {
+    tpRow = row;
+    const arr = row === 0 ? tpStart : tpEnd;
+    tpCursor = arr.findIndex(d => d === '');
+    if (tpCursor < 0) tpCursor = 4;
+    updateTpDisplay();
+  }
+
+  function tpInput(digit) {
+    const arr = tpRow === 0 ? tpStart : tpEnd;
+    if (tpCursor < 4) {
+      arr[tpCursor] = String(digit);
+      tpCursor++;
+    }
+    // 開始行が埋まったら自動で終了行へ
+    if (tpRow === 0 && tpCursor === 4) {
+      const firstEmpty = tpEnd.findIndex(d => d === '');
+      if (firstEmpty >= 0) { tpRow = 1; tpCursor = firstEmpty; }
+    }
+    updateTpDisplay();
+  }
+
+  function tpBackspace() {
+    if (tpCursor > 0) {
+      const arr = tpRow === 0 ? tpStart : tpEnd;
+      tpCursor--;
+      arr[tpCursor] = '';
+    } else if (tpRow === 1) {
+      tpRow = 0; tpCursor = 3; tpStart[3] = '';
+    }
+    updateTpDisplay();
+  }
+
+  function tpNow() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const arr = tpRow === 0 ? tpStart : tpEnd;
+    arr[0]=h[0]; arr[1]=h[1]; arr[2]=m[0]; arr[3]=m[1];
+    tpCursor = 4;
+    updateTpDisplay();
+  }
+
+  function clearTimePicker() {
+    tpStart = ['','','',''];
+    tpEnd   = ['','','',''];
+    tpRow   = 0;
+    tpCursor = 0;
+    updateTpDisplay();
+  }
+
+  function updateTpDisplay() {
+    const rows = [
+      { prefix:'s', arr:tpStart, rowId:'tp-row-0', active:tpRow===0 },
+      { prefix:'e', arr:tpEnd,   rowId:'tp-row-1', active:tpRow===1 },
+    ];
+    rows.forEach(({ prefix, arr, rowId, active }) => {
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById(`tp-${prefix}${i}`);
+        if (!el) return;
+        const isCursor = active && i === tpCursor;
+        el.textContent = arr[i] || '—';
+        el.className = 'tp-digit' + (isCursor ? ' active' : '');
+      }
+      const rowEl = document.getElementById(rowId);
+      if (rowEl) {
+        const label = rowEl.querySelector('.tp-row-label');
+        if (label) label.style.color = active ? '#dc2626' : '';
+      }
+    });
+  }
+
+  function confirmTimePicker() {
+    const fmt = arr => {
+      if (arr.every(d => d === '')) return null;
+      if (arr.some(d => d === '')) return 'INCOMPLETE';
+      const h = arr[0]+arr[1], m = arr[2]+arr[3];
+      if (parseInt(h)>23 || parseInt(m)>59) return 'INVALID';
+      return `${h}:${m}`;
+    };
+    const s = fmt(tpStart), e = fmt(tpEnd);
+    if (s==='INVALID'||e==='INVALID') { alert('正しい時間を入力してください（例：09:00）'); return; }
+    if (s==='INCOMPLETE'||e==='INCOMPLETE') { alert('時間を4桁で入力してください（例：0900）'); return; }
+    let result = '';
+    if (s && e) result = `${s}〜${e}`;
+    else if (s) result = s;
+    else if (e) result = e;
+    document.getElementById('ev-time').value = result;
+    closeTimePicker();
   }
 
   function closeDetailModal() {
