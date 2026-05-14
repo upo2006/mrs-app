@@ -525,6 +525,7 @@
   const isParentMode   = params.get('view') === 'parent';
 
   const CATEGORY_ORDER = ['U7','U8','U9','U10','U11','U12'];
+  let activeCategoryTab = localStorage.getItem('att_active_tab') || null; // 現在選択中のカテゴリータブ（永続化）
 
   // ─── カテゴリー動的計算ヘルパー ────────────────────────────────────────────
   function currentFiscalYear() {
@@ -939,10 +940,65 @@
     }).join('');
   }
 
+  // ─── カテゴリータブ描画（管理者イベント一覧用） ──────────────────────────────
+  function buildCategoryTabsHtml(groups, cardFn) {
+    // アクティブタブが未設定またはリストにない場合は先頭（イベントありを優先）に設定
+    if (!activeCategoryTab || !groups.find(g => g.key === activeCategoryTab)) {
+      activeCategoryTab = (groups.find(g => g.evs.length > 0) || groups[0])?.key || null;
+    }
+    const tabBar = `
+      <div class="bg-white rounded-xl shadow border border-gray-200 mb-3 overflow-hidden">
+        <div class="flex overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch">
+          ${groups.map(({ key, evs }) => {
+            const sk = safeKey(key);
+            const active = key === activeCategoryTab;
+            return `<button id="tab-btn-${sk}" onclick="switchCategoryTab('${sk}')"
+              class="shrink-0 flex-1 px-3 py-2.5 text-sm font-bold whitespace-nowrap transition-colors
+                ${active ? 'text-red-600 border-b-2 border-red-500' : 'text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50'}"
+            >${escHtml(key)}<span class="ml-1 text-xs font-normal ${active ? 'text-red-400' : 'text-gray-400'}">${evs.length}</span></button>`;
+          }).join('')}
+        </div>
+      </div>`;
+    const panels = groups.map(({ key, evs }) => {
+      const sk = safeKey(key);
+      const active = key === activeCategoryTab;
+      const inner = evs.length > 0
+        ? `<div class="space-y-3">${evs.map(cardFn).join('')}</div>`
+        : `<div class="text-center py-10 bg-white rounded-xl shadow border border-gray-100">
+             <p class="text-3xl mb-2">📋</p>
+             <p class="text-sm text-gray-400">このカテゴリーのイベントはありません</p>
+           </div>`;
+      return `<div id="tab-panel-${sk}" class="${active ? '' : 'hidden'}">${inner}</div>`;
+    }).join('');
+    return tabBar + panels;
+  }
+
+  function switchCategoryTab(sk) {
+    const groups = groupByCategory(events);
+    const found = groups.find(g => safeKey(g.key) === sk);
+    if (found) {
+      activeCategoryTab = found.key;
+      localStorage.setItem('att_active_tab', found.key); // 選択を記憶
+    }
+    groups.forEach(({ key }) => {
+      const s = safeKey(key);
+      const panel = document.getElementById('tab-panel-' + s);
+      const btn   = document.getElementById('tab-btn-'   + s);
+      const active = s === sk;
+      if (panel) panel.classList.toggle('hidden', !active);
+      if (btn) {
+        btn.className = `shrink-0 flex-1 px-3 py-2.5 text-sm font-bold whitespace-nowrap transition-colors
+          ${active ? 'text-red-600 border-b-2 border-red-500' : 'text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50'}`;
+        const span = btn.querySelector('span');
+        if (span) span.className = `ml-1 text-xs font-normal ${active ? 'text-red-400' : 'text-gray-400'}`;
+      }
+    });
+  }
+
   function renderEvents() {
     const el = document.getElementById('event-list');
     const groups = groupByCategory(events);
-    el.innerHTML = buildCategoryGroupHtml(groups, buildAdminEventCard);
+    el.innerHTML = buildCategoryTabsHtml(groups, buildAdminEventCard);
   }
 
   // ─── URL短縮（is.gd） ─────────────────────────────────────────────────────
