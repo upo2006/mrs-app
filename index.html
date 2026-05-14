@@ -3369,7 +3369,11 @@ ${error?.message || ''}`);
 
       const scoringCategoryFilter = document.getElementById('scoring-category-filter');
       if (scoringCategoryFilter) {
+        // 保存値を復元
+        const savedScoringCat = localStorage.getItem('mrs_scoring_cat_filter');
+        if (savedScoringCat) scoringCategoryFilter.value = savedScoringCat;
         scoringCategoryFilter.addEventListener('change', () => {
+          localStorage.setItem('mrs_scoring_cat_filter', scoringCategoryFilter.value);
           scoringExpanded = false;
           renderScoringRanking();
         });
@@ -3406,7 +3410,10 @@ ${error?.message || ''}`);
         clearBtn.addEventListener('click', () => {
           matchSearchQuery = '';
           if (searchInput) searchInput.value = '';
-          if (matchCategoryFilter) matchCategoryFilter.value = 'all';
+          if (matchCategoryFilter) {
+            matchCategoryFilter.value = 'all';
+            localStorage.setItem('mrs_match_cat_filter', 'all');
+          }
           renderMatches();
           updateStats();
           updateCategoryStats();
@@ -3414,7 +3421,11 @@ ${error?.message || ''}`);
         });
       }
       if (matchCategoryFilter) {
+        // 保存値を復元
+        const savedMatchCat = localStorage.getItem('mrs_match_cat_filter');
+        if (savedMatchCat) matchCategoryFilter.value = savedMatchCat;
         matchCategoryFilter.addEventListener('change', () => {
+          localStorage.setItem('mrs_match_cat_filter', matchCategoryFilter.value);
           renderMatches();
           updateStats();
         });
