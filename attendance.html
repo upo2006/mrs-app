@@ -80,7 +80,8 @@
         <div class="relative shrink-0">
           <button id="settings-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors">⚙️</button>
           <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
-            <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-red-600 font-bold">⚙️ 接続設定</button>
+            <button type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-blue-600 font-bold">🏟️ チーム管理</button>
+            <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">⚙️ 接続設定</button>
             <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
             <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 保護者リンクを発行</button>
           </div>
@@ -511,6 +512,20 @@
     </div>
   </div>
 </div>
+<!-- チーム管理モーダル -->
+<div id="att-team-manager-modal" class="fixed inset-0 z-[110] hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTeamManager()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-blue-700 to-blue-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+      <h2 class="text-xl font-black">🏟️ チーム管理</h2>
+      <button onclick="closeTeamManager()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="p-4 space-y-3">
+      <div id="att-team-list" class="space-y-2"></div>
+    </div>
+  </div>
+</div>
+
 <!-- 回答詳細ポップアップ -->
 <div id="memo-popup" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-black/50" onclick="closeMemoPopup()"></div>
@@ -1777,6 +1792,52 @@
   });
 
   // ─── 接続設定 ─────────────────────────────────────────────────────────────
+  // ─── チーム管理 ───────────────────────────────────────────────────────────
+  function openTeamManager() {
+    document.getElementById('settings-menu')?.classList.add('hidden');
+    renderAttTeamList();
+    document.getElementById('att-team-manager-modal').classList.remove('hidden');
+  }
+  function closeTeamManager() {
+    document.getElementById('att-team-manager-modal').classList.add('hidden');
+  }
+  function renderAttTeamList() {
+    const teams    = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+    const activeId = localStorage.getItem(STORAGE_ACTIVE_KEY);
+    const container = document.getElementById('att-team-list');
+    if (!container) return;
+    if (teams.length === 0) {
+      container.innerHTML = '<p class="text-center text-gray-400 text-sm py-4">チームがまだ登録されていません<br><span class="text-xs">MRS（試合記録）アプリから追加してください</span></p>';
+      return;
+    }
+    const resolvedActive = activeId || teams[0]?.id;
+    container.innerHTML = teams.map(team => {
+      const isActive = team.id === resolvedActive;
+      return `<div class="flex items-center gap-2 p-3 rounded-xl border-2 ${isActive ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} transition-colors">
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-gray-800 truncate">${escHtml(team.team_name || '名前なし')}</p>
+          ${isActive ? '<p class="text-xs text-blue-600 font-medium">✓ 使用中</p>' : ''}
+        </div>
+        ${!isActive ? `<button onclick="switchToAttTeam('${team.id}')" class="shrink-0 px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors">切替</button>` : ''}
+      </div>`;
+    }).join('');
+  }
+  async function switchToAttTeam(teamId) {
+    const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+    const team  = teams.find(t => t.id === teamId);
+    if (!team) return;
+    localStorage.setItem(STORAGE_ACTIVE_KEY, teamId);
+    const cfg = { supabase_url: team.supabase_url, supabase_anon_key: team.supabase_anon_key, team_name: team.team_name, primary_color: team.primary_color, footer_text: team.footer_text };
+    saveConfig(cfg);
+    applyConfig(cfg);
+    supabaseClient = null;
+    initSupabase();
+    closeTeamManager();
+    events = [];
+    await loadPlayersMap();
+    await loadEvents();
+  }
+
   function openSetupModal() {
     const cfg = loadConfig();
     if (cfg) {
