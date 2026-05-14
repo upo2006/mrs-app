@@ -1475,14 +1475,10 @@
       .from(TABLE_RESPONSES).select('*').eq('event_id', eventId).order('jersey_number');
     if (error) { alert('取得に失敗しました'); return; }
 
-    const attendColor   = { '出席':'bg-green-100 text-green-700', '欠席':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
-    const transportColor= { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
-    const carpoolColor  = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
     const pRideLabel = r => r.transport_need === '乗せて欲しい'
       ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3">乗せて<br>欲しい</span>'
-      : `<span class="badge ${transportColor[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span>`;
+      : `<span class="badge ${TRANSPORT_COLOR[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span>`;
 
-    // 既存の結果モーダルを再利用 or 動的生成
     let modal = document.getElementById('parent-result-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -1490,53 +1486,71 @@
       modal.className = 'fixed inset-0 z-[100]';
       document.body.appendChild(modal);
     }
-    const _categoryTitle = [ev.category, ev.title].filter(Boolean).join('  ／  ');
+
+    // ヘッダー情報
+    const _catBadge = ev.category
+      ? `<span class="inline-block text-xs font-bold bg-white/25 text-white px-2 py-0.5 rounded-full mr-2">${escHtml(ev.category)}</span>` : '';
     const _dateShort = ev.event_date
-      ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' })
-      : '';
-    const _subtitle = [_dateShort, ev.event_time, ev.location].filter(Boolean).join('  ／  ');
+      ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' }) : '';
+    const _col1 = [_dateShort ? `📆 ${escHtml(_dateShort)}` : '', ev.event_time ? `🕐 ${escHtml(ev.event_time)}` : ''];
+    const _col2 = [ev.location ? `📍 ${escHtml(ev.location)}` : '', ev.transport ? `🚗 移動：${escHtml(ev.transport)}` : ''];
+    const _gridItems = [_col1[0], _col2[0], _col1[1], _col2[1]].map(s => `<div>${s}</div>`).join('');
+
+    // テーブル行
+    const tableRows = responses.map(r => {
+      const name  = getPlayerName(r.jersey_number);
+      const notes = r.notes || '';
+      const trunc = notes.length > 10 ? notes.slice(0, 10) + '…' : notes;
+      const rowData = escHtml(JSON.stringify({ jersey_number: r.jersey_number, attendance: r.attendance, transport_need: r.transport_need, carpool: r.carpool, notes }));
+      return `<tr class="cursor-pointer hover:bg-blue-50 active:bg-blue-100" data-resp="${rowData}">
+        <td class="text-left">
+          <span class="block text-xs font-black text-gray-400">${escHtml(r.jersey_number)}</span>
+          <span class="font-medium text-gray-800">${escHtml(name)}</span>
+        </td>
+        <td><span class="badge ${ATTEND_COLOR[r.attendance]||'bg-gray-100 text-gray-500'}">${r.attendance}</span></td>
+        <td>${pRideLabel(r)}</td>
+        <td><span class="badge ${CARPOOL_COLOR[r.carpool]||'bg-gray-100 text-gray-500'}">${r.carpool}</span></td>
+        <td class="text-left text-gray-500 text-xs">${escHtml(trunc)}</td>
+      </tr>`;
+    }).join('');
 
     modal.innerHTML = `
       <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="document.getElementById('parent-result-modal').classList.add('hidden')"></div>
-      <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
-        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-          <div class="min-w-0">
-            <h2 class="text-xl font-black truncate leading-tight">${escHtml(_categoryTitle)}</h2>
-            ${_subtitle ? `<p class="text-sm text-white/80 mt-1">${escHtml(_subtitle)}</p>` : ''}
+      <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:calc(100vh - 2rem)">
+        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
+          <div class="min-w-0 flex-1">
+            <div class="text-xl font-black leading-tight mb-1">${_catBadge}${escHtml(ev.title)}</div>
+            <div class="text-xs text-white/80"><div style="display:inline-grid;grid-template-columns:auto auto;gap:1px 12px">${_gridItems}</div></div>
           </div>
           <button onclick="document.getElementById('parent-result-modal').classList.add('hidden')" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
         </div>
-        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 shrink-0">
           <div class="grid grid-cols-4 gap-2 text-center">
-            <div class="bg-white rounded-xl p-2 shadow-sm"><p class="text-xs text-gray-400 h-7 flex items-center justify-center leading-tight">回答数</p><p class="text-xl font-black text-gray-700">${responses.length}</p></div>
-            <div class="bg-green-50 rounded-xl p-2"><p class="text-xs text-gray-400 h-7 flex items-center justify-center leading-tight">出席</p><p class="text-xl font-black text-green-600">${responses.filter(r=>r.attendance==='出席').length}</p></div>
-            <div class="bg-red-50 rounded-xl p-2"><p class="text-xs text-gray-400 h-7 flex items-center justify-center leading-tight">乗せて<br>欲しい</p><p class="text-xl font-black text-red-600">${responses.filter(r=>r.transport_need==='乗せて欲しい').length}</p></div>
-            <div class="bg-blue-50 rounded-xl p-2"><p class="text-xs text-gray-400 h-7 flex items-center justify-center leading-tight">配車<br>できる</p><p class="text-xl font-black text-blue-600">${responses.filter(r=>r.carpool==='できる').length}</p></div>
+            <div class="bg-white rounded-xl p-2.5 shadow-sm"><p class="text-xs text-gray-400 mb-1 leading-tight">回答数</p><p class="text-xl font-black text-gray-700">${responses.length}</p></div>
+            <div class="bg-green-50 rounded-xl p-2.5"><p class="text-xs text-gray-400 mb-1 leading-tight">出席</p><p class="text-xl font-black text-green-600">${responses.filter(r=>r.attendance==='出席').length}</p></div>
+            <div class="bg-red-50 rounded-xl p-2.5"><p class="text-xs text-gray-400 mb-1 leading-tight">乗せて<br>欲しい</p><p class="text-xl font-black text-red-600">${responses.filter(r=>r.transport_need==='乗せて欲しい').length}</p></div>
+            <div class="bg-blue-50 rounded-xl p-2.5"><p class="text-xs text-gray-400 mb-1 leading-tight">配車<br>できる</p><p class="text-xl font-black text-blue-600">${responses.filter(r=>r.carpool==='できる').length}</p></div>
           </div>
         </div>
-        <div class="p-4 overflow-x-auto">
+        <div class="overflow-y-auto flex-1">
           ${responses.length === 0
             ? '<p class="text-center text-gray-400 text-sm py-8">まだ回答がありません</p>'
             : `<table class="resp-table w-full">
-                <thead><tr>
-                  <th class="text-left">#名前</th><th>出欠</th><th>送迎</th><th>配車</th><th class="text-left">備考</th>
-                </tr></thead>
-                <tbody>${responses.map(r => {
-                  const name = getPlayerName(r.jersey_number);
-                  return `<tr>
-                    <td class="text-left">
-                      <span class="block text-xs font-black text-gray-400">${escHtml(r.jersey_number)}</span>
-                      <span class="font-medium text-gray-800">${escHtml(name)}</span>
-                    </td>
-                    <td><span class="badge ${attendColor[r.attendance]||'bg-gray-100 text-gray-500'}">${r.attendance}</span></td>
-                    <td>${pRideLabel(r)}</td>
-                    <td><span class="badge ${carpoolColor[r.carpool]||'bg-gray-100 text-gray-500'}">${r.carpool}</span></td>
-                    <td class="text-left text-gray-400 text-xs">${escHtml(r.notes||'')}</td>
-                  </tr>`;
-                }).join('')}</tbody>
+                <colgroup>
+                  <col style="width:30%"><col style="width:15%"><col style="width:15%"><col style="width:15%"><col style="width:25%">
+                </colgroup>
+                <thead style="position:sticky;top:0;z-index:10;background:#f9fafb">
+                  <tr><th class="text-left">#名前</th><th>出欠</th><th>送迎</th><th>配車</th><th class="text-left">備考</th></tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
               </table>`}
         </div>
       </div>`;
+
+    // 行クリック → 詳細ポップアップ
+    modal.querySelectorAll('tbody tr[data-resp]').forEach(tr => {
+      tr.addEventListener('click', () => showResponseDetail(JSON.parse(tr.dataset.resp)));
+    });
     modal.classList.remove('hidden');
   }
 
