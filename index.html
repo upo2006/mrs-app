@@ -405,14 +405,19 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-0">
-          <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-            <button id="active-scoring-toggle" type="button" class="flex items-center gap-3 min-w-0 flex-1 text-left">
-              <h3 class="text-sm font-bold whitespace-nowrap">🔥 得点ランキング</h3>
-              
-              <span id="active-scoring-icon" class="text-sm ml-auto">▼</span>
-            </button>
-            <div class="flex items-center gap-2 flex-wrap justify-end shrink-0">
-              <select id="scoring-category-filter" class="bg-red-500 hover:bg-red-400 text-white text-xs font-medium rounded px-2 py-1 transition-colors focus:outline-none focus:ring-2 focus:ring-white">
+          <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-2.5 space-y-2">
+            <!-- 1行目: タイトル ＋ 年度/通算 -->
+            <div class="flex items-center gap-2">
+              <button id="active-scoring-toggle" type="button" class="flex items-center gap-2 min-w-0 flex-1 text-left">
+                <h3 class="text-sm font-bold whitespace-nowrap">🔥 得点ランキング</h3>
+                <span id="active-scoring-icon" class="text-sm ml-auto">▼</span>
+              </button>
+              <button id="tab-scoring-yearly" class="shrink-0 px-3 py-1 rounded text-xs font-medium bg-red-500 text-white">年度</button>
+              <button id="tab-scoring-cumulative" class="shrink-0 px-3 py-1 rounded text-xs font-medium bg-red-600 hover:bg-red-500 text-white">通算</button>
+            </div>
+            <!-- 2行目: カテゴリー絞り込み ＋ 月間 -->
+            <div class="flex items-center gap-2">
+              <select id="scoring-category-filter" class="bg-white/20 text-white text-xs font-medium rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-white">
                 <option value="all">全Cat</option>
                 <option value="U7">U7</option>
                 <option value="U8">U8</option>
@@ -423,8 +428,6 @@
                 <option value="卒業生">卒業生</option>
               </select>
               <button id="tab-scoring-monthly" class="px-3 py-1 rounded text-xs font-medium bg-red-600 hover:bg-red-500 text-white">月間</button>
-              <button id="tab-scoring-yearly" class="px-3 py-1 rounded text-xs font-medium bg-red-500 text-white">年度</button>
-              <button id="tab-scoring-cumulative" class="px-3 py-1 rounded text-xs font-medium bg-red-600 hover:bg-red-500 text-white">通算</button>
             </div>
           </div>
           <div id="active-scoring-content" class=" overflow-x-auto">
@@ -456,14 +459,14 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-0">
-          <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-            <button id="recorded-matches-toggle" type="button" class="flex items-center gap-3 min-w-0 flex-1 text-left">
-              <h3 class="text-sm font-bold whitespace-nowrap">📝 試合カード</h3>
-              <span id="recorded-matches-icon" class="text-sm ml-auto">▼</span>
-            </button>
-            <div class="flex items-center gap-2 flex-wrap justify-end shrink-0">
-              <input id="match-search" type="text" placeholder="試合検索" class="w-28 bg-white/15 placeholder-white/80 text-white text-xs font-medium rounded px-2 py-1 border border-white/20 focus:outline-none focus:ring-2 focus:ring-white">
-              <select id="match-category-filter" class="bg-red-500 hover:bg-red-400 text-white text-xs font-medium rounded px-2 py-1 transition-colors focus:outline-none focus:ring-2 focus:ring-white min-w-[96px]">
+          <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-2.5 space-y-2">
+            <!-- 1行目: タイトル ＋ カテゴリー絞り込み -->
+            <div class="flex items-center gap-2">
+              <button id="recorded-matches-toggle" type="button" class="flex items-center gap-2 min-w-0 flex-1 text-left">
+                <h3 class="text-sm font-bold whitespace-nowrap">📝 試合カード</h3>
+                <span id="recorded-matches-icon" class="text-sm ml-auto">▼</span>
+              </button>
+              <select id="match-category-filter" class="shrink-0 bg-white/20 text-white text-xs font-medium rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-white">
                 <option value="all">全Cat</option>
                 <option value="U7">U7</option>
                 <option value="U8">U8</option>
@@ -472,7 +475,11 @@
                 <option value="U11">U11</option>
                 <option value="U12">U12</option>
               </select>
-              <button id="clear-match-search" type="button" class="bg-white/15 hover:bg-white/25 text-white text-xs font-medium rounded px-3 py-1 transition-colors">クリア</button>
+            </div>
+            <!-- 2行目: 検索ボックス ＋ クリア -->
+            <div class="flex items-center gap-2">
+              <input id="match-search" type="text" placeholder="🔍 試合を検索..." class="flex-1 bg-white/15 placeholder-white/60 text-white text-xs font-medium rounded px-2 py-1 border border-white/20 focus:outline-none focus:ring-2 focus:ring-white">
+              <button id="clear-match-search" type="button" class="shrink-0 bg-white/15 hover:bg-white/25 text-white text-xs font-medium rounded px-3 py-1 transition-colors">クリア</button>
             </div>
           </div>
           <div id="recorded-matches-body" class="p-4">
@@ -2046,14 +2053,29 @@
 
     function createMatchCard(match) {
       const card = document.createElement('div');
-      card.className = 'bg-white rounded-xl shadow p-4 cursor-pointer hover:bg-gray-50 transition-colors';
+      const ourScore = Number(match.our_score ?? 0);
+      const oppScore = Number(match.opponent_score ?? 0);
+      const result   = ourScore > oppScore ? 'win' : ourScore < oppScore ? 'lose' : 'draw';
+      const resultLabel = result === 'win' ? '勝' : result === 'lose' ? '負' : '分';
+      const badgeColor  = result === 'win'
+        ? 'text-green-700 bg-green-100 border-green-300'
+        : result === 'lose'
+        ? 'text-red-700 bg-red-100 border-red-300'
+        : 'text-yellow-700 bg-yellow-100 border-yellow-300';
+      card.className = `match-card ${result} bg-white rounded-xl shadow cursor-pointer hover:bg-gray-50 transition-colors`;
       card.innerHTML = `
-        <div class="flex flex-col gap-2">
-          <div class="font-bold text-gray-800">⚽ ${match.opponent || '対戦相手未設定'} ${match.our_score || 0}-${match.opponent_score || 0}</div>
-          ${isParentMode ? '' : `<div class="flex justify-end gap-2">
-            <button type="button" class="edit-match-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-3 py-2 rounded-lg transition-colors">編集</button>
-            <button type="button" class="delete-match-btn bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors">削除</button>
-          </div>`}
+        <div class="p-4 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-bold text-gray-800 truncate">⚽ ${match.opponent || '対戦相手未設定'}</div>
+            ${isParentMode ? '' : `<div class="flex gap-2 shrink-0">
+              <button type="button" class="edit-match-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-3 py-2 rounded-lg transition-colors">編集</button>
+              <button type="button" class="delete-match-btn bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors">削除</button>
+            </div>`}
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-base font-black text-gray-800">${ourScore} - ${oppScore}</span>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full border ${badgeColor}">${resultLabel}</span>
+          </div>
         </div>
       `;
       card.addEventListener('click', (e) => {
