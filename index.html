@@ -227,24 +227,7 @@
               <p class="text-[0.72rem] md:text-[0.82rem] font-medium text-white/80 tracking-[0.08em]"></p>
             </div>
             <div class="mt-3 flex justify-end">
-              <div class="relative">
-                <button id="settings-toggle-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors" aria-label="設定">⚙️</button>
-                <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40 min-w-max">
-                  <!-- 年度切替 -->
-                  <div id="season-selector-wrap" class="px-4 py-2 border-b border-gray-100">
-                    <div style="color:#6b7280" class="text-xs font-medium mb-1">📅 年度切替</div>
-                    <select id="season-selector" style="color:#374151" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-red-400"></select>
-                  </div>
-                  <button id="import-csv-btn" type="button" style="color:#374151" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors whitespace-nowrap">CSV取込</button>
-                  <button id="preview-csv-btn" type="button" style="color:#374151" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 whitespace-nowrap">CSV確認</button>
-                  <button id="export-csv-btn" type="button" style="color:#374151" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 whitespace-nowrap">CSV出力</button>
-                  <button id="backup-json-btn" type="button" style="color:#374151" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 whitespace-nowrap">バックアップJSON</button>
-                  <button id="open-team-manager-btn" type="button" onclick="openTeamManager()" style="color:#2563eb" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold whitespace-nowrap">🏟️ チーム管理</button>
-                  <button id="open-setup-btn" type="button" onclick="openSetupModal('edit')" style="color:#a93226" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold whitespace-nowrap">⚙️ 接続設定</button>
-                  <button type="button" onclick="openAdminLinkModal()" style="color:#a93226" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold whitespace-nowrap">🔧 管理者リンクを発行</button>
-                  <button type="button" onclick="openParentLinkModal()" style="color:#16a34a" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold whitespace-nowrap">🔗 保護者リンクを発行</button>
-                </div>
-              </div>
+              <button id="settings-toggle-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors" aria-label="設定">⚙️</button>
             </div>
           </div>
         </div>
@@ -938,8 +921,29 @@
     function teamCfgToStorageCfg(team) {
       return { team_name: team.team_name, supabase_url: team.supabase_url, supabase_anon_key: team.supabase_anon_key, supabase_table: 'app_records', footer_text: team.footer_text || '© MATCH RECORD SYSTEM', page_title: `${team.team_name} MATCH RECORD SYSTEM`, primary_color: team.primary_color || '#c0392b' };
     }
-    function openTeamManager() {
+    function openSettingsMenu() {
+      const btn  = document.getElementById('settings-toggle-btn');
+      const menu = document.getElementById('settings-menu');
+      const bd   = document.getElementById('settings-backdrop');
+      if (!btn || !menu) return;
+      const rect  = btn.getBoundingClientRect();
+      const menuW = 220;
+      let left = rect.right - menuW;
+      if (left < 8) left = 8;
+      menu.style.top      = (rect.bottom + 8) + 'px';
+      menu.style.left     = left + 'px';
+      menu.style.minWidth = menuW + 'px';
+      menu.classList.remove('hidden');
+      if (bd) bd.classList.remove('hidden');
+    }
+
+    function closeSettingsMenu() {
       document.getElementById('settings-menu')?.classList.add('hidden');
+      document.getElementById('settings-backdrop')?.classList.add('hidden');
+    }
+
+    function openTeamManager() {
+      closeSettingsMenu();
       renderTeamList();
       document.getElementById('team-manager-modal').classList.remove('hidden');
     }
@@ -3449,7 +3453,7 @@ ${error?.message || ''}`);
           if (player) showPlayerStats(player);
         }
         // 年度変更後にメニューを閉じる
-        document.getElementById('settings-menu')?.classList.add('hidden');
+        closeSettingsMenu();
       });
 
       document.getElementById('stats-mode-season')?.addEventListener('click', () => {
@@ -4031,7 +4035,7 @@ ${error?.message || ''}`);
     const STORAGE_APP_URL_KEY = 'mrs_app_public_url_v1';
 
     function openAdminLinkModal() {
-      document.getElementById('settings-menu')?.classList.add('hidden');
+      closeSettingsMenu();
       const modal = document.getElementById('admin-link-modal');
       if (!modal) return;
       modal.classList.remove('hidden');
@@ -4096,7 +4100,7 @@ ${error?.message || ''}`);
     }
 
     function openParentLinkModal() {
-      document.getElementById('settings-menu')?.classList.add('hidden');
+      closeSettingsMenu();
       const modal = document.getElementById('parent-link-modal');
       if (!modal) return;
       modal.classList.remove('hidden');
@@ -4474,21 +4478,17 @@ ${error?.message || ''}`);
         wireCsvButtons();
         runSelfTests();
 
-        // 設定メニュー
+        // 設定メニュー（fixed配置）
         const settingsToggleBtn = document.getElementById('settings-toggle-btn');
-        const settingsMenu = document.getElementById('settings-menu');
-        if (settingsToggleBtn && settingsMenu) {
+        if (settingsToggleBtn) {
           settingsToggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            settingsMenu.classList.toggle('hidden');
+            const menu = document.getElementById('settings-menu');
+            if (menu?.classList.contains('hidden')) openSettingsMenu();
+            else closeSettingsMenu();
           });
-          document.addEventListener('click', (e) => {
-            if (!settingsMenu.contains(e.target) && !settingsToggleBtn.contains(e.target)) {
-              settingsMenu.classList.add('hidden');
-            }
-          });
-          settingsMenu.querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('click', () => settingsMenu.classList.add('hidden'));
+          document.getElementById('settings-menu')?.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => closeSettingsMenu());
           });
         }
 
@@ -4725,6 +4725,23 @@ ${error?.message || ''}`);
         </div>
       </div>
     </div>
+    <!-- ══ 設定メニュー（body直下・fixed配置） ══ -->
+    <div id="settings-backdrop" class="fixed inset-0 z-[79] hidden" onclick="closeSettingsMenu()"></div>
+    <div id="settings-menu" class="fixed z-[80] hidden bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden" style="min-width:200px">
+      <div id="season-selector-wrap" class="px-4 py-2 border-b border-gray-100">
+        <div class="text-xs font-medium mb-1" style="color:#6b7280">📅 年度切替</div>
+        <select id="season-selector" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none" style="color:#374151"></select>
+      </div>
+      <button id="import-csv-btn" type="button" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 whitespace-nowrap" style="color:#374151">CSV取込</button>
+      <button id="preview-csv-btn" type="button" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#374151">CSV確認</button>
+      <button id="export-csv-btn" type="button" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#374151">CSV出力</button>
+      <button id="backup-json-btn" type="button" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#374151">バックアップJSON</button>
+      <button id="open-team-manager-btn" type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#2563eb">🏟️ チーム管理</button>
+      <button id="open-setup-btn" type="button" onclick="openSetupModal('edit')" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#a93226">⚙️ 接続設定</button>
+      <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#a93226">🔧 管理者リンクを発行</button>
+      <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#16a34a">🔗 保護者リンクを発行</button>
+    </div>
+
     <!-- ══ 設定リセットボタン（設定メニューに追加） ══ -->
 
     <div id="numpad-backdrop" class="fixed inset-0 z-[59] hidden" onclick="numpadClose()"></div>
