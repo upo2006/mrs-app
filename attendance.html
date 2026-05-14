@@ -485,13 +485,13 @@
           <p class="text-xs text-gray-400 mb-1">出席</p>
           <p id="summary-attend" class="text-2xl font-black text-green-600">0</p>
         </div>
-        <div class="bg-blue-50 rounded-xl p-3">
-          <p class="text-xs text-gray-400 mb-1">乗せて欲しい</p>
-          <p id="summary-need-ride" class="text-2xl font-black text-blue-600">0</p>
+        <div class="bg-red-50 rounded-xl p-3">
+          <p class="text-xs text-gray-400 mb-1 leading-tight">乗せて<br>欲しい</p>
+          <p id="summary-need-ride" class="text-2xl font-black text-red-600">0</p>
         </div>
-        <div class="bg-amber-50 rounded-xl p-3">
+        <div class="bg-blue-50 rounded-xl p-3">
           <p class="text-xs text-gray-400 mb-1">配車できる</p>
-          <p id="summary-can-drive" class="text-2xl font-black text-amber-600">0</p>
+          <p id="summary-can-drive" class="text-2xl font-black text-blue-600">0</p>
         </div>
       </div>
     </div>
@@ -1190,15 +1190,17 @@
       noEl.classList.add('hidden');
 
       const attendColor  = { '出席':'bg-green-100 text-green-700', '欠席':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' };
-      const transportColor = { '乗せて欲しい':'bg-blue-100 text-blue-700', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
-      const carpoolColor   = { 'できる':'bg-amber-100 text-amber-700', '難しい':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' };
+      const transportColor = { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
+      const carpoolColor   = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
 
+      const rideLabel = r => r.transport_need === '乗せて欲しい'
+        ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3">乗せて<br>欲しい</span>'
+        : `<span class="badge ${transportColor[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span>`;
       listEl.innerHTML = `
         <table class="resp-table w-full">
           <thead>
             <tr>
-              <th>#</th>
-              <th class="text-left">名前</th>
+              <th class="text-left">#名前</th>
               <th>出欠</th>
               <th>送迎</th>
               <th>配車</th>
@@ -1209,10 +1211,12 @@
             ${responses.map(r => {
               const name = getPlayerName(r.jersey_number);
               return `<tr>
-                <td class="font-black text-gray-700">${escHtml(r.jersey_number)}</td>
-                <td class="text-left font-medium text-gray-800">${escHtml(name)}</td>
+                <td class="text-left">
+                  <span class="block text-xs font-black text-gray-400">${escHtml(r.jersey_number)}</span>
+                  <span class="font-medium text-gray-800">${escHtml(name)}</span>
+                </td>
                 <td><span class="badge ${attendColor[r.attendance] || 'bg-gray-100 text-gray-500'}">${r.attendance}</span></td>
-                <td><span class="badge ${transportColor[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span></td>
+                <td>${rideLabel(r)}</td>
                 <td><span class="badge ${carpoolColor[r.carpool] || 'bg-gray-100 text-gray-500'}">${r.carpool}</span></td>
                 <td class="text-left text-gray-400 text-xs">${escHtml(r.notes || '')}</td>
               </tr>`;
