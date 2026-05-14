@@ -1189,13 +1189,16 @@
     } else {
       noEl.classList.add('hidden');
 
-      const attendColor  = { '出席':'bg-green-100 text-green-700', '欠席':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' };
+      const attendColor  = { '出席':'bg-green-100 text-green-700', '欠席':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
       const transportColor = { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
       const carpoolColor   = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
 
       const rideLabel = r => r.transport_need === '乗せて欲しい'
         ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3">乗せて<br>欲しい</span>'
         : `<span class="badge ${transportColor[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span>`;
+      const carpoolLabel = r => r.carpool === 'できる'
+        ? '<span class="badge bg-blue-100 text-blue-700" style="white-space:normal;text-align:center;line-height:1.3">配車<br>できる</span>'
+        : `<span class="badge ${carpoolColor[r.carpool] || 'bg-gray-100 text-gray-500'}">${r.carpool}</span>`;
       listEl.innerHTML = `
         <table class="resp-table w-full">
           <thead>
@@ -1217,7 +1220,7 @@
                 </td>
                 <td><span class="badge ${attendColor[r.attendance] || 'bg-gray-100 text-gray-500'}">${r.attendance}</span></td>
                 <td>${rideLabel(r)}</td>
-                <td><span class="badge ${carpoolColor[r.carpool] || 'bg-gray-100 text-gray-500'}">${r.carpool}</span></td>
+                <td>${carpoolLabel(r)}</td>
                 <td class="text-left text-gray-400 text-xs">${escHtml(r.notes || '')}</td>
               </tr>`;
             }).join('')}
@@ -1319,9 +1322,15 @@
       .from(TABLE_RESPONSES).select('*').eq('event_id', eventId).order('jersey_number');
     if (error) { alert('取得に失敗しました'); return; }
 
-    const attendColor   = { '出席':'bg-green-100 text-green-700', '欠席':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' };
-    const transportColor= { '乗せて欲しい':'bg-blue-100 text-blue-700', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
-    const carpoolColor  = { 'できる':'bg-amber-100 text-amber-700', '難しい':'bg-red-100 text-red-600', '未定':'bg-gray-100 text-gray-500' };
+    const attendColor   = { '出席':'bg-green-100 text-green-700', '欠席':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
+    const transportColor= { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
+    const carpoolColor  = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-gray-100 text-gray-500' };
+    const pRideLabel = r => r.transport_need === '乗せて欲しい'
+      ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3">乗せて<br>欲しい</span>'
+      : `<span class="badge ${transportColor[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span>`;
+    const pCarpoolLabel = r => r.carpool === 'できる'
+      ? '<span class="badge bg-blue-100 text-blue-700" style="white-space:normal;text-align:center;line-height:1.3">配車<br>できる</span>'
+      : `<span class="badge ${carpoolColor[r.carpool] || 'bg-gray-100 text-gray-500'}">${r.carpool}</span>`;
 
     // 既存の結果モーダルを再利用 or 動的生成
     let modal = document.getElementById('parent-result-modal');
@@ -1351,8 +1360,8 @@
           <div class="grid grid-cols-4 gap-2 text-center">
             <div class="bg-white rounded-xl p-2 shadow-sm"><p class="text-xs text-gray-400">回答数</p><p class="text-xl font-black text-gray-700">${responses.length}</p></div>
             <div class="bg-green-50 rounded-xl p-2"><p class="text-xs text-gray-400">出席</p><p class="text-xl font-black text-green-600">${responses.filter(r=>r.attendance==='出席').length}</p></div>
-            <div class="bg-blue-50 rounded-xl p-2"><p class="text-xs text-gray-400">乗せて欲しい</p><p class="text-xl font-black text-blue-600">${responses.filter(r=>r.transport_need==='乗せて欲しい').length}</p></div>
-            <div class="bg-amber-50 rounded-xl p-2"><p class="text-xs text-gray-400">配車できる</p><p class="text-xl font-black text-amber-600">${responses.filter(r=>r.carpool==='できる').length}</p></div>
+            <div class="bg-red-50 rounded-xl p-2"><p class="text-xs text-gray-400">乗せて欲しい</p><p class="text-xl font-black text-red-600">${responses.filter(r=>r.transport_need==='乗せて欲しい').length}</p></div>
+            <div class="bg-blue-50 rounded-xl p-2"><p class="text-xs text-gray-400">配車できる</p><p class="text-xl font-black text-blue-600">${responses.filter(r=>r.carpool==='できる').length}</p></div>
           </div>
         </div>
         <div class="p-4 overflow-x-auto">
@@ -1360,16 +1369,18 @@
             ? '<p class="text-center text-gray-400 text-sm py-8">まだ回答がありません</p>'
             : `<table class="resp-table w-full">
                 <thead><tr>
-                  <th>#</th><th class="text-left">名前</th><th>出欠</th><th>送迎</th><th>配車</th><th class="text-left">備考</th>
+                  <th class="text-left">#名前</th><th>出欠</th><th>送迎</th><th>配車</th><th class="text-left">備考</th>
                 </tr></thead>
                 <tbody>${responses.map(r => {
                   const name = getPlayerName(r.jersey_number);
                   return `<tr>
-                    <td class="font-black text-gray-700">${escHtml(r.jersey_number)}</td>
-                    <td class="text-left font-medium text-gray-800">${escHtml(name)}</td>
+                    <td class="text-left">
+                      <span class="block text-xs font-black text-gray-400">${escHtml(r.jersey_number)}</span>
+                      <span class="font-medium text-gray-800">${escHtml(name)}</span>
+                    </td>
                     <td><span class="badge ${attendColor[r.attendance]||'bg-gray-100 text-gray-500'}">${r.attendance}</span></td>
-                    <td><span class="badge ${transportColor[r.transport_need]||'bg-gray-100 text-gray-500'}">${r.transport_need}</span></td>
-                    <td><span class="badge ${carpoolColor[r.carpool]||'bg-gray-100 text-gray-500'}">${r.carpool}</span></td>
+                    <td>${pRideLabel(r)}</td>
+                    <td>${pCarpoolLabel(r)}</td>
                     <td class="text-left text-gray-400 text-xs">${escHtml(r.notes||'')}</td>
                   </tr>`;
                 }).join('')}</tbody>
