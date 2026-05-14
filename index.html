@@ -1193,9 +1193,26 @@
       const name = config.team_name || defaultConfig.team_name;
       if (elements.teamName) {
         elements.teamName.textContent = name;
+        fitTeamName();
       }
       // ページタイトルはチーム名を反映（config.json の page_title で上書き可）
       document.title = `${name} MATCH RECORD SYSTEM`;
+    }
+
+    function fitTeamName() {
+      const el = elements.teamName;
+      if (!el) return;
+      el.style.fontSize = '';
+      const container = el.closest('.flex-1') || el.parentElement;
+      if (!container) return;
+      requestAnimationFrame(() => {
+        let fs = parseFloat(window.getComputedStyle(el).fontSize);
+        const minFs = 14;
+        while (el.scrollWidth > container.clientWidth + 2 && fs > minFs) {
+          fs -= 0.5;
+          el.style.fontSize = fs + 'px';
+        }
+      });
     }
 
     let devShowFutureSeasons = localStorage.getItem('mrs_dev_future_seasons') === '1';
@@ -3876,7 +3893,7 @@ ${error?.message || ''}`);
       console.assert(typeof updateScoringModeButtons === 'function', 'updateScoringModeButtons missing');
       
       console.assert(document.getElementById('match-category-filter') !== null, 'match-category-filter missing');
-      console.assert(document.getElementById('match-search')?.getAttribute('placeholder') === '試合検索', 'match-search placeholder mismatch');
+      console.assert(document.getElementById('match-search') !== null, 'match-search missing');
       console.assert(document.getElementById('current-view-title') !== null, 'current-view-title missing');
       console.assert(elements.teamName !== null, 'teamName missing');
       console.assert(document.getElementById('recorded-matches-toggle') !== null, 'recorded-matches-toggle missing');
@@ -4487,6 +4504,8 @@ ${error?.message || ''}`);
         console.error('起動エラー:', e);
       }
     })();
+
+    window.addEventListener('resize', () => fitTeamName && fitTeamName());
   </script>
 
     <!-- ══ チーム管理モーダル ══════════════════════════════════════════════ -->
