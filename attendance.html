@@ -408,22 +408,8 @@
     </div>
     <div class="p-6 space-y-4">
       <input type="hidden" id="edit-event-id">
-      <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">タイトル <span class="text-red-500">*</span></label>
-        <input type="text" id="ev-title" placeholder="例：U11 5.10 試合"
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-      </div>
+      <!-- Row1: カテゴリー / タイトル -->
       <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-1">日付 <span class="text-red-500">*</span></label>
-          <input type="date" id="ev-date"
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-1">時間</label>
-          <input type="text" id="ev-time" placeholder="例：AM / 13:00〜"
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-        </div>
         <div>
           <label class="block text-gray-700 text-sm font-bold mb-1">カテゴリ</label>
           <select id="ev-category"
@@ -438,16 +424,38 @@
           </select>
         </div>
         <div>
+          <label class="block text-gray-700 text-sm font-bold mb-1">タイトル <span class="text-red-500">*</span></label>
+          <input type="text" id="ev-title" placeholder="例：5.10 試合"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+      </div>
+      <!-- Row2: 日付 / 時間 -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-1">日付 <span class="text-red-500">*</span></label>
+          <input type="date" id="ev-date"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-1">時間</label>
+          <input type="text" id="ev-time" placeholder="例：AM / 13:00〜"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+      </div>
+      <!-- Row3: 場所 / 移動手段 -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-1">場所</label>
+          <input type="text" id="ev-location" placeholder="例：伊丹市立桜台小学校"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
           <label class="block text-gray-700 text-sm font-bold mb-1">移動手段</label>
           <input type="text" id="ev-transport" placeholder="例：車"
             class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
         </div>
       </div>
-      <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">場所</label>
-        <input type="text" id="ev-location" placeholder="例：伊丹市立桜台小学校"
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-      </div>
+      <!-- Row4: メモ -->
       <div>
         <label class="block text-gray-700 text-sm font-bold mb-1">メモ（保護者へのお知らせ）</label>
         <textarea id="ev-memo" rows="2" placeholder="任意"
@@ -466,40 +474,50 @@
 <!-- ══ イベント詳細モーダル ══════════════════════════════════════════ -->
 <div id="detail-modal" class="fixed inset-0 z-[100] hidden">
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeDetailModal()"></div>
-  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
-    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-      <div class="min-w-0">
-        <h2 id="detail-title" class="text-xl font-black truncate leading-tight"></h2>
-        <p id="detail-subtitle" class="text-sm text-white/80 mt-1"></p>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:calc(100vh - 2rem)">
+    <!-- 固定: ヘッダー -->
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
+      <div class="min-w-0 flex-1">
+        <div id="detail-title" class="text-xl font-black leading-tight mb-1"></div>
+        <div id="detail-subtitle" class="text-xs text-white/80 space-y-0.5"></div>
       </div>
       <button onclick="closeDetailModal()" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
     </div>
-    <!-- 集計 -->
-    <div class="px-4 py-4 bg-gray-50 border-b border-gray-200">
+    <!-- 固定: 集計 -->
+    <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 shrink-0">
       <div class="grid grid-cols-4 gap-2 text-center">
-        <div class="bg-white rounded-xl p-3 shadow-sm">
-          <p class="text-xs text-gray-400 mb-1 h-8 flex items-center justify-center leading-tight">回答数</p>
-          <p id="summary-total" class="text-2xl font-black text-gray-700">0</p>
+        <div class="bg-white rounded-xl p-2.5 shadow-sm">
+          <p class="text-xs text-gray-400 mb-1 leading-tight">回答数</p>
+          <p id="summary-total" class="text-xl font-black text-gray-700">0</p>
         </div>
-        <div class="bg-green-50 rounded-xl p-3">
-          <p class="text-xs text-gray-400 mb-1 h-8 flex items-center justify-center leading-tight">出席</p>
-          <p id="summary-attend" class="text-2xl font-black text-green-600">0</p>
+        <div class="bg-green-50 rounded-xl p-2.5">
+          <p class="text-xs text-gray-400 mb-1 leading-tight">出席</p>
+          <p id="summary-attend" class="text-xl font-black text-green-600">0</p>
         </div>
-        <div class="bg-red-50 rounded-xl p-3">
-          <p class="text-xs text-gray-400 mb-1 h-8 flex items-center justify-center leading-tight">乗せて<br>欲しい</p>
-          <p id="summary-need-ride" class="text-2xl font-black text-red-600">0</p>
+        <div class="bg-red-50 rounded-xl p-2.5">
+          <p class="text-xs text-gray-400 mb-1 leading-tight">乗せて<br>欲しい</p>
+          <p id="summary-need-ride" class="text-xl font-black text-red-600">0</p>
         </div>
-        <div class="bg-blue-50 rounded-xl p-3">
-          <p class="text-xs text-gray-400 mb-1 h-8 flex items-center justify-center leading-tight">配車<br>できる</p>
-          <p id="summary-can-drive" class="text-2xl font-black text-blue-600">0</p>
+        <div class="bg-blue-50 rounded-xl p-2.5">
+          <p class="text-xs text-gray-400 mb-1 leading-tight">配車<br>できる</p>
+          <p id="summary-can-drive" class="text-xl font-black text-blue-600">0</p>
         </div>
       </div>
     </div>
-    <!-- 回答一覧（テーブル） -->
-    <div class="p-4 overflow-x-auto">
+    <!-- スクロール: 回答一覧 -->
+    <div class="overflow-y-auto flex-1">
       <div id="response-list"></div>
       <p id="no-responses" class="hidden text-center text-gray-400 text-sm py-8">まだ回答がありません</p>
     </div>
+  </div>
+</div>
+<!-- 備考ポップアップ -->
+<div id="memo-popup" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" onclick="closeMemoPopup()"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+    <h3 class="font-bold text-gray-800 mb-3">📝 備考</h3>
+    <p id="memo-popup-text" class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap"></p>
+    <button onclick="closeMemoPopup()" class="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-sm transition-colors">閉じる</button>
   </div>
 </div>
 
@@ -887,7 +905,8 @@
     const dateStr = formatDate(ev.event_date);
     return `<div class="bg-white rounded-2xl shadow p-4" data-event-id="${ev.id}">
       <div class="mb-3">
-        <p class="font-black text-gray-800 mb-1.5">${escHtml(ev.title)}</p>
+        <p class="font-black text-gray-800 mb-1.5">
+          ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1.5">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}</p>
         <div class="text-sm text-gray-500 space-y-0.5">
           ${dateStr        ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
           ${ev.event_time  ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
@@ -909,7 +928,8 @@
     const dateStr = formatDate(ev.event_date);
     return `<div class="bg-white rounded-2xl shadow p-4">
       <div class="mb-3">
-        <p class="font-black text-gray-800 mb-1.5">${escHtml(ev.title)}</p>
+        <p class="font-black text-gray-800 mb-1.5">
+          ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1.5">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}</p>
         <div class="text-sm text-gray-500 space-y-0.5">
           ${dateStr       ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
           ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
@@ -1239,16 +1259,23 @@
     const ev = events.find(e => e.id === eventId);
     if (!ev) return;
 
-    // 1行目：カテゴリ ／ タイトル
+    // ヘッダー: カテゴリバッジ + タイトル
     const titleEl = document.getElementById('detail-title');
-    titleEl.textContent = [ev.category, ev.title].filter(Boolean).join('  ／  ');
+    titleEl.innerHTML = (ev.category ? `<span class="inline-block text-xs font-bold bg-white/25 text-white px-2 py-0.5 rounded-full mr-2">${escHtml(ev.category)}</span>` : '')
+      + escHtml(ev.title);
 
-    // 2行目：日付（月日（曜））／ 時間 ／ 場所
+    // サブ情報: イベントカードと同じアイコン形式
     const dateShort = ev.event_date
       ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' })
       : '';
-    document.getElementById('detail-subtitle').textContent =
-      [dateShort, ev.event_time, ev.location].filter(Boolean).join('  ／  ');
+    const subItems = [
+      dateShort      ? `📆 ${escHtml(dateShort)}`           : '',
+      ev.event_time  ? `🕐 ${escHtml(ev.event_time)}`       : '',
+      ev.location    ? `📍 ${escHtml(ev.location)}`         : '',
+      ev.transport   ? `🚗 移動：${escHtml(ev.transport)}` : '',
+    ].filter(Boolean);
+    document.getElementById('detail-subtitle').innerHTML =
+      subItems.map(s => `<div>${s}</div>`).join('');
 
     const { data: responses, error } = await supabaseClient
       .from(TABLE_RESPONSES)
@@ -1282,7 +1309,14 @@
         : `<span class="badge ${transportColor[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span>`;
       listEl.innerHTML = `
         <table class="resp-table w-full">
-          <thead>
+          <colgroup>
+            <col style="width:20%">
+            <col style="width:15%">
+            <col style="width:15%">
+            <col style="width:15%">
+            <col style="width:35%">
+          </colgroup>
+          <thead style="position:sticky;top:0;z-index:10;background:#f9fafb">
             <tr>
               <th class="text-left">#名前</th>
               <th>出欠</th>
@@ -1293,7 +1327,12 @@
           </thead>
           <tbody>
             ${responses.map(r => {
-              const name = getPlayerName(r.jersey_number);
+              const name  = getPlayerName(r.jersey_number);
+              const notes = r.notes || '';
+              const trunc = notes.length > 14 ? notes.slice(0, 14) + '…' : notes;
+              const notesCell = notes
+                ? `<button onclick="showMemoPopup(${JSON.stringify(notes)})" class="text-left text-xs w-full ${notes.length > 14 ? 'text-blue-600 underline' : 'text-gray-500'} hover:opacity-70">${escHtml(trunc)}</button>`
+                : '';
               return `<tr>
                 <td class="text-left">
                   <span class="block text-xs font-black text-gray-400">${escHtml(r.jersey_number)}</span>
@@ -1302,13 +1341,21 @@
                 <td><span class="badge ${attendColor[r.attendance] || 'bg-gray-100 text-gray-500'}">${r.attendance}</span></td>
                 <td>${rideLabel(r)}</td>
                 <td><span class="badge ${carpoolColor[r.carpool] || 'bg-gray-100 text-gray-500'}">${r.carpool}</span></td>
-                <td class="text-left text-gray-400 text-xs">${escHtml(r.notes || '')}</td>
+                <td class="text-left">${notesCell}</td>
               </tr>`;
             }).join('')}
           </tbody>
         </table>`;
     }
     document.getElementById('detail-modal').classList.remove('hidden');
+  }
+
+  function showMemoPopup(text) {
+    document.getElementById('memo-popup-text').textContent = text;
+    document.getElementById('memo-popup').classList.remove('hidden');
+  }
+  function closeMemoPopup() {
+    document.getElementById('memo-popup').classList.add('hidden');
   }
 
   function closeDetailModal() {
