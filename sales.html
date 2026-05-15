@@ -737,33 +737,33 @@
     <div class="features-grid">
       <div class="feature-card reveal">
         <span class="f-icon">⚽</span>
-        <h3>試合記録</h3>
-        <p>スコア・得点者・出場選手・大会名をスマホから入力。試合会場でもサクッと記録できます。</p>
+        <h3>かんたん試合記録</h3>
+        <p>背番号を入力するだけで選手名が自動で入力。スコア・得点者・出場選手を会場でサッと記録できます。</p>
       </div>
       <div class="feature-card reveal">
         <span class="f-icon">🏆</span>
         <h3>得点ランキング</h3>
-        <p>選手の得点を自動集計。年度別・通算・カテゴリー別に確認でき、前回からの順位変動も表示。</p>
+        <p>年度・通算・月間の3軸で集計。カテゴリー別に絞り込めます。子どもたちのモチベーションが上がります。</p>
       </div>
       <div class="feature-card reveal">
         <span class="f-icon">📈</span>
         <h3>チーム成績</h3>
-        <p>勝率・得失点差・試合数をカテゴリー別に自動集計。シーズン全体の流れが一目でわかります。</p>
+        <p>勝ち・負け・引き分けだけでなく、得点・失点・得失点差も自動集計。カテゴリー別（U10・U11など）でも確認できます。</p>
       </div>
       <div class="feature-card reveal">
         <span class="f-icon">👤</span>
-        <h3>選手ページ</h3>
-        <p>選手ごとの得点履歴・出場試合一覧をワンタップで確認。カテゴリーは年度とともに自動で繰り上がります。</p>
+        <h3>選手個人成績</h3>
+        <p>出場試合数・得点・得点/試合を記録。年度別と通算を切り替えて確認。卒業時には小学校全期間の成績が残ります。</p>
       </div>
       <div class="feature-card reveal">
-        <span class="f-icon">📱</span>
-        <h3>スマホ・PC 対応</h3>
-        <p>アプリのインストール不要。ブラウザで開くだけ。試合会場でも自宅でも快適に使えます。</p>
+        <span class="f-icon">👕</span>
+        <h3>選手管理</h3>
+        <p>カテゴリー別の人数を一覧で把握。年度が替わると選手のカテゴリーが自動で更新されます（例：U11→U12）。</p>
       </div>
       <div class="feature-card reveal">
-        <span class="f-icon">💾</span>
-        <h3>データ書き出し</h3>
-        <p>CSV・JSON でいつでもエクスポート可能。大切なデータはチームのものです。</p>
+        <span class="f-icon">🗂️</span>
+        <h3>試合カード</h3>
+        <p>試合を日付・カテゴリー別に整理して一覧表示。対戦相手名で検索でき、過去の試合もすぐに見つかります。</p>
       </div>
     </div>
 
@@ -787,6 +787,13 @@
         <div>
           <h4>コーチの手間が大幅減</h4>
           <p>記録・集計・管理がすべて自動。子どもたちと向き合う時間を増やせる。</p>
+        </div>
+      </div>
+      <div class="scene-card reveal">
+        <div class="si">🎓</div>
+        <div>
+          <h4>卒業の記念になる</h4>
+          <p>年度・通算の切り替えで6年間の全成績を振り返れる。出場試合数・得点・カテゴリー別成績——子どもへの最高のプレゼント。</p>
         </div>
       </div>
     </div>
@@ -954,6 +961,113 @@
           </div>
         </div>
         <div class="phone-label">チーム成績</div>
+      </div>
+
+      <!-- Screen 4: Match card list -->
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-notch"><span></span></div>
+          <div class="phone-inner">
+            <div class="app-bar">
+              <div class="ab-title">📝 試合カード</div>
+              <div class="ab-sub">FC サンライズ · U11</div>
+            </div>
+            <div class="app-content" style="padding:8px;">
+              <div style="background:#fff; border-radius:6px; padding:5px 8px; margin-bottom:6px; font-size:0.62rem; font-weight:700; color:var(--text-light); border:1px solid #f0f0f0;">
+                🔍 試合を検索...
+              </div>
+              <div style="background:#f0f0f0; border-radius:6px; padding:6px 8px; margin-bottom:4px;">
+                <div style="font-size:0.65rem; font-weight:700; display:flex; align-items:center; gap:4px;">📅 2026年5月（8試合）</div>
+              </div>
+              <div style="font-size:0.6rem; color:var(--text-light); padding:4px 4px 2px; font-weight:700;">📍 2026年5月10日（3試合）</div>
+              <div style="font-size:0.58rem; color:var(--text-light); padding:2px 4px 4px;">👥 U11</div>
+              <div style="background:#fff; border-radius:6px; padding:7px 8px; margin-bottom:3px; border:1px solid #f0f0f0; border-left:3px solid #27ae60;">
+                <div style="font-size:0.68rem; font-weight:700; margin-bottom:2px;">伊丹桜台SC</div>
+                <div style="display:flex; align-items:center; gap:6px; font-size:0.62rem;">
+                  <span style="font-family:'Oswald',sans-serif; font-weight:700;">3 - 0</span>
+                  <span style="background:#e8f5e9; color:#2e7d32; font-size:0.55rem; font-weight:700; padding:2px 6px; border-radius:4px;">勝</span>
+                </div>
+              </div>
+              <div style="background:#fff; border-radius:6px; padding:7px 8px; margin-bottom:3px; border:1px solid #f0f0f0; border-left:3px solid #e74c3c;">
+                <div style="font-size:0.68rem; font-weight:700; margin-bottom:2px;">伊丹桜台SC</div>
+                <div style="display:flex; align-items:center; gap:6px; font-size:0.62rem;">
+                  <span style="font-family:'Oswald',sans-serif; font-weight:700;">0 - 2</span>
+                  <span style="background:#fce4ec; color:#c62828; font-size:0.55rem; font-weight:700; padding:2px 6px; border-radius:4px;">負</span>
+                </div>
+              </div>
+              <div style="background:#fff; border-radius:6px; padding:7px 8px; border:1px solid #f0f0f0; border-left:3px solid #e74c3c;">
+                <div style="font-size:0.68rem; font-weight:700; margin-bottom:2px;">宝塚Jr.</div>
+                <div style="display:flex; align-items:center; gap:6px; font-size:0.62rem;">
+                  <span style="font-family:'Oswald',sans-serif; font-weight:700;">0 - 1</span>
+                  <span style="background:#fce4ec; color:#c62828; font-size:0.55rem; font-weight:700; padding:2px 6px; border-radius:4px;">負</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-label">試合カード</div>
+      </div>
+
+      <!-- Screen 5: Individual player stats -->
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-notch"><span></span></div>
+          <div class="phone-inner">
+            <div class="app-bar">
+              <div class="ab-title">👤 選手個人成績</div>
+              <div class="ab-sub">FC サンライズ</div>
+            </div>
+            <div class="app-content" style="padding:8px;">
+              <div style="background:#fff; border-radius:8px; padding:10px; border:1px solid #f0f0f0; margin-bottom:6px;">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px;">
+                  <div>
+                    <div style="font-size:0.62rem; color:var(--text-light);">U11 / 背番号 10</div>
+                    <div style="font-size:0.9rem; font-weight:900; margin-top:2px;">山田 一郎</div>
+                  </div>
+                  <div style="background:var(--red); color:#fff; font-family:'Oswald',sans-serif; font-weight:700; font-size:0.75rem; padding:5px 8px; border-radius:6px;">#10</div>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                  <div style="flex:1; background:#f8f7f5; border-radius:6px; padding:6px; text-align:center;">
+                    <div style="font-size:0.5rem; color:var(--text-light); margin-bottom:2px;">出場試合数</div>
+                    <div style="font-family:'Oswald',sans-serif; font-size:1rem; font-weight:700;">13</div>
+                  </div>
+                  <div style="flex:1; background:#fff5f5; border-radius:6px; padding:6px; text-align:center; border:1px solid rgba(192,57,43,0.1);">
+                    <div style="font-size:0.5rem; color:var(--text-light); margin-bottom:2px;">得点</div>
+                    <div style="font-family:'Oswald',sans-serif; font-size:1rem; font-weight:700; color:var(--red);">9</div>
+                  </div>
+                  <div style="flex:1; background:#f8f7f5; border-radius:6px; padding:6px; text-align:center;">
+                    <div style="font-size:0.5rem; color:var(--text-light); margin-bottom:2px;">得点/試合</div>
+                    <div style="font-family:'Oswald',sans-serif; font-size:1rem; font-weight:700;">0.69</div>
+                  </div>
+                </div>
+              </div>
+              <div style="font-size:0.6rem; font-weight:700; color:var(--text-light); margin-bottom:4px;">カテゴリー別得点</div>
+              <div style="background:#fff; border-radius:6px; border:1px solid #f0f0f0; overflow:hidden; margin-bottom:6px;">
+                <div style="display:flex; font-size:0.55rem;">
+                  <div style="flex:1; padding:5px 6px; text-align:center; border-right:1px solid #f5f5f5;">
+                    <div style="color:var(--text-light); margin-bottom:2px;">U10</div>
+                    <div style="font-weight:700; color:var(--red);">11</div>
+                  </div>
+                  <div style="flex:1; padding:5px 6px; text-align:center; border-right:1px solid #f5f5f5;">
+                    <div style="color:var(--text-light); margin-bottom:2px;">U11</div>
+                    <div style="font-weight:700; color:var(--red);">9</div>
+                  </div>
+                  <div style="flex:1; padding:5px 6px; text-align:center;">
+                    <div style="color:var(--text-light); margin-bottom:2px;">通算</div>
+                    <div style="font-weight:700;">20</div>
+                  </div>
+                </div>
+              </div>
+              <div style="background:#f8f7f5; border-radius:6px; padding:7px 8px; font-size:0.62rem; color:var(--text-mid); display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+                <span>▶</span> 得点した試合一覧
+              </div>
+              <div style="background:#f8f7f5; border-radius:6px; padding:7px 8px; font-size:0.62rem; color:var(--text-mid); display:flex; align-items:center; gap:6px;">
+                <span>▶</span> 出場した試合一覧
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-label">選手個人成績</div>
       </div>
 
     </div>
@@ -1264,11 +1378,11 @@
         <div class="price-amount">¥800<small>（税込）</small></div>
         <div class="price-note">月額 / いつでも解約可</div>
         <ul class="price-items">
-          <li>試合記録・スコア管理</li>
-          <li>得点ランキング自動集計</li>
-          <li>チーム成績管理</li>
-          <li>選手ページ</li>
-          <li>データ書き出し</li>
+          <li>背番号入力で選手名が自動入力</li>
+          <li>試合カード（日付・カテゴリー別）</li>
+          <li>得点ランキング（年度/通算/月間）</li>
+          <li>チーム成績（得点・失点・得失点差）</li>
+          <li>選手個人成績・選手管理</li>
         </ul>
       </div>
       <div class="price-card">
