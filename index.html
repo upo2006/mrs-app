@@ -4375,8 +4375,9 @@ ${error?.message || ''}`);
 
     async function checkSubscription(email) {
       const { data } = await getAuthClient()
-        .from('subscriptions').select('status').eq('email', email).maybeSingle();
-      return data?.status === 'active';
+        .from('subscriptions').select('status, plan').eq('email', email).maybeSingle();
+      // mrs単体 または セットプランのみ許可
+      return data?.status === 'active' && (data?.plan === 'mrs' || data?.plan === 'set');
     }
 
     function showLoginModal() {
@@ -4421,6 +4422,20 @@ ${error?.message || ''}`);
         btn.disabled = false;
         btnText?.classList.remove('hidden');
         btnLoad?.classList.add('hidden');
+      }
+    }
+
+    async function handleForgotPassword() {
+      const email = document.getElementById('login-email')?.value.trim();
+      if (!email) { setLoginStatus('メールアドレスを入力してください', 'error'); return; }
+      try {
+        const { error } = await getAuthClient().auth.resetPasswordForEmail(email, {
+          redirectTo: 'https://upo2006.github.io/mrs-app/'
+        });
+        if (error) { setLoginStatus('送信に失敗しました', 'error'); return; }
+        setLoginStatus('パスワードリセットメールを送信しました', 'info');
+      } catch(e) {
+        setLoginStatus('送信に失敗しました', 'error');
       }
     }
 
@@ -4614,6 +4629,9 @@ ${error?.message || ''}`);
             <span id="login-btn-text">ログイン</span>
             <span id="login-btn-loading" class="hidden">ログイン中…</span>
           </button>
+          <p class="text-center text-sm text-gray-500 pt-1">
+            <button type="button" onclick="handleForgotPassword()" class="text-red-600 hover:underline">パスワードを忘れた方はこちら</button>
+          </p>
         </div>
       </div>
     </div>

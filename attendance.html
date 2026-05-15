@@ -2331,6 +2331,20 @@
     }
   }
 
+  async function handleForgotPassword() {
+    const email = document.getElementById('att-login-email')?.value.trim();
+    if (!email) { setLoginStatus('メールアドレスを入力してください', 'error'); return; }
+    try {
+      const { error } = await getAuthClient().auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://upo2006.github.io/mrs-app/attendance.html'
+      });
+      if (error) { setLoginStatus('送信に失敗しました', 'error'); return; }
+      setLoginStatus('パスワードリセットメールを送信しました', 'info');
+    } catch(e) {
+      setLoginStatus('送信に失敗しました', 'error');
+    }
+  }
+
   async function handleLogout() {
     await getAuthClient().auth.signOut();
     location.reload();
@@ -2471,6 +2485,9 @@
           <span id="att-login-btn-text">ログイン</span>
           <span id="att-login-btn-loading" class="hidden">ログイン中…</span>
         </button>
+        <p class="text-center text-sm text-gray-500 pt-1">
+          <button type="button" onclick="handleForgotPassword()" style="color: var(--primary);" class="hover:underline">パスワードを忘れた方はこちら</button>
+        </p>
       </div>
     </div>
   </div>
