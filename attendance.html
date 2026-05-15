@@ -1546,14 +1546,35 @@
 
   function tpInput(digit) {
     const arr = tpRow === 0 ? tpStart : tpEnd;
-    if (tpCursor < 4) {
-      arr[tpCursor] = String(digit);
-      tpCursor++;
-    }
-    // 開始行が埋まったら自動で終了行へ
-    if (tpRow === 0 && tpCursor === 4) {
-      const firstEmpty = tpEnd.findIndex(d => d === '');
-      if (firstEmpty >= 0) { tpRow = 1; tpCursor = firstEmpty; }
+    const d = String(digit);
+
+    if (tpCursor === 0) {
+      // H1: ２以上なら "0" を自動挿入してH2に確定、MMに "00" をプリセット
+      if (digit >= 2) {
+        arr[0] = '0'; arr[1] = d;
+        arr[2] = '0'; arr[3] = '0';
+        tpCursor = 2; // M1へ
+      } else {
+        arr[0] = d;
+        tpCursor = 1;
+      }
+    } else if (tpCursor === 1) {
+      // H2が確定 → MMに "00" をプリセットしてM1へ
+      arr[1] = d;
+      arr[2] = '0'; arr[3] = '0';
+      tpCursor = 2;
+    } else if (tpCursor === 2) {
+      // M1入力 → M2へ
+      arr[2] = d;
+      tpCursor = 3;
+    } else if (tpCursor === 3) {
+      // M2入力 → 行完了
+      arr[3] = d;
+      tpCursor = 4;
+      // 開始行完了 → 終了行の先頭へ自動移動
+      if (tpRow === 0) {
+        tpRow = 1; tpCursor = 0;
+      }
     }
     updateTpDisplay();
   }
@@ -1613,16 +1634,16 @@
       if (arr.every(d => d === '')) return null;
       if (arr.some(d => d === '')) return 'INCOMPLETE';
       const h = arr[0]+arr[1], m = arr[2]+arr[3];
-      if (parseInt(h)>23 || parseInt(m)>59) return 'INVALID';
+      if (parseInt(h) > 23 || parseInt(m) > 59) return 'INVALID';
       return `${h}:${m}`;
     };
     const s = fmt(tpStart), e = fmt(tpEnd);
-    if (s==='INVALID'||e==='INVALID') { alert('正しい時間を入力してください（例：09:00）'); return; }
-    if (s==='INCOMPLETE'||e==='INCOMPLETE') { alert('時間を4桁で入力してください（例：0900）'); return; }
+    if (s === 'INVALID' || e === 'INVALID') { alert('正しい時間を入力してください（例：09:00）'); return; }
+    if (s === 'INCOMPLETE' || e === 'INCOMPLETE') { alert('時間が未完成です。入力を確認してください。'); return; }
     let result = '';
-    if (s && e) result = `${s}〜${e}`;
-    else if (s) result = s;
-    else if (e) result = e;
+    if (s && e) result = `${s}〜${e}`;  // 両方: 09:00〜13:00
+    else if (s)  result = `${s}〜`;     // 開始のみ: 09:30〜
+    else if (e)  result = `〜${e}`;     // 終了のみ: 〜13:00
     document.getElementById('ev-time').value = result;
     closeTimePicker();
   }
