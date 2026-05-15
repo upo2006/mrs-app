@@ -1,247 +1,476 @@
 <!doctype html>
-<html lang="ja" class="h-full">
+<html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>お申し込み | スポーツ管理システム</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <title>お申し込み | チーム管理システム</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Noto Sans JP', sans-serif; }
-    :root {
-      --primary:      #c0392b;
-      --primary-dark: #922b21;
-      --primary-mid:  #a93226;
-    }
-    body { background: #f3f4f6; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --red:       #c0392b;
+      --red-dark:  #922b21;
+      --red-light: #e74c3c;
+      --black:     #0a0a0a;
+      --dark:      #111111;
+      --gray:      #1e1e1e;
+      --gray-mid:  #2d2d2d;
+      --gray-light:#888;
+      --off-white: #f5f4f0;
+      --white:     #ffffff;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--black);
+      color: var(--off-white);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      background: rgba(10,10,10,0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-logo {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.15rem;
+      letter-spacing: 0.12em;
+      color: var(--white);
+    }
+    .nav-logo span { color: var(--red-light); }
+    .nav-back {
+      font-size: 0.8rem;
+      color: rgba(245,244,240,0.5);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--off-white); }
+
+    /* ── HERO BAND ── */
+    .hero-band {
+      background: linear-gradient(135deg, var(--red-dark) 0%, var(--red) 100%);
+      padding: 48px 24px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-band::before {
+      content: '';
+      position: absolute;
+      top: -30%; left: -10%;
+      width: 50%; height: 160%;
+      background: rgba(255,255,255,0.04);
+      transform: skewX(-12deg);
+    }
+    .hero-band h1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    .hero-band p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.08em;
+      position: relative;
+    }
+
+    /* ── MAIN ── */
+    .main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .step-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--red-light);
+      margin-bottom: 12px;
+    }
+    .step-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--off-white);
+      margin-bottom: 16px;
+    }
+
+    /* ── PLAN CARDS ── */
     .plan-card {
-      border: 2px solid #e5e7eb;
-      border-radius: 1rem;
+      background: var(--gray);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 18px 20px;
       cursor: pointer;
-      transition: all 0.2s;
-      background: #fff;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
     }
     .plan-card:hover {
-      border-color: var(--primary);
-      box-shadow: 0 4px 20px rgba(192,57,43,0.15);
-      transform: translateY(-2px);
+      border-color: rgba(192,57,43,0.5);
+      transform: translateY(-1px);
     }
     .plan-card.selected {
-      border-color: var(--primary);
-      background: #fff5f5;
-      box-shadow: 0 4px 20px rgba(192,57,43,0.2);
+      border-color: var(--red);
+      background: rgba(192,57,43,0.1);
     }
-    .plan-card.selected .plan-check {
-      opacity: 1;
+    .plan-card-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .plan-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .plan-name {
+      font-size: 0.97rem;
+      font-weight: 700;
+      color: var(--off-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+    .plan-badge {
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      background: var(--red);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+    .plan-desc {
+      font-size: 0.8rem;
+      color: rgba(245,244,240,0.45);
     }
     .plan-check {
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .btn-primary {
-      background: var(--primary);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
       transition: all 0.2s;
     }
-    .btn-primary:hover:not(:disabled) {
-      background: var(--primary-dark);
-      transform: scale(1.02);
+    .plan-card.selected .plan-check {
+      background: var(--red);
+      border-color: var(--red);
     }
-    .btn-primary:disabled {
+    .plan-check::after {
+      content: '';
+      display: none;
+    }
+    .plan-card.selected .plan-check::after {
+      content: '✓';
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    /* ── DIVIDER ── */
+    .divider { height: 32px; }
+
+    /* ── FORM ── */
+    .form-box {
+      background: var(--gray);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 28px 24px;
+    }
+    .form-field { margin-bottom: 20px; }
+    .form-field:last-child { margin-bottom: 0; }
+    .form-field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(245,244,240,0.5);
+      margin-bottom: 8px;
+    }
+    .form-field label span { color: var(--red-light); }
+    .form-field input {
+      width: 100%;
+      background: var(--gray-mid);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: var(--off-white);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.95rem;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-field input::placeholder { color: rgba(245,244,240,0.25); }
+    .form-field input:focus { border-color: var(--red-light); }
+    .form-field .hint {
+      font-size: 0.72rem;
+      color: rgba(245,244,240,0.3);
+      margin-top: 6px;
+    }
+
+    /* ── STATUS ── */
+    #form-status {
+      display: none;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 14px 18px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    #form-status.error   { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.3); color: #e74c3c; }
+    #form-status.info    { background: rgba(52,152,219,0.12); border: 1px solid rgba(52,152,219,0.3); color: #5dade2; }
+    #form-status.success { background: rgba(39,174,96,0.12); border: 1px solid rgba(39,174,96,0.3); color: #2ecc71; }
+
+    /* ── BUTTON ── */
+    .btn-submit {
+      width: 100%;
+      background: var(--red);
+      color: #fff;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1rem;
+      font-weight: 900;
+      padding: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(192,57,43,0.35);
+    }
+    .btn-submit:hover:not(:disabled) {
+      background: var(--red-light);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(192,57,43,0.45);
+    }
+    .btn-submit:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.75rem;
+      color: rgba(245,244,240,0.3);
+      margin-top: 20px;
+      line-height: 1.8;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    footer p { font-size: 0.72rem; color: var(--gray-light); }
+
+    @media (max-width: 520px) {
+      nav { padding: 16px 20px; }
+      .hero-band { padding: 36px 20px 32px; }
+    }
   </style>
 </head>
-<body class="min-h-full">
+<body>
 
-  <!-- ヘッダー -->
-  <div style="background: linear-gradient(to right, #922b21, #c0392b);" class="text-white py-8 px-4 text-center">
-    <div class="text-4xl mb-2">⚽</div>
-    <h1 class="text-2xl font-black">スポーツ管理システム</h1>
-    <p class="text-white/80 text-sm mt-1">お申し込みフォーム</p>
-  </div>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo"><span>MRS</span> チーム管理システム</div>
+  <a href="sales.html" class="nav-back">← サービス紹介へ</a>
+</nav>
 
-  <div class="max-w-lg mx-auto px-4 py-8 space-y-6">
+<!-- HERO BAND -->
+<div class="hero-band">
+  <h1>お申し込みフォーム</h1>
+  <p>プランを選択して、決済ページへお進みください</p>
+</div>
 
-    <!-- プラン選択 -->
-    <div>
-      <h2 class="text-base font-black text-gray-700 mb-3">① プランを選択してください</h2>
-      <div class="space-y-3">
+<div class="main">
 
-        <!-- MRSのみ -->
-        <div class="plan-card p-4" onclick="selectPlan('mrs')" id="plan-mrs">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="text-2xl">📊</div>
-              <div>
-                <div class="font-black text-gray-800">試合記録アプリ</div>
-                <div class="text-sm text-gray-500 mt-0.5">試合記録・スコア管理・選手統計</div>
-              </div>
-            </div>
-            <div class="plan-check text-green-500 text-xl font-black">✓</div>
-          </div>
-        </div>
+  <!-- プラン選択 -->
+  <div class="step-label">Step 01</div>
+  <div class="step-title">プランを選択してください</div>
 
-        <!-- 出欠のみ -->
-        <div class="plan-card p-4" onclick="selectPlan('attendance')" id="plan-attendance">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="text-2xl">📋</div>
-              <div>
-                <div class="font-black text-gray-800">出欠管理アプリ</div>
-                <div class="text-sm text-gray-500 mt-0.5">イベント出欠・送迎・配車管理</div>
-              </div>
-            </div>
-            <div class="plan-check text-green-500 text-xl font-black">✓</div>
-          </div>
-        </div>
-
-        <!-- セット -->
-        <div class="plan-card p-4" onclick="selectPlan('set')" id="plan-set">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="text-2xl">🎯</div>
-              <div>
-                <div class="font-black text-gray-800">セットプラン <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-1">おすすめ</span></div>
-                <div class="text-sm text-gray-500 mt-0.5">試合記録アプリ ＋ 出欠管理アプリの両方が使える</div>
-              </div>
-            </div>
-            <div class="plan-check text-green-500 text-xl font-black">✓</div>
-          </div>
-        </div>
-
+  <div id="plan-mrs" class="plan-card" onclick="selectPlan('mrs')">
+    <div class="plan-card-left">
+      <div class="plan-icon">📊</div>
+      <div>
+        <div class="plan-name">試合記録アプリ</div>
+        <div class="plan-desc">試合記録・スコア管理・選手統計</div>
       </div>
     </div>
-
-    <!-- 情報入力 -->
-    <div>
-      <h2 class="text-base font-black text-gray-700 mb-3">② チーム情報を入力してください</h2>
-      <div class="bg-white rounded-2xl p-5 space-y-4 shadow-sm">
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1">チーム名 <span class="text-red-500">*</span></label>
-          <input id="team-name" type="text" placeholder="例：甲子園サッカースクール"
-            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-        </div>
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
-          <input id="signup-email" type="email" placeholder="email@example.com"
-            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-          <p class="text-xs text-gray-400 mt-1">ログイン時に使用するメールアドレスを入力してください</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- エラー・メッセージ -->
-    <div id="form-status" class="hidden text-sm rounded-xl px-4 py-3 font-medium"></div>
-
-    <!-- 申し込みボタン -->
-    <button onclick="handleSignup()" id="signup-btn"
-      class="btn-primary w-full text-white font-black py-4 rounded-2xl text-base shadow-md">
-      <span id="btn-text">決済ページへ進む →</span>
-      <span id="btn-loading" class="hidden">処理中…</span>
-    </button>
-
-    <p class="text-center text-xs text-gray-400">
-      申し込み後、Squareの決済ページに移動します。<br>
-      決済完了後、ログイン情報をメールでお送りします。
-    </p>
-
+    <div class="plan-check"></div>
   </div>
 
-  <script>
-    const AUTH_URL      = 'https://ggmtlfhctezozcdohzcm.supabase.co';
-    const AUTH_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnbXRsZmhjdGV6b3pjZG9oemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMTIxMDQsImV4cCI6MjA4ODY4ODEwNH0.vpU78D4jYRdGPUTbYvG-vI_KMRwLofUJou_TmZ0FXBo';
+  <div id="plan-attendance" class="plan-card" onclick="selectPlan('attendance')">
+    <div class="plan-card-left">
+      <div class="plan-icon">📋</div>
+      <div>
+        <div class="plan-name">出欠管理アプリ</div>
+        <div class="plan-desc">イベント出欠・送迎・配車管理</div>
+      </div>
+    </div>
+    <div class="plan-check"></div>
+  </div>
 
-    // SquareのサブスクリプションURL
-    const SQUARE_URLS = {
-      mrs:        'https://square.link/u/nnOcTqGf',
-      attendance: 'https://square.link/u/VVzWSIsd',
-      set:        'https://square.link/u/ZNHcL9nz',
-    };
+  <div id="plan-set" class="plan-card" onclick="selectPlan('set')">
+    <div class="plan-card-left">
+      <div class="plan-icon">🎯</div>
+      <div>
+        <div class="plan-name">セットプラン <span class="plan-badge">おすすめ</span></div>
+        <div class="plan-desc">試合記録アプリ ＋ 出欠管理アプリの両方が使える</div>
+      </div>
+    </div>
+    <div class="plan-check"></div>
+  </div>
 
-    const PLAN_LABELS = {
-      mrs:        '試合記録アプリ',
-      attendance: '出欠管理アプリ',
-      set:        'セットプラン',
-    };
+  <div class="divider"></div>
 
-    let selectedPlan = null;
-    const client = window.supabase.createClient(AUTH_URL, AUTH_ANON_KEY);
+  <!-- チーム情報 -->
+  <div class="step-label">Step 02</div>
+  <div class="step-title">チーム情報を入力してください</div>
 
-    function selectPlan(plan) {
-      selectedPlan = plan;
-      ['mrs', 'attendance', 'set'].forEach(p => {
-        document.getElementById('plan-' + p).classList.toggle('selected', p === plan);
+  <div class="form-box">
+    <div class="form-field">
+      <label>チーム名 <span>*</span></label>
+      <input id="team-name" type="text" placeholder="例：甲子園サッカースクール" />
+    </div>
+    <div class="form-field">
+      <label>メールアドレス <span>*</span></label>
+      <input id="signup-email" type="email" placeholder="email@example.com" />
+      <p class="hint">ログイン時に使用するメールアドレスを入力してください</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ステータス -->
+  <div id="form-status"></div>
+
+  <!-- 申し込みボタン -->
+  <button class="btn-submit" onclick="handleSignup()" id="signup-btn">
+    <span id="btn-text">決済ページへ進む →</span>
+    <span id="btn-loading" style="display:none">処理中…</span>
+  </button>
+
+  <p class="footer-note">
+    申し込み後、Squareの決済ページに移動します。<br>
+    決済完了後、ログイン情報をメールでお送りします。
+  </p>
+
+</div>
+
+<footer>
+  <p>© MATCH RECORD SYSTEM. All rights reserved.</p>
+</footer>
+
+<script>
+  const AUTH_URL      = 'https://ggmtlfhctezozcdohzcm.supabase.co';
+  const AUTH_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnbXRsZmhjdGV6b3pjZG9oemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMTIxMDQsImV4cCI6MjA4ODY4ODEwNH0.vpU78D4jYRdGPUTbYvG-vI_KMRwLofUJou_TmZ0FXBo';
+
+  const SQUARE_URLS = {
+    mrs:        'https://square.link/u/nnOcTqGf',
+    attendance: 'https://square.link/u/VVzWSIsd',
+    set:        'https://square.link/u/ZNHcL9nz',
+  };
+
+  const PLAN_LABELS = {
+    mrs:        '試合記録アプリ',
+    attendance: '出欠管理アプリ',
+    set:        'セットプラン',
+  };
+
+  let selectedPlan = null;
+  const client = window.supabase.createClient(AUTH_URL, AUTH_ANON_KEY);
+
+  function selectPlan(plan) {
+    selectedPlan = plan;
+    ['mrs', 'attendance', 'set'].forEach(p => {
+      document.getElementById('plan-' + p).classList.toggle('selected', p === plan);
+    });
+    hideStatus();
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('form-status');
+    el.style.display = 'block';
+    el.className = type;
+    el.textContent = msg;
+  }
+
+  function hideStatus() {
+    const el = document.getElementById('form-status');
+    el.style.display = 'none';
+    el.className = '';
+  }
+
+  async function handleSignup() {
+    const teamName = document.getElementById('team-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+
+    if (!selectedPlan) { showStatus('プランを選択してください', 'error'); return; }
+    if (!teamName)     { showStatus('チーム名を入力してください', 'error'); return; }
+    if (!email)        { showStatus('メールアドレスを入力してください', 'error'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showStatus('正しいメールアドレスを入力してください', 'error'); return;
+    }
+
+    const btn     = document.getElementById('signup-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnLoad = document.getElementById('btn-loading');
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoad.style.display = 'inline';
+
+    try {
+      const { error } = await client.from('pending_signups').insert({
+        team_name: teamName,
+        email:     email,
+        plan:      selectedPlan,
       });
-      hideStatus();
-    }
 
-    function showStatus(msg, type) {
-      const el = document.getElementById('form-status');
-      el.classList.remove('hidden');
-      const styles = {
-        error: 'bg-red-50 border border-red-200 text-red-700',
-        info:  'bg-blue-50 border border-blue-200 text-blue-700',
-        success: 'bg-green-50 border border-green-200 text-green-700',
-      };
-      el.className = `text-sm rounded-xl px-4 py-3 font-medium ${styles[type] || styles.info}`;
-      el.textContent = msg;
-    }
-
-    function hideStatus() {
-      document.getElementById('form-status').classList.add('hidden');
-    }
-
-    async function handleSignup() {
-      const teamName = document.getElementById('team-name').value.trim();
-      const email    = document.getElementById('signup-email').value.trim();
-
-      if (!selectedPlan) { showStatus('プランを選択してください', 'error'); return; }
-      if (!teamName)     { showStatus('チーム名を入力してください', 'error'); return; }
-      if (!email)        { showStatus('メールアドレスを入力してください', 'error'); return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showStatus('正しいメールアドレスを入力してください', 'error'); return;
+      if (error) {
+        console.error(error);
+        showStatus('送信に失敗しました。しばらくしてから再試行してください。', 'error');
+        return;
       }
 
-      const btn     = document.getElementById('signup-btn');
-      const btnText = document.getElementById('btn-text');
-      const btnLoad = document.getElementById('btn-loading');
-      btn.disabled = true;
-      btnText.classList.add('hidden');
-      btnLoad.classList.remove('hidden');
+      showStatus(`${PLAN_LABELS[selectedPlan]}の決済ページへ移動します…`, 'success');
+      setTimeout(() => {
+        window.location.href = SQUARE_URLS[selectedPlan];
+      }, 1500);
 
-      try {
-        // Supabaseにpending_signupsとして保存
-        const { error } = await client.from('pending_signups').insert({
-          team_name: teamName,
-          email:     email,
-          plan:      selectedPlan,
-        });
-
-        if (error) {
-          console.error(error);
-          showStatus('送信に失敗しました。しばらくしてから再試行してください。', 'error');
-          return;
-        }
-
-        // Squareの決済ページへリダイレクト
-        showStatus(`${PLAN_LABELS[selectedPlan]}の決済ページへ移動します…`, 'success');
-        setTimeout(() => {
-          window.location.href = SQUARE_URLS[selectedPlan];
-        }, 1500);
-
-      } catch(e) {
-        showStatus('エラーが発生しました。', 'error');
-      } finally {
-        btn.disabled = false;
-        btnText.classList.remove('hidden');
-        btnLoad.classList.add('hidden');
-      }
+    } catch(e) {
+      showStatus('エラーが発生しました。', 'error');
+    } finally {
+      btn.disabled = false;
+      btnText.style.display = 'inline';
+      btnLoad.style.display = 'none';
     }
-  </script>
+  }
+</script>
 
 </body>
 </html>
