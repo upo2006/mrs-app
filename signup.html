@@ -287,9 +287,29 @@
     }
     footer p { font-size: 0.72rem; color: var(--gray-light); }
 
+    /* ── STICKY BOTTOM CTA (mobile) ── */
+    .sticky-cta {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 16px;
+      display: none;
+    }
+    .sticky-cta .btn-submit {
+      margin: 0;
+      font-size: 0.95rem;
+      padding: 14px;
+    }
+
     @media (max-width: 520px) {
-      nav { padding: 16px 20px; }
-      .hero-band { padding: 36px 20px 32px; }
+      nav { padding: 14px 16px; }
+      .hero-band { padding: 32px 16px 28px; }
+      .main { padding: 28px 16px 120px; }
+      .form-box { padding: 20px 16px; }
+      .sticky-cta { display: block; }
+      .btn-submit { display: none; }
+      .footer-note { margin-bottom: 4px; }
     }
   </style>
 </head>
@@ -370,6 +390,11 @@
   <div id="form-status"></div>
 
   <!-- 申し込みボタン -->
+  <div id="price-summary" style="display:none; background:rgba(192,57,43,0.08); border:1px solid rgba(192,57,43,0.2); border-radius:6px; padding:12px 16px; margin-bottom:16px; display:none;">
+    <div style="font-size:0.72rem; color:var(--red); font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px;">選択中のプラン</div>
+    <div id="price-summary-text" style="font-size:1rem; font-weight:900; color:var(--off-white);"></div>
+  </div>
+
   <button class="btn-submit" onclick="handleSignup()" id="signup-btn">
     <span id="btn-text">決済ページへ進む →</span>
     <span id="btn-loading" style="display:none">処理中…</span>
@@ -380,6 +405,14 @@
     決済完了後、ログイン情報をメールでお送りします。
   </p>
 
+</div>
+
+<!-- STICKY BOTTOM CTA (mobile) -->
+<div class="sticky-cta">
+  <button class="btn-submit" onclick="handleSignup()" id="signup-btn-sticky">
+    <span id="btn-text-sticky">決済ページへ進む →</span>
+    <span id="btn-loading-sticky" style="display:none">処理中…</span>
+  </button>
 </div>
 
 <footer>
@@ -405,11 +438,24 @@
   let selectedPlan = null;
   const client = window.supabase.createClient(AUTH_URL, AUTH_ANON_KEY);
 
+  const PLAN_PRICES = {
+    mrs: '試合記録アプリ · ¥800/月',
+    attendance: '出欠管理アプリ · ¥800/月',
+    set: 'セットプラン · ¥1,000/月',
+  };
+
   function selectPlan(plan) {
     selectedPlan = plan;
     ['mrs', 'attendance', 'set'].forEach(p => {
       document.getElementById('plan-' + p).classList.toggle('selected', p === plan);
     });
+    // 料金サマリー表示
+    const ps = document.getElementById('price-summary');
+    const pt = document.getElementById('price-summary-text');
+    if (ps && pt) {
+      pt.textContent = PLAN_PRICES[plan] || '';
+      ps.style.display = 'block';
+    }
     hideStatus();
   }
 
