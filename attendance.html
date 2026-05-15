@@ -65,6 +65,9 @@
     .tp-func { color:#6b7280; font-size:1.1rem; }
     .tp-now-btn { background:#fee2e2; color:#dc2626; font-size:.85rem; font-weight:900; }
     .tp-now-btn:active { background:#fecaca; }
+    .tp-ampm { background:#f3f4f6; color:#6b7280; border:2px solid transparent; transition:all .15s; cursor:pointer; }
+    .tp-ampm.active { background:#fef2f2; color:#dc2626; border-color:#dc2626; }
+    .tp-ampm:active { opacity:.8; }
   </style>
 </head>
 <body class="h-full bg-gray-50">
@@ -419,58 +422,55 @@
     </div>
     <div class="p-6 space-y-4">
       <input type="hidden" id="edit-event-id">
-      <!-- Row1: カテゴリー / タイトル -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-1">カテゴリ</label>
-          <select id="ev-category"
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-            <option value="">未設定</option>
-            <option value="U7">U7</option>
-            <option value="U8">U8</option>
-            <option value="U9">U9</option>
-            <option value="U10">U10</option>
-            <option value="U11">U11</option>
-            <option value="U12">U12</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-1">タイトル <span class="text-red-500">*</span></label>
-          <input type="text" id="ev-title" placeholder="例：5.10 試合"
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+      <!-- カテゴリー -->
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">カテゴリ</label>
+        <select id="ev-category"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          <option value="">未設定</option>
+          <option value="U7">U7</option>
+          <option value="U8">U8</option>
+          <option value="U9">U9</option>
+          <option value="U10">U10</option>
+          <option value="U11">U11</option>
+          <option value="U12">U12</option>
+        </select>
+      </div>
+      <!-- タイトル -->
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">タイトル <span class="text-red-500">*</span></label>
+        <input type="text" id="ev-title" placeholder="例：5.10 試合"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+      </div>
+      <!-- 日付 -->
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">日付 <span class="text-red-500">*</span></label>
+        <input type="date" id="ev-date"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+      </div>
+      <!-- 時間 -->
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">時間</label>
+        <div class="relative">
+          <input type="text" id="ev-time" placeholder="タップして時間を設定" readonly
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 pr-10 text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
+            onclick="openTimePicker()">
+          <button type="button" onclick="openTimePicker()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 text-lg leading-none">🕐</button>
         </div>
       </div>
-      <!-- Row2: 日付 / 時間 -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-1">日付 <span class="text-red-500">*</span></label>
-          <input type="date" id="ev-date"
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-1">時間</label>
-          <div class="relative">
-            <input type="text" id="ev-time" placeholder="例：9:00〜13:00" readonly
-              class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 pr-10 text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
-              onclick="openTimePicker()">
-            <button type="button" onclick="openTimePicker()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 text-lg leading-none">🕐</button>
-          </div>
-        </div>
+      <!-- 場所 -->
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">場所</label>
+        <input type="text" id="ev-location" placeholder="例：伊丹市立桜台小学校"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
       </div>
-      <!-- Row3: 場所 / 移動手段 -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-1">場所</label>
-          <input type="text" id="ev-location" placeholder="例：伊丹市立桜台小学校"
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-1">移動手段</label>
-          <input type="text" id="ev-transport" placeholder="例：車"
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-        </div>
+      <!-- 移動手段 -->
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">移動手段</label>
+        <input type="text" id="ev-transport" placeholder="例：車"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
       </div>
-      <!-- Row4: メモ -->
+      <!-- メモ -->
       <div>
         <label class="block text-gray-700 text-sm font-bold mb-1">メモ（保護者へのお知らせ）</label>
         <textarea id="ev-memo" rows="2" placeholder="任意"
@@ -549,10 +549,17 @@
       <span class="text-xl">🕐</span>
       <h3 class="text-lg font-black">時間設定</h3>
     </div>
+    <!-- 午前/午後/終日 -->
+    <div class="px-4 pt-3 pb-0 flex gap-2">
+      <button id="tp-btn-none" class="tp-ampm flex-1 py-1.5 rounded-lg text-sm font-bold" onclick="tpSetAmPm('')">指定なし</button>
+      <button id="tp-btn-am"   class="tp-ampm flex-1 py-1.5 rounded-lg text-sm font-bold" onclick="tpSetAmPm('午前')">午前</button>
+      <button id="tp-btn-pm"   class="tp-ampm flex-1 py-1.5 rounded-lg text-sm font-bold" onclick="tpSetAmPm('午後')">午後</button>
+      <button id="tp-btn-all"  class="tp-ampm flex-1 py-1.5 rounded-lg text-sm font-bold" onclick="tpSetAmPm('終日')">終日</button>
+    </div>
     <!-- デジット表示 -->
-    <div class="px-5 pt-4 pb-3 bg-gray-50 border-b border-gray-200 space-y-2.5">
+    <div class="px-5 pt-3 pb-3 bg-gray-50 border-b border-gray-200 space-y-2.5">
       <div id="tp-row-0" class="flex items-center gap-2">
-        <span class="tp-row-label text-xs font-bold text-gray-400 w-10 shrink-0 transition-colors">開始</span>
+        <span class="tp-row-label text-xs font-bold text-gray-400 w-10 shrink-0 transition-colors cursor-pointer" onclick="tpMoveCursor(0,0)">開始</span>
         <div class="flex items-center gap-1.5">
           <div id="tp-s0" class="tp-digit cursor-pointer" onclick="tpMoveCursor(0,0)">—</div>
           <div id="tp-s1" class="tp-digit cursor-pointer" onclick="tpMoveCursor(0,1)">—</div>
@@ -562,7 +569,7 @@
         </div>
       </div>
       <div id="tp-row-1" class="flex items-center gap-2">
-        <span class="tp-row-label text-xs font-bold text-gray-400 w-10 shrink-0 transition-colors">終了</span>
+        <span class="tp-row-label text-xs font-bold text-gray-400 w-10 shrink-0 transition-colors cursor-pointer" onclick="tpMoveCursor(1,0)">終了</span>
         <div class="flex items-center gap-1.5">
           <div id="tp-e0" class="tp-digit cursor-pointer" onclick="tpMoveCursor(1,0)">—</div>
           <div id="tp-e1" class="tp-digit cursor-pointer" onclick="tpMoveCursor(1,1)">—</div>
@@ -1509,13 +1516,23 @@
   let tpCursor = 0;           // 0-3: 行内カーソル位置
   let tpStart  = ['','','',''];
   let tpEnd    = ['','','',''];
+  let tpAmPm   = '';          // '' | '午前' | '午後' | '終日'
 
   function openTimePicker() {
     const val = (document.getElementById('ev-time').value || '').trim();
     tpStart = ['','','',''];
     tpEnd   = ['','','',''];
-    if (val) {
-      const parts = val.split('〜');
+    tpAmPm  = '';
+
+    if (val === '終日') {
+      tpAmPm = '終日';
+    } else if (val) {
+      // prefix解析（午前/午後）
+      let body = val;
+      if (body.startsWith('午前')) { tpAmPm = '午前'; body = body.slice(2).trim(); }
+      else if (body.startsWith('午後')) { tpAmPm = '午後'; body = body.slice(2).trim(); }
+      // 時刻解析
+      const parts = body.split('〜');
       const parse = (s, arr) => {
         const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
         if (!m) return;
@@ -1525,10 +1542,12 @@
       if (parts[0]) parse(parts[0], tpStart);
       if (parts[1]) parse(parts[1], tpEnd);
     }
+
     tpRow = 0;
     tpCursor = tpStart.findIndex(d => d === '');
     if (tpCursor < 0) tpCursor = 4;
     updateTpDisplay();
+    updateTpAmPmDisplay();
     document.getElementById('time-picker-modal').classList.remove('hidden');
   }
 
@@ -1610,9 +1629,36 @@
   function clearTimePicker() {
     tpStart = ['','','',''];
     tpEnd   = ['','','',''];
+    tpAmPm  = '';
     tpRow   = 0;
     tpCursor = 0;
     updateTpDisplay();
+    updateTpAmPmDisplay();
+  }
+
+  function tpSetAmPm(val) {
+    tpAmPm = val;
+    updateTpAmPmDisplay();
+    // 終日はすぐ確定して閉じる
+    if (val === '終日') {
+      document.getElementById('ev-time').value = '終日';
+      closeTimePicker();
+    }
+  }
+
+  function updateTpAmPmDisplay() {
+    const map = { '':'tp-btn-none', '午前':'tp-btn-am', '午後':'tp-btn-pm', '終日':'tp-btn-all' };
+    ['tp-btn-none','tp-btn-am','tp-btn-pm','tp-btn-all'].forEach(id => {
+      document.getElementById(id)?.classList.remove('active');
+    });
+    const activeId = map[tpAmPm];
+    if (activeId) document.getElementById(activeId)?.classList.add('active');
+    // 終日選択中はデジット入力を無効化
+    const disabled = tpAmPm === '終日';
+    document.querySelectorAll('.tp-digit, .tp-num').forEach(el => {
+      el.style.opacity = disabled ? '0.35' : '';
+      el.style.pointerEvents = disabled ? 'none' : '';
+    });
   }
 
   function updateTpDisplay() {
@@ -1637,6 +1683,7 @@
   }
 
   function confirmTimePicker() {
+    if (tpAmPm === '終日') { document.getElementById('ev-time').value = '終日'; closeTimePicker(); return; }
     const fmt = arr => {
       if (arr.every(d => d === '')) return null;
       if (arr.some(d => d === '')) return 'INCOMPLETE';
@@ -1647,11 +1694,12 @@
     const s = fmt(tpStart), e = fmt(tpEnd);
     if (s === 'INVALID' || e === 'INVALID') { alert('正しい時間を入力してください（例：09:00）'); return; }
     if (s === 'INCOMPLETE' || e === 'INCOMPLETE') { alert('時間が未完成です。入力を確認してください。'); return; }
-    let result = '';
-    if (s && e) result = `${s}〜${e}`;  // 両方: 09:00〜13:00
-    else if (s)  result = `${s}〜`;     // 開始のみ: 09:30〜
-    else if (e)  result = `〜${e}`;     // 終了のみ: 〜13:00
-    document.getElementById('ev-time').value = result;
+    let time = '';
+    if (s && e) time = `${s}〜${e}`;
+    else if (s) time = `${s}〜`;
+    else if (e) time = `〜${e}`;
+    const prefix = tpAmPm ? `${tpAmPm} ` : '';
+    document.getElementById('ev-time').value = prefix + time;
     closeTimePicker();
   }
 
