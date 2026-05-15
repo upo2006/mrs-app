@@ -1639,9 +1639,9 @@
   function tpSetAmPm(val) {
     tpAmPm = val;
     updateTpAmPmDisplay();
-    // 終日はすぐ確定して閉じる
-    if (val === '終日') {
-      document.getElementById('ev-time').value = '終日';
+    // 午前・午後・終日はすぐ確定して閉じる
+    if (val === '午前' || val === '午後' || val === '終日') {
+      document.getElementById('ev-time').value = val;
       closeTimePicker();
     }
   }
