@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MRS – 試合記録システム｜少年サッカーチーム向け</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #c0392b;
+      --red-dark: #922b21;
+      --red-light: #e74c3c;
+      --black: #0a0a0a;
+      --dark: #111111;
+      --gray: #1e1e1e;
+      --gray-mid: #2d2d2d;
+      --gray-light: #888;
+      --off-white: #f5f4f0;
+      --white: #ffffff;
+      --gold: #d4a017;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--black);
+      color: var(--off-white);
+      overflow-x: hidden;
+    }
+
+    /* ── Noise texture overlay ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 999;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 40px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-logo {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.25rem;
+      letter-spacing: 0.12em;
+      color: var(--white);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-logo span { color: var(--red-light); }
+    .nav-cta {
+      background: var(--red);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 4px;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .nav-cta:hover { background: var(--red-light); transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Diagonal red stripe */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -10%; left: -5%;
+      width: 55%; height: 120%;
+      background: linear-gradient(135deg, var(--red-dark) 0%, transparent 70%);
+      opacity: 0.18;
+      transform: skewX(-8deg);
+    }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--red-light);
+      border: 1px solid rgba(231,76,60,0.35);
+      padding: 6px 16px;
+      border-radius: 2px;
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero h1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(3rem, 9vw, 7rem);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+    .hero h1 .accent { color: var(--red-light); }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      font-weight: 500;
+      color: rgba(245,244,240,0.7);
+      margin-bottom: 48px;
+      line-height: 1.7;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-btns {
+      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+    .btn-main {
+      background: var(--red);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: 4px;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 24px rgba(192,57,43,0.4);
+    }
+    .btn-main:hover {
+      background: var(--red-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(192,57,43,0.5);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--off-white);
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 16px 36px;
+      border-radius: 4px;
+      text-decoration: none;
+      border: 1px solid rgba(245,244,240,0.25);
+      letter-spacing: 0.04em;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--off-white); background: rgba(255,255,255,0.04); }
+
+    .hero-note {
+      margin-top: 20px;
+      font-size: 0.78rem;
+      color: var(--gray-light);
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+
+    /* ── SECTION BASE ── */
+    section { padding: 100px 24px; }
+    .container { max-width: 960px; margin: 0 auto; }
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--red-light);
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .section-desc {
+      font-size: 0.97rem;
+      color: rgba(245,244,240,0.65);
+      line-height: 1.8;
+      max-width: 560px;
+    }
+
+    /* ── PAIN ── */
+    .pain { background: var(--dark); }
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2px;
+      margin-top: 56px;
+    }
+    .pain-item {
+      background: var(--gray);
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .pain-item::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--red);
+    }
+    .pain-item .icon { font-size: 1.8rem; margin-bottom: 14px; }
+    .pain-item h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .pain-item p {
+      font-size: 0.85rem;
+      color: rgba(245,244,240,0.55);
+      line-height: 1.7;
+    }
+
+    /* ── FEATURES ── */
+    .features { background: var(--black); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 56px;
+    }
+    .feature-card {
+      background: var(--gray);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 32px 28px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(231,76,60,0.3);
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .feature-card p {
+      font-size: 0.86rem;
+      color: rgba(245,244,240,0.55);
+      line-height: 1.75;
+    }
+
+    /* ── HOW ── */
+    .how { background: var(--dark); }
+    .how-steps {
+      margin-top: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+    .how-steps::before {
+      content: '';
+      position: absolute;
+      left: 28px; top: 28px; bottom: 28px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--red), transparent);
+    }
+    .how-step {
+      display: flex;
+      gap: 28px;
+      padding: 32px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .how-step:last-child { border-bottom: none; }
+    .how-num {
+      width: 56px; height: 56px;
+      background: var(--red);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      position: relative; z-index: 1;
+    }
+    .how-content { padding-top: 8px; }
+    .how-content h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .how-content p {
+      font-size: 0.86rem;
+      color: rgba(245,244,240,0.55);
+      line-height: 1.75;
+    }
+    .how-content .tag {
+      display: inline-block;
+      background: rgba(192,57,43,0.15);
+      border: 1px solid rgba(192,57,43,0.3);
+      color: var(--red-light);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-top: 10px;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── PRICING ── */
+    .pricing { background: var(--black); }
+    .pricing-wrap {
+      margin-top: 56px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      max-width: 900px;
+    }
+    .price-card {
+      background: var(--gray);
+      padding: 40px 32px;
+    }
+    .price-card.featured {
+      background: var(--red-dark);
+      position: relative;
+    }
+    .price-card.featured::before {
+      content: 'おすすめ';
+      position: absolute; top: -1px; right: 16px;
+      background: var(--gold);
+      color: var(--black);
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    .price-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(245,244,240,0.5);
+      margin-bottom: 16px;
+    }
+    .price-amount {
+      font-family: 'Oswald', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .price-amount small {
+      font-size: 1rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 400;
+      color: rgba(245,244,240,0.6);
+    }
+    .price-note {
+      font-size: 0.78rem;
+      color: rgba(245,244,240,0.5);
+      margin-bottom: 24px;
+    }
+    .price-includes {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .price-includes li {
+      font-size: 0.86rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: rgba(245,244,240,0.8);
+    }
+    .price-includes li::before {
+      content: '✓';
+      color: var(--gold);
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    /* ── FAQ ── */
+    .faq { background: var(--dark); }
+    .faq-list {
+      margin-top: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .faq-item {
+      background: var(--gray);
+    }
+    .faq-q {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: var(--off-white);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.97rem;
+      font-weight: 700;
+      padding: 24px 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      transition: background 0.15s;
+    }
+    .faq-q:hover { background: var(--gray-mid); }
+    .faq-arrow {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      transition: transform 0.25s, background 0.15s;
+    }
+    .faq-item.open .faq-arrow {
+      transform: rotate(45deg);
+      background: var(--red);
+    }
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 28px;
+    }
+    .faq-item.open .faq-a {
+      max-height: 300px;
+      padding: 0 28px 24px;
+    }
+    .faq-a p {
+      font-size: 0.88rem;
+      color: rgba(245,244,240,0.6);
+      line-height: 1.85;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 16px;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: var(--red-dark);
+      text-align: center;
+      padding: 100px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '⚽';
+      position: absolute;
+      font-size: 20rem;
+      opacity: 0.04;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .cta-section h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .cta-section p {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 40px;
+      line-height: 1.7;
+    }
+    .btn-white {
+      display: inline-block;
+      background: var(--white);
+      color: var(--red-dark);
+      font-size: 1.05rem;
+      font-weight: 900;
+      padding: 18px 48px;
+      border-radius: 4px;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .cta-note {
+      margin-top: 16px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ── CONTACT MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--gray);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      width: 100%; max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-header {
+      background: linear-gradient(135deg, var(--red-dark), var(--red));
+      padding: 28px 28px 24px;
+      border-radius: 12px 12px 0 0;
+    }
+    .modal-header h3 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .modal-header p { font-size: 0.83rem; color: rgba(255,255,255,0.7); }
+    .modal-body { padding: 28px; }
+    .form-field { margin-bottom: 20px; }
+    .form-field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: rgba(245,244,240,0.6);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .form-field input,
+    .form-field textarea,
+    .form-field select {
+      width: 100%;
+      background: var(--gray-mid);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: var(--off-white);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.95rem;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-field input:focus,
+    .form-field textarea:focus,
+    .form-field select { border-color: var(--red-light); }
+    .form-field textarea { min-height: 90px; resize: vertical; }
+    .form-field select option { background: var(--gray); }
+    .form-submit {
+      width: 100%;
+      background: var(--red);
+      color: #fff;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      letter-spacing: 0.04em;
+    }
+    .form-submit:hover { background: var(--red-light); }
+    .modal-close {
+      position: absolute; top: 16px; right: 20px;
+      background: none; border: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 1.5rem; cursor: pointer;
+      line-height: 1;
+    }
+    .modal-close:hover { color: #fff; }
+    .modal-header { position: relative; }
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 40px 28px;
+    }
+    .form-success .emoji { font-size: 3rem; margin-bottom: 16px; }
+    .form-success h4 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+    .form-success p { font-size: 0.86rem; color: rgba(245,244,240,0.6); line-height: 1.7; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--black);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 40px 24px;
+      text-align: center;
+    }
+    footer p { font-size: 0.78rem; color: var(--gray-light); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      .nav-logo { font-size: 1rem; }
+      .pricing-wrap { grid-template-columns: 1fr; max-width: 360px; }
+      .how-steps::before { display: none; }
+      section { padding: 72px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">⚽ <span>MRS</span> MATCH RECORD</div>
+  <a href="https://upo2006.github.io/mrs-app/signup.html" class="nav-cta">お申し込み</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">⚽ 少年サッカーチーム向け</div>
+  <h1>試合記録を<br><span class="accent">もっとかんたん</span>に。</h1>
+  <p class="hero-sub">
+    スコア・得点者・出場選手をスマホから記録。<br>
+    成績・ランキングは自動で集計されます。
+  </p>
+  <div class="hero-btns">
+    <a href="https://upo2006.github.io/mrs-app/signup.html" class="btn-main">今すぐ申し込む →</a>
+    <a href="#features" class="btn-ghost">機能を見る</a>
+  </div>
+  <p class="hero-note">月額 ¥800〜（税込）・初期費用なし・いつでも解約可</p>
+</section>
+
+<!-- PAIN -->
+<section class="pain">
+  <div class="container">
+    <div class="section-label reveal">こんなお悩みありませんか？</div>
+    <h2 class="section-title reveal">試合記録、<br>まだ手書きですか？</h2>
+    <div class="pain-grid">
+      <div class="pain-item reveal">
+        <div class="icon">📝</div>
+        <h3>記録がバラバラ</h3>
+        <p>紙のメモ・LINEのメッセージ・スプレッドシートと、試合データが散らばって管理が大変。</p>
+      </div>
+      <div class="pain-item reveal">
+        <div class="icon">📊</div>
+        <h3>集計に時間がかかる</h3>
+        <p>誰が何点取ったか、勝率はどのくらいかを調べるのに毎回手計算が必要。</p>
+      </div>
+      <div class="pain-item reveal">
+        <div class="icon">👦</div>
+        <h3>選手の成長が見えにくい</h3>
+        <p>個人の出場記録・得点履歴を振り返ろうとしても、すぐに出てこない。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-label reveal">FEATURES</div>
+    <h2 class="section-title reveal">必要な機能が<br>全部入っています。</h2>
+    <p class="section-desc reveal">U7〜U12まで対応。試合を記録するたびに、成績・ランキングが自動で更新されます。</p>
+    <div class="features-grid" style="margin-top:56px">
+      <div class="feature-card reveal">
+        <span class="feature-icon">⚽</span>
+        <h3>試合記録</h3>
+        <p>日付・対戦相手・スコア・カテゴリー・大会名・得点者・出場選手を記録。スマホからでも快適に入力できます。</p>
+      </div>
+      <div class="feature-card reveal">
+        <span class="feature-icon">🏆</span>
+        <h3>得点ランキング</h3>
+        <p>選手ごとの得点を自動集計。年度別・通算・カテゴリー別で切り替え可能。前回との順位変動も表示。</p>
+      </div>
+      <div class="feature-card reveal">
+        <span class="feature-icon">📈</span>
+        <h3>チーム成績</h3>
+        <p>勝利・引き分け・敗北・勝率・得失点をカテゴリー別に自動集計。年度別と通算を切り替えて確認できます。</p>
+      </div>
+      <div class="feature-card reveal">
+        <span class="feature-icon">👤</span>
+        <h3>選手管理</h3>
+        <p>選手ごとの得点履歴・出場試合一覧をワンタップで確認。カテゴリーは年度とともに自動で繰り上がります。</p>
+      </div>
+      <div class="feature-card reveal">
+        <span class="feature-icon">📱</span>
+        <h3>スマホ対応</h3>
+        <p>PC・スマホ・タブレットすべてに最適化。試合会場でもすぐに入力できます。</p>
+      </div>
+      <div class="feature-card reveal">
+        <span class="feature-icon">💾</span>
+        <h3>CSV・JSONバックアップ</h3>
+        <p>すべてのデータをCSVやJSONでいつでもエクスポート可能。データはあなたのものです。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-label reveal">HOW IT WORKS</div>
+    <h2 class="section-title reveal">導入は<br>たったの4ステップ。</h2>
+    <div class="how-steps">
+      <div class="how-step reveal">
+        <div class="how-num">1</div>
+        <div class="how-content">
+          <h3>プランを選んで申し込む</h3>
+          <p>申し込みページでプランを選択し、チーム名・メールアドレスを入力するだけ。</p>
+          <span class="tag">所要時間 1分</span>
+        </div>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-num">2</div>
+        <div class="how-content">
+          <h3>オンライン決済</h3>
+          <p>Squareの安全な決済ページで月額料金をお支払い。クレジットカードに対応しています。</p>
+          <span class="tag">所要時間 2分</span>
+        </div>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-num">3</div>
+        <div class="how-content">
+          <h3>ログイン情報をメールでお届け</h3>
+          <p>決済完了後、ログインIDとパスワードをメールにてお送りします。お待たせしません。</p>
+          <span class="tag">自動送信</span>
+        </div>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-num">4</div>
+        <div class="how-content">
+          <h3>すぐに使い始められます</h3>
+          <p>ブラウザでアクセスしてログインするだけ。アプリのインストールは一切不要です。</p>
+          <span class="tag">データは自動保存</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-label reveal">PRICING</div>
+    <h2 class="section-title reveal">シンプルな料金体系。</h2>
+    <p class="section-desc reveal">初期費用なし・月額のみ。隠れた費用はありません。いつでも解約できます。</p>
+    <div class="pricing-wrap reveal">
+      <div class="price-card">
+        <div class="price-label">試合記録アプリ</div>
+        <div class="price-amount">¥800<small>（税込）</small></div>
+        <div class="price-note">月額・いつでも解約可</div>
+        <ul class="price-includes">
+          <li>試合記録・スコア管理</li>
+          <li>得点ランキング自動集計</li>
+          <li>チーム成績管理</li>
+          <li>選手管理</li>
+        </ul>
+      </div>
+      <div class="price-card">
+        <div class="price-label">出欠管理アプリ</div>
+        <div class="price-amount">¥800<small>（税込）</small></div>
+        <div class="price-note">月額・いつでも解約可</div>
+        <ul class="price-includes">
+          <li>イベント出欠管理</li>
+          <li>送迎・配車管理</li>
+          <li>参加者一覧確認</li>
+          <li>スマホ対応</li>
+        </ul>
+      </div>
+      <div class="price-card featured">
+        <div class="price-label">セットプラン</div>
+        <div class="price-amount">¥1,000<small>（税込）</small></div>
+        <div class="price-note">月額・いつでも解約可</div>
+        <ul class="price-includes">
+          <li>試合記録アプリ</li>
+          <li>出欠管理アプリ</li>
+          <li>両方が使い放題</li>
+          <li>メールサポート</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="section-label reveal">FAQ</div>
+    <h2 class="section-title reveal">よくある質問</h2>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          スマホだけで使えますか？
+          <span class="faq-arrow">＋</span>
+        </button>
+        <div class="faq-a">
+          <p>はい、スマホ・タブレット・PCすべてに対応しています。アプリのインストールは不要で、ブラウザで開くだけで使えます。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          データは安全ですか？
+          <span class="faq-arrow">＋</span>
+        </button>
+        <div class="faq-a">
+          <p>データはチーム専用のデータベース（Supabase）に保存されます。他のチームのデータとは完全に分離されており、第三者がアクセスすることはできません。また、CSVやJSONでいつでもバックアップを取ることができます。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          解約はいつでもできますか？
+          <span class="faq-arrow">＋</span>
+        </button>
+        <div class="faq-a">
+          <p>はい、いつでも解約できます。解約の場合は月末までにご連絡ください。解約後もデータはCSV形式でエクスポートできます。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          サッカー以外のスポーツでも使えますか？
+          <span class="faq-arrow">＋</span>
+        </button>
+        <div class="faq-a">
+          <p>現在はU7〜U12の少年サッカー向けに最適化されています。他のスポーツへの対応はご相談ください。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          複数のコーチで使えますか？
+          <span class="faq-arrow">＋</span>
+        </button>
+        <div class="faq-a">
+          <p>はい。ログイン機能を搭載しているため、IDとパスワードを持つコーチ・スタッフであれば複数名で同じデータを共有・編集できます。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="container">
+    <h2>今すぐ始めよう。</h2>
+    <p>申し込みは1分。決済後すぐにログイン情報が届きます。<br>初期費用なし・いつでも解約可能です。</p>
+    <a href="https://upo2006.github.io/mrs-app/signup.html" class="btn-white">お申し込みはこちら →</a>
+    <p class="cta-note">月額 ¥800〜（税込）・初期費用なし</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© MATCH RECORD SYSTEM. All rights reserved.</p>
+</footer>
+
+<!-- CONTACT MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <h3>お申し込み・ご相談</h3>
+      <p>内容確認後、担当者よりご連絡いたします</p>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="form-field">
+        <label>チーム名 *</label>
+        <input type="text" id="f-team" placeholder="○○サッカースクール">
+      </div>
+      <div class="form-field">
+        <label>お名前 *</label>
+        <input type="text" id="f-name" placeholder="山田 太郎">
+      </div>
+      <div class="form-field">
+        <label>メールアドレス *</label>
+        <input type="email" id="f-email" placeholder="example@email.com">
+      </div>
+      <div class="form-field">
+        <label>選手人数（おおよそ）</label>
+        <select id="f-players">
+          <option value="">選択してください</option>
+          <option>〜10人</option>
+          <option>10〜30人</option>
+          <option>30〜50人</option>
+          <option>50人以上</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>ご質問・ご要望（任意）</label>
+        <textarea id="f-note" placeholder="気になることがあればお気軽にどうぞ"></textarea>
+      </div>
+      <div id="form-error" style="display:none; color:#e74c3c; font-size:0.83rem; margin-bottom:14px; font-weight:700;"></div>
+      <button class="form-submit" onclick="submitForm()">送信する</button>
+      <p style="font-size:0.72rem; color:rgba(245,244,240,0.35); margin-top:12px; text-align:center;">送信後、担当者より2営業日以内にご連絡します</p>
+    </div>
+    <div class="form-success" id="form-success">
+      <div class="emoji">✅</div>
+      <h4>送信が完了しました！</h4>
+      <p>担当者より2営業日以内にご連絡いたします。<br>しばらくお待ちください。</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Modal ──
+  function openModal() {
+    document.getElementById('modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modal')) closeModal();
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ── Form submit ──
+  function submitForm() {
+    const team  = document.getElementById('f-team').value.trim();
+    const name  = document.getElementById('f-name').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    const err   = document.getElementById('form-error');
+
+    err.style.display = 'none';
+    if (!team)  { err.textContent = 'チーム名を入力してください'; err.style.display='block'; return; }
+    if (!name)  { err.textContent = 'お名前を入力してください'; err.style.display='block'; return; }
+    if (!email || !email.includes('@')) { err.textContent = 'メールアドレスを正しく入力してください'; err.style.display='block'; return; }
+
+    // メール送信
+    const players = document.getElementById('f-players').value;
+    const note    = document.getElementById('f-note').value.trim();
+    const subject = encodeURIComponent(`【MRS申し込み】${team}`);
+    const body = encodeURIComponent(
+      `チーム名：${team}\nお名前：${name}\nメール：${email}\n選手人数：${players || '未回答'}\n\nご質問・ご要望：\n${note || 'なし'}`
+    );
+    window.location.href = `mailto:evviva.design@gmail.com?subject=${subject}&body=${body}`;
+    document.getElementById('modal-body').style.display = 'none';
+    document.getElementById('form-success').style.display = 'block';
+  }
+
+  // ── FAQ accordion ──
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // ── Scroll reveal ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
