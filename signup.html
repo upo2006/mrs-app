@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ja" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>お申し込み | スポーツ管理システム</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Noto Sans JP', sans-serif; }
+    :root {
+      --primary:      #c0392b;
+      --primary-dark: #922b21;
+      --primary-mid:  #a93226;
+    }
+    body { background: #f3f4f6; }
+
+    .plan-card {
+      border: 2px solid #e5e7eb;
+      border-radius: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fff;
+    }
+    .plan-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 20px rgba(192,57,43,0.15);
+      transform: translateY(-2px);
+    }
+    .plan-card.selected {
+      border-color: var(--primary);
+      background: #fff5f5;
+      box-shadow: 0 4px 20px rgba(192,57,43,0.2);
+    }
+    .plan-card.selected .plan-check {
+      opacity: 1;
+    }
+    .plan-check {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: scale(1.02);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body class="min-h-full">
+
+  <!-- ヘッダー -->
+  <div style="background: linear-gradient(to right, #922b21, #c0392b);" class="text-white py-8 px-4 text-center">
+    <div class="text-4xl mb-2">⚽</div>
+    <h1 class="text-2xl font-black">スポーツ管理システム</h1>
+    <p class="text-white/80 text-sm mt-1">お申し込みフォーム</p>
+  </div>
+
+  <div class="max-w-lg mx-auto px-4 py-8 space-y-6">
+
+    <!-- プラン選択 -->
+    <div>
+      <h2 class="text-base font-black text-gray-700 mb-3">① プランを選択してください</h2>
+      <div class="space-y-3">
+
+        <!-- MRSのみ -->
+        <div class="plan-card p-4" onclick="selectPlan('mrs')" id="plan-mrs">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="text-2xl">📊</div>
+              <div>
+                <div class="font-black text-gray-800">MRS（試合記録）プラン</div>
+                <div class="text-sm text-gray-500 mt-0.5">試合記録・スコア管理・選手統計</div>
+              </div>
+            </div>
+            <div class="plan-check text-green-500 text-xl font-black">✓</div>
+          </div>
+        </div>
+
+        <!-- 出欠のみ -->
+        <div class="plan-card p-4" onclick="selectPlan('attendance')" id="plan-attendance">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="text-2xl">📋</div>
+              <div>
+                <div class="font-black text-gray-800">出欠管理プラン</div>
+                <div class="text-sm text-gray-500 mt-0.5">イベント出欠・送迎・配車管理</div>
+              </div>
+            </div>
+            <div class="plan-check text-green-500 text-xl font-black">✓</div>
+          </div>
+        </div>
+
+        <!-- セット -->
+        <div class="plan-card p-4" onclick="selectPlan('set')" id="plan-set">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="text-2xl">🎯</div>
+              <div>
+                <div class="font-black text-gray-800">セットプラン <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-1">おすすめ</span></div>
+                <div class="text-sm text-gray-500 mt-0.5">MRS ＋ 出欠管理の両方が使える</div>
+              </div>
+            </div>
+            <div class="plan-check text-green-500 text-xl font-black">✓</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 情報入力 -->
+    <div>
+      <h2 class="text-base font-black text-gray-700 mb-3">② チーム情報を入力してください</h2>
+      <div class="bg-white rounded-2xl p-5 space-y-4 shadow-sm">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">チーム名 <span class="text-red-500">*</span></label>
+          <input id="team-name" type="text" placeholder="例：甲子園サッカースクール"
+            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
+          <input id="signup-email" type="email" placeholder="email@example.com"
+            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+          <p class="text-xs text-gray-400 mt-1">ログイン時に使用するメールアドレスを入力してください</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- エラー・メッセージ -->
+    <div id="form-status" class="hidden text-sm rounded-xl px-4 py-3 font-medium"></div>
+
+    <!-- 申し込みボタン -->
+    <button onclick="handleSignup()" id="signup-btn"
+      class="btn-primary w-full text-white font-black py-4 rounded-2xl text-base shadow-md">
+      <span id="btn-text">決済ページへ進む →</span>
+      <span id="btn-loading" class="hidden">処理中…</span>
+    </button>
+
+    <p class="text-center text-xs text-gray-400">
+      申し込み後、Squareの決済ページに移動します。<br>
+      決済完了後、ログイン情報をメールでお送りします。
+    </p>
+
+  </div>
+
+  <script>
+    const AUTH_URL      = 'https://ggmtlfhctezozcdohzcm.supabase.co';
+    const AUTH_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnbXRsZmhjdGV6b3pjZG9oemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMTIxMDQsImV4cCI6MjA4ODY4ODEwNH0.vpU78D4jYRdGPUTbYvG-vI_KMRwLofUJou_TmZ0FXBo';
+
+    // SquareのサブスクリプションURL（設定後に変更してください）
+    const SQUARE_URLS = {
+      mrs:        'https://square.link/u/XXXXXXXX',  // MRSプランのURL
+      attendance: 'https://square.link/u/YYYYYYYY',  // 出欠プランのURL
+      set:        'https://square.link/u/ZZZZZZZZ',  // セットプランのURL
+    };
+
+    const PLAN_LABELS = {
+      mrs:        'MRS（試合記録）プラン',
+      attendance: '出欠管理プラン',
+      set:        'セットプラン',
+    };
+
+    let selectedPlan = null;
+    const client = window.supabase.createClient(AUTH_URL, AUTH_ANON_KEY);
+
+    function selectPlan(plan) {
+      selectedPlan = plan;
+      ['mrs', 'attendance', 'set'].forEach(p => {
+        document.getElementById('plan-' + p).classList.toggle('selected', p === plan);
+      });
+      hideStatus();
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('form-status');
+      el.classList.remove('hidden');
+      const styles = {
+        error: 'bg-red-50 border border-red-200 text-red-700',
+        info:  'bg-blue-50 border border-blue-200 text-blue-700',
+        success: 'bg-green-50 border border-green-200 text-green-700',
+      };
+      el.className = `text-sm rounded-xl px-4 py-3 font-medium ${styles[type] || styles.info}`;
+      el.textContent = msg;
+    }
+
+    function hideStatus() {
+      document.getElementById('form-status').classList.add('hidden');
+    }
+
+    async function handleSignup() {
+      const teamName = document.getElementById('team-name').value.trim();
+      const email    = document.getElementById('signup-email').value.trim();
+
+      if (!selectedPlan) { showStatus('プランを選択してください', 'error'); return; }
+      if (!teamName)     { showStatus('チーム名を入力してください', 'error'); return; }
+      if (!email)        { showStatus('メールアドレスを入力してください', 'error'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showStatus('正しいメールアドレスを入力してください', 'error'); return;
+      }
+
+      const btn     = document.getElementById('signup-btn');
+      const btnText = document.getElementById('btn-text');
+      const btnLoad = document.getElementById('btn-loading');
+      btn.disabled = true;
+      btnText.classList.add('hidden');
+      btnLoad.classList.remove('hidden');
+
+      try {
+        // Supabaseにpending_signupsとして保存
+        const { error } = await client.from('pending_signups').insert({
+          team_name: teamName,
+          email:     email,
+          plan:      selectedPlan,
+        });
+
+        if (error) {
+          console.error(error);
+          showStatus('送信に失敗しました。しばらくしてから再試行してください。', 'error');
+          return;
+        }
+
+        // Squareの決済ページへリダイレクト
+        showStatus(`${PLAN_LABELS[selectedPlan]}の決済ページへ移動します…`, 'success');
+        setTimeout(() => {
+          window.location.href = SQUARE_URLS[selectedPlan];
+        }, 1500);
+
+      } catch(e) {
+        showStatus('エラーが発生しました。', 'error');
+      } finally {
+        btn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoad.classList.add('hidden');
+      }
+    }
+  </script>
+
+</body>
+</html>
