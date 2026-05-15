@@ -36,10 +36,11 @@
 
     /* ラジオボタン */
     .radio-btn {
-      width: 100%; padding: 0.75rem 0.5rem; border-radius: 0.75rem;
+      width: 100%; padding: 0.75rem 0.25rem; border-radius: 0.75rem;
       border: 2px solid #e5e7eb; background: #fff; color: #4b5563;
-      font-weight: 700; font-size: 0.875rem; cursor: pointer;
+      font-weight: 700; font-size: min(0.875rem, 3.8vw); cursor: pointer;
       transition: all 0.15s; text-align: center; display: block;
+      white-space: nowrap;
     }
     .radio-btn:hover { border-color: #d1d5db; background: #f9fafb; }
     .radio-btn[data-selected="1"][data-color="green"]  { border-color:#22c55e; background:#f0fdf4; color:#15803d; }
