@@ -2282,8 +2282,9 @@
 
   async function checkSubscription(email) {
     const { data } = await getAuthClient()
-      .from('subscriptions').select('status').eq('email', email).maybeSingle();
-    return data?.status === 'active';
+      .from('subscriptions').select('status, plan').eq('email', email).maybeSingle();
+    // attendance単体 または セットプランのみ許可
+    return data?.status === 'active' && (data?.plan === 'attendance' || data?.plan === 'set');
   }
 
   function showLoginModal() {
