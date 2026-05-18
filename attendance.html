@@ -2349,7 +2349,12 @@
   }
 
   async function handleLogout() {
-    await getAuthClient().auth.signOut();
+    try {
+      await Promise.race([
+        getAuthClient().auth.signOut(),
+        new Promise(r => setTimeout(r, 3000))
+      ]);
+    } catch(e) {}
     location.reload();
   }
 
@@ -2538,8 +2543,13 @@
         </div>
         <div>
           <label class="block text-sm font-bold text-gray-700 mb-1">パスワード</label>
-          <input id="att-login-password" type="password" placeholder="パスワード"
-            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2" />
+          <div class="relative">
+            <input id="att-login-password" type="password" placeholder="パスワード"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2" />
+            <button type="button" onclick="(function(){const i=document.getElementById('att-login-password');const b=document.getElementById('att-pw-eye');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';})()"
+              id="att-pw-eye"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">👁</button>
+          </div>
         </div>
         <div id="att-login-status" class="hidden"></div>
         <button onclick="handleLogin()" id="att-login-btn"
