@@ -1384,11 +1384,9 @@
       const html = (error || !data || data.length === 0)
         ? '<p class="text-gray-400 text-sm text-center py-4">お知らせはありません</p>'
         : data.map(n => {
-            const dt = new Date(n.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
-            return `<div class="flex items-start gap-2 py-2.5 border-b border-gray-100 last:border-0" id="notif-row-${n.id}">
+            return `<div class="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-0" id="notif-row-${n.id}">
               <div class="flex-1 min-w-0">
                 <p class="text-sm text-gray-800 leading-snug">${escHtml(n.message)}</p>
-                <p class="text-xs text-gray-400 mt-1 text-right">${dt}</p>
               </div>
               <button type="button" onclick="dismissNotification('${n.id}')"
                 class="shrink-0 text-gray-300 hover:text-gray-500 text-base leading-none mt-0.5 px-1 transition-colors"
