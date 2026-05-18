@@ -75,7 +75,7 @@
 <div id="app" class="min-h-full">
 
   <!-- ローディング -->
-  <div id="loading-screen" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-[500] gap-4">
+  <div id="loading-screen" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-[150] gap-4">
     <div class="text-5xl">📋</div>
     <div class="w-8 h-8 border-4 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
   </div>
@@ -2431,7 +2431,13 @@
           // タイムアウトまたは通信エラー → ログイン画面へ
         }
         if (!session) { showLoginModal(); return; }
-        const subOk = await checkSubscription(session.user.email);
+        let subOk = false;
+        try {
+          subOk = await Promise.race([
+            checkSubscription(session.user.email),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+          ]);
+        } catch(e) { /* タイムアウト → サブスクリプション未確認扱い */ }
         if (!subOk) { showSubscriptionModal(); return; }
       }
 

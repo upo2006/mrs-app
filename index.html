@@ -213,7 +213,7 @@
 <body class="h-full bg-white">
 
   <!-- ローディングスプラッシュ: 認証確認が終わるまで画面を覆う -->
-  <div id="loading-splash" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center gap-4">
+  <div id="loading-splash" class="fixed inset-0 bg-white z-[150] flex flex-col items-center justify-center gap-4">
     <div class="text-5xl">⚽</div>
     <div class="w-8 h-8 border-4 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
   </div>
@@ -4556,7 +4556,13 @@ ${error?.message || ''}`);
           // 認証確認完了 → スプラッシュを消す
           document.getElementById('loading-splash')?.remove();
           if (!session) { showLoginModal(); return; }
-          const ok = await checkSubscription(session.user.email);
+          let ok = false;
+          try {
+            ok = await Promise.race([
+              checkSubscription(session.user.email),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+            ]);
+          } catch(e) { /* タイムアウト → サブスクリプション未確認扱い */ }
           if (!ok) { showSubscriptionModal(); return; }
           await startApp();
         }
