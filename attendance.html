@@ -618,9 +618,11 @@
   const STORAGE_CONFIG_KEY = 'mrs_app_config_v1';
   const STORAGE_TEAMS_KEY  = 'mrs_teams_v1';
   const STORAGE_ACTIVE_KEY = 'mrs_active_team_v1';
-  const TABLE_EVENTS    = 'attendance_events';
-  const TABLE_RESPONSES = 'attendance_responses';
-  const TABLE_PLAYERS   = 'app_records';  // MRSと共通
+  const TABLE_EVENTS        = 'attendance_events';
+  const TABLE_RESPONSES     = 'attendance_responses';
+  const TABLE_PLAYERS       = 'app_records';  // MRSと共通
+  const TABLE_NOTIFICATIONS = 'attendance_notifications';
+  const NOTIF_LAST_SEEN_KEY = 'att_notif_last_seen';
 
   let SUPABASE_CONFIG = { url: '', anonKey: '' };
   let supabaseClient  = null;
@@ -1307,6 +1309,39 @@
     document.getElementById('create-event-modal').classList.add('hidden');
   }
 
+  // ─── お知らせポップアップ ─────────────────────────────────────────────
+  async function checkAndShowNotifications() {
+    if (!supabaseClient) return;
+    try {
+      const lastSeen = localStorage.getItem(NOTIF_LAST_SEEN_KEY) || '1970-01-01T00:00:00.000Z';
+      const { data, error } = await supabaseClient
+        .from(TABLE_NOTIFICATIONS)
+        .select('id, message, created_at')
+        .gt('created_at', lastSeen)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error || !data || data.length === 0) return;
+      const list = document.getElementById('notif-popup-list');
+      if (!list) return;
+      list.innerHTML = data.map(n => {
+        const dt = new Date(n.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        return `<li class="flex items-start gap-2 py-2 border-b border-gray-100 last:border-0">
+          <span class="text-lg leading-none mt-0.5">📢</span>
+          <div>
+            <p class="text-sm text-gray-800">${escHtml(n.message)}</p>
+            <p class="text-xs text-gray-400 mt-0.5">${dt}</p>
+          </div>
+        </li>`;
+      }).join('');
+      document.getElementById('notif-popup').classList.remove('hidden');
+    } catch(e) { console.warn('通知取得エラー:', e); }
+  }
+
+  function closeNotificationPopup() {
+    document.getElementById('notif-popup').classList.add('hidden');
+    localStorage.setItem(NOTIF_LAST_SEEN_KEY, new Date().toISOString());
+  }
+
   async function saveEvent() {
     const btn      = document.getElementById('save-event-btn');
     const txt      = document.getElementById('save-event-text');
@@ -1331,13 +1366,27 @@
       memo:       document.getElementById('ev-memo').value.trim()       || null,
     };
 
-    const { error } = editId
-      ? await supabaseClient.from(TABLE_EVENTS).update(payload).eq('id', editId)
-      : await supabaseClient.from(TABLE_EVENTS).insert(payload);
+    let saveError = null;
+    let newEventId = null;
+    if (editId) {
+      const { error } = await supabaseClient.from(TABLE_EVENTS).update(payload).eq('id', editId);
+      saveError = error;
+    } else {
+      const { data: inserted, error } = await supabaseClient.from(TABLE_EVENTS).insert(payload).select('id').single();
+      saveError = error;
+      newEventId = inserted?.id ?? null;
+    }
 
     btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
 
-    if (error) { setStatus(statusEl, '保存に失敗しました: ' + error.message, 'error'); return; }
+    if (saveError) { setStatus(statusEl, '保存に失敗しました: ' + saveError.message, 'error'); return; }
+
+    // 新規作成時：お知らせを自動生成
+    if (!editId && newEventId) {
+      const notifMsg = (payload.category ? `【${payload.category}】` : '') + `「${payload.title}」が追加されました`;
+      await supabaseClient.from(TABLE_NOTIFICATIONS).insert({ message: notifMsg, event_id: newEventId }).catch(() => {});
+    }
+
     closeCreateEventModal();
     await loadEvents();
   }
@@ -2268,7 +2317,26 @@
     return authClient;
   }
 
+  const SUB_CACHE_KEY = 'att_sub_cache';
+  function getSubCache(email) {
+    try {
+      const c = JSON.parse(localStorage.getItem(SUB_CACHE_KEY) || 'null');
+      if (c && c.email === email && c.ok && Date.now() < c.exp) return true;
+    } catch(e) {}
+    return null; // キャッシュなし
+  }
+  function setSubCache(email, ok) {
+    try {
+      localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({
+        email, ok, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7日間
+      }));
+    } catch(e) {}
+  }
+
   async function checkSubscription(email) {
+    // キャッシュが有効なら即OKを返す（モバイル等の遅い回線対策）
+    if (getSubCache(email) === true) return true;
+
     const { data, error } = await getAuthClient()
       .from('subscriptions').select('status, plan').eq('email', email).maybeSingle();
     if (error) {
@@ -2277,7 +2345,9 @@
     }
     if (!data) return false;
     // attendance単体 または セットプランのみ許可
-    return data.status === 'active' && (data.plan === 'attendance' || data.plan === 'set');
+    const ok = data.status === 'active' && (data.plan === 'attendance' || data.plan === 'set');
+    if (ok) setSubCache(email, true); // 成功をキャッシュ
+    return ok;
   }
 
   function showLoginModal() {
@@ -2421,6 +2491,7 @@
         });
 
         document.getElementById('loading-screen').classList.add('hidden');
+        checkAndShowNotifications();
         return;
       }
 
@@ -2515,6 +2586,7 @@
         if (initSupabase()) {
           await loadPlayersMap();
           await loadEvents();
+          checkAndShowNotifications();
         }
       } else {
         openSetupModal();
@@ -2609,6 +2681,26 @@
           class="w-full border border-gray-300 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 transition-colors mt-2">
           ログアウト
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ お知らせポップアップ ══════════════════════════════════════════ -->
+  <div id="notif-popup" class="fixed inset-0 z-[210] hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeNotificationPopup()"></div>
+    <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[80vh] flex flex-col">
+      <div class="text-white px-5 py-4 flex items-center justify-between shrink-0" style="background: linear-gradient(to right, var(--primary-dark), var(--primary));">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📢</span>
+          <h2 class="text-base font-black">お知らせ</h2>
+        </div>
+        <button type="button" onclick="closeNotificationPopup()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+      </div>
+      <ul id="notif-popup-list" class="overflow-y-auto flex-1 px-4 py-2 space-y-0"></ul>
+      <div class="px-4 py-3 border-t border-gray-100 shrink-0">
+        <button type="button" onclick="closeNotificationPopup()"
+          class="w-full py-2.5 rounded-xl text-white font-bold text-sm transition-colors"
+          style="background: var(--primary);">確認しました</button>
       </div>
     </div>
   </div>
