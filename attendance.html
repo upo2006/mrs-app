@@ -74,12 +74,16 @@
 <body class="h-full bg-gray-50">
 <div id="app" class="min-h-full">
 
+  <!-- デモモードバナー -->
+  <div id="att-demo-banner" class="hidden fixed top-0 inset-x-0 z-[190] bg-amber-400 text-amber-900 text-center text-xs font-bold py-1.5 flex items-center justify-center gap-3">
+    🎮 デモモード表示中 — データは保存されません
+    <button onclick="exitDemoMode()" class="bg-amber-900/20 hover:bg-amber-900/30 text-amber-900 text-xs font-bold px-2 py-0.5 rounded">終了</button>
+  </div>
+
   <!-- ローディング -->
-  <div id="loading-screen" class="fixed inset-0 bg-white flex items-center justify-center z-50">
-    <div class="text-center space-y-3">
-      <div class="text-5xl">📋</div>
-      <p class="text-gray-400 text-sm font-medium">読み込み中...</p>
-    </div>
+  <div id="loading-screen" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-[500] gap-4">
+    <div class="text-5xl">📋</div>
+    <div class="w-8 h-8 border-4 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
   </div>
 
   <!-- ヘッダー -->
@@ -1326,6 +1330,11 @@
     const statusEl = document.getElementById('create-event-status');
     const editId   = document.getElementById('edit-event-id').value;
 
+    if (isDemoMode()) {
+      setStatus(statusEl, 'デモモードでは保存できません。', 'error');
+      return;
+    }
+
     const title = document.getElementById('ev-title').value.trim();
     const date  = document.getElementById('ev-date').value;
     if (!title) { setStatus(statusEl, 'タイトルを入力してください', 'error'); return; }
@@ -2415,6 +2424,33 @@
         return;
       }
 
+      // ── デモモード ────────────────────────────────────────────────
+      const ATT_DEMO_KEY = 'att_demo_mode';
+      function isDemoMode() { return sessionStorage.getItem(ATT_DEMO_KEY) === '1'; }
+      function handleDemoLogin() { sessionStorage.setItem(ATT_DEMO_KEY, '1'); location.reload(); }
+      function exitDemoMode() { sessionStorage.removeItem(ATT_DEMO_KEY); location.reload(); }
+      window.handleDemoLogin = handleDemoLogin;
+      window.exitDemoMode    = exitDemoMode;
+
+      if (isDemoMode()) {
+        document.getElementById('att-demo-banner')?.classList.remove('hidden');
+        // サンプルイベントをメモリに設定（Supabase不使用）
+        const today = new Date();
+        const fmt = d => d.toISOString().slice(0, 10);
+        const d = (offset) => { const x = new Date(today); x.setDate(x.getDate() + offset); return fmt(x); };
+        events = [
+          { id:'demo1', category:'U11', title:'練習試合 vs 西宮FC', event_date: d(7),  event_time:'09:00', location:'甲子園グラウンド', transport:'集合現地', memo:'ユニフォーム持参', att_responses:[{count:8}] },
+          { id:'demo2', category:'U10', title:'水曜練習',           event_date: d(3),  event_time:'17:00', location:'市民グラウンド',   transport:'各自', memo:'', att_responses:[{count:10}] },
+          { id:'demo3', category:'U11', title:'U11 カップ戦',       event_date: d(14), event_time:'08:30', location:'県立競技場',       transport:'配車あり', memo:'弁当持参', att_responses:[{count:0}] },
+          { id:'demo4', category:'U10', title:'U10 リーグ戦第2節',  event_date: d(-3), event_time:'10:00', location:'芦屋グラウンド',   transport:'集合現地', memo:'', att_responses:[{count:9}] },
+          { id:'demo5', category:'U9',  title:'U9 交流戦',          event_date: d(-7), event_time:'09:30', location:'市民グラウンド',   transport:'各自', memo:'', att_responses:[{count:6}] },
+        ];
+        renderEvents();
+        document.getElementById('admin-view').classList.remove('hidden');
+        return; // finallyへ
+      }
+      // ─────────────────────────────────────────────────────────────
+
       // 管理者モード：認証チェック
       const { data: { session } } = await getAuthClient().auth.getSession();
       if (!session) { showLoginModal(); return; }
@@ -2521,6 +2557,12 @@
         <p class="text-center text-sm text-gray-500 pt-1">
           <button type="button" onclick="handleForgotPassword()" style="color: var(--primary);" class="hover:underline">パスワードを忘れた方はこちら</button>
         </p>
+        <div class="border-t border-gray-100 pt-3">
+          <button type="button" onclick="handleDemoLogin()"
+            class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 rounded-xl transition-colors text-sm">
+            🎮 デモで試す（サンプルデータ）
+          </button>
+        </div>
       </div>
     </div>
   </div>
