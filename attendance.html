@@ -2310,23 +2310,24 @@
     btnText?.classList.add('hidden');
     btnLoad?.classList.remove('hidden');
     try {
-      setLoginStatus('認証中… しばらくお待ちください', 'info');
+      setLoginStatus('認証中… 最大60秒かかる場合があります', 'info');
       const { data, error } = await Promise.race([
         getAuthClient().auth.signInWithPassword({ email, password }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 60000))
       ]);
       if (error) { setLoginStatus('メールアドレスまたはパスワードが違います', 'error'); return; }
+      setLoginStatus('サブスクリプション確認中…', 'info');
       let ok = false;
       try {
         ok = await Promise.race([
           checkSubscription(email),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000))
         ]);
       } catch(e) { ok = false; }
       if (!ok) { hideLoginModal(); showSubscriptionModal(); return; }
       location.reload();
     } catch(e) {
-      setLoginStatus(e.message === 'timeout' ? '通信がタイムアウトしました（30秒）。もう一度お試しください' : 'ログインに失敗しました', 'error');
+      setLoginStatus(e.message === 'timeout' ? '通信がタイムアウトしました。再度お試しください（回線が遅い場合は時間をおいてください）' : 'ログインに失敗しました', 'error');
     } finally {
       btn.disabled = false;
       btnText?.classList.remove('hidden');
@@ -2438,7 +2439,7 @@
         try {
           const result = await Promise.race([
             getAuthClient().auth.getSession(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('auth_timeout')), 8000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('auth_timeout')), 60000))
           ]);
           session = result?.data?.session ?? null;
         } catch(e) {
@@ -2449,7 +2450,7 @@
         try {
           subOk = await Promise.race([
             checkSubscription(session.user.email),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000))
           ]);
         } catch(e) { /* タイムアウト → サブスクリプション未確認扱い */ }
         if (!subOk) { showSubscriptionModal(); return; }
