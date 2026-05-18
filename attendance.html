@@ -1428,52 +1428,50 @@
     if (!title) { setStatus(statusEl, 'タイトルを入力してください', 'error'); return; }
     if (!date)  { setStatus(statusEl, '日付を入力してください', 'error'); return; }
 
-    btn.disabled = true; txt.classList.add('hidden'); load.classList.remove('hidden');
+    if (btn)  btn.disabled = true;
+    if (txt)  txt.classList.add('hidden');
+    if (load) load.classList.remove('hidden');
 
-    const payload = {
-      title,
-      event_date: date,
-      event_time: document.getElementById('ev-time').value.trim()      || null,
-      category:   document.getElementById('ev-category').value          || null,
-      transport:  document.getElementById('ev-transport').value.trim()  || null,
-      location:   document.getElementById('ev-location').value.trim()   || null,
-      memo:       document.getElementById('ev-memo').value.trim()       || null,
-    };
+    try {
+      const payload = {
+        title,
+        event_date: date,
+        event_time: document.getElementById('ev-time').value.trim()      || null,
+        category:   document.getElementById('ev-category').value          || null,
+        transport:  document.getElementById('ev-transport').value.trim()  || null,
+        location:   document.getElementById('ev-location').value.trim()   || null,
+        memo:       document.getElementById('ev-memo').value.trim()       || null,
+      };
 
-    let saveError = null;
-    let newEventId = null;
-    if (editId) {
-      const { error } = await supabaseClient.from(TABLE_EVENTS).update(payload).eq('id', editId);
-      saveError = error;
-    } else {
-      const { error } = await supabaseClient.from(TABLE_EVENTS).insert(payload);
-      saveError = error;
-      // 成功した場合、IDを別クエリで取得
-      if (!error) {
+      const { error: saveError } = editId
+        ? await supabaseClient.from(TABLE_EVENTS).update(payload).eq('id', editId)
+        : await supabaseClient.from(TABLE_EVENTS).insert(payload);
+
+      if (saveError) {
+        setStatus(statusEl, '保存に失敗しました: ' + saveError.message, 'error');
+        return;
+      }
+
+      // 新規作成時：お知らせ自動生成（失敗しても無視）
+      if (!editId) {
         try {
-          const { data: found } = await supabaseClient.from(TABLE_EVENTS)
-            .select('id').eq('event_date', date).eq('title', title)
-            .order('created_at', { ascending: false }).limit(1);
-          newEventId = found?.[0]?.id ?? null;
+          const notifMsg = (payload.category ? `【${payload.category}】` : '') + `「${payload.title}」が追加されました`;
+          await supabaseClient.from(TABLE_NOTIFICATIONS).insert({ message: notifMsg });
         } catch(e) {}
       }
+
+      // モーダルを先に閉じてから更新（閉じるのをブロックしない）
+      closeCreateEventModal();
+      loadEvents();
+      renderNotificationsPanel();
+
+    } catch(e) {
+      setStatus(statusEl, 'エラーが発生しました: ' + (e.message || '不明'), 'error');
+    } finally {
+      if (btn)  btn.disabled = false;
+      if (txt)  txt.classList.remove('hidden');
+      if (load) load.classList.add('hidden');
     }
-
-    btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
-
-    if (saveError) { setStatus(statusEl, '保存に失敗しました: ' + saveError.message, 'error'); return; }
-
-    // 新規作成時：お知らせを自動生成
-    if (!editId) {
-      const notifMsg = (payload.category ? `【${payload.category}】` : '') + `「${payload.title}」が追加されました`;
-      await supabaseClient.from(TABLE_NOTIFICATIONS)
-        .insert({ message: notifMsg, ...(newEventId ? { event_id: newEventId } : {}) })
-        .catch(() => {});
-    }
-
-    closeCreateEventModal();
-    await loadEvents();
-    await renderNotificationsPanel();
   }
 
   // ─── 管理者：詳細モーダル（テーブル表示） ────────────────────────────────
