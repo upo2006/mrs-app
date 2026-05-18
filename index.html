@@ -1084,12 +1084,7 @@
     let currentEditingPlayerId = null;
     let matchToDelete = null;
     let playerToDelete = null;
-    let selectedSeason = String((() => {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
-      return month >= 4 ? year : year - 1;
-    })());
+    let selectedSeason = String((() => { const n=new Date(); return n.getMonth()>=3?n.getFullYear():n.getFullYear()-1; })());
     let matchSearchQuery = '';
     let currentScorers = [];
     let currentAttendees = [];
@@ -4403,16 +4398,36 @@ ${error?.message || ''}`);
       return authClient;
     }
 
+    const SUB_CACHE_KEY = 'mrs_sub_cache';
+    function getSubCache(email) {
+      try {
+        const c = JSON.parse(localStorage.getItem(SUB_CACHE_KEY) || 'null');
+        if (c && c.email === email && c.ok && Date.now() < c.exp) return true;
+      } catch(e) {}
+      return null;
+    }
+    function setSubCache(email, ok) {
+      try {
+        localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({
+          email, ok, exp: Date.now() + 7 * 24 * 60 * 60 * 1000
+        }));
+      } catch(e) {}
+    }
+
     async function checkSubscription(email) {
+      if (getSubCache(email) === true) return true;
+
       const { data, error } = await getAuthClient()
         .from('subscriptions').select('status, plan').eq('email', email).maybeSingle();
       if (error) {
         console.warn('checkSubscription error:', error);
-        return true; // テーブルエラー時はブロックしない
+        return true;
       }
       if (!data) return false;
       // mrs単体 または セットプランのみ許可
-      return data.status === 'active' && (data.plan === 'mrs' || data.plan === 'set');
+      const ok = data.status === 'active' && (data.plan === 'mrs' || data.plan === 'set');
+      if (ok) setSubCache(email, ok);
+      return ok;
     }
 
     function showLoginModal() {
@@ -4879,7 +4894,7 @@ ${error?.message || ''}`);
     <!-- ══ 設定メニュー（body直下・fixed配置） ══ -->
     <div id="settings-backdrop" class="fixed inset-0 z-[79] hidden" onclick="closeSettingsMenu()"></div>
     <div id="settings-menu" class="fixed z-[80] hidden bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden" style="min-width:200px">
-      <div id="season-selector-wrap" class="px-4 py-2 border-b border-gray-100">
+      <div id="season-selector-wrap" class="hidden px-4 py-2 border-b border-gray-100">
         <div class="text-xs font-medium mb-1" style="color:#6b7280">📅 年度切替</div>
         <select id="season-selector" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none" style="color:#374151"></select>
       </div>
