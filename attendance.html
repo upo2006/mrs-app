@@ -1375,67 +1375,44 @@
     const panels = document.querySelectorAll('.notifications-panel-list');
     if (!panels.length || !supabaseClient) return;
     try {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
-      const cutoffStr = cutoff.toISOString().slice(0, 10);
-
-      // お知らせ（追加通知）
-      const { data: notifs } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from(TABLE_NOTIFICATIONS)
         .select('id, message, created_at')
         .order('created_at', { ascending: false })
         .limit(20);
 
-      // 受付終了イベント（昨日〜7日前）
-      const { data: expired } = await supabaseClient
-        .from(TABLE_EVENTS)
-        .select('id, title, category, event_date')
-        .lt('event_date', todayStr)
-        .gte('event_date', cutoffStr)
-        .order('event_date', { ascending: false });
-
-      // 追加通知の行
-      const notifItems = (notifs || []).map(n => ({
-        sortKey: n.created_at,
-        html: (() => {
-          const dt = new Date(n.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
-          return `<div class="flex items-start gap-3 py-2.5 border-b border-gray-100 last:border-0">
-            <span class="text-base leading-none mt-0.5 shrink-0">📢</span>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm text-gray-800">${escHtml(n.message)}</p>
-              <p class="text-xs text-gray-400 mt-0.5">${dt}</p>
-            </div>
-          </div>`;
-        })()
-      }));
-
-      // 受付終了の行
-      const expiredItems = (expired || []).map(ev => ({
-        sortKey: ev.event_date + 'T23:59:59',
-        html: (() => {
-          const dt = new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'numeric', day:'numeric' });
-          const label = (ev.category ? `【${escHtml(ev.category)}】` : '') + `「${escHtml(ev.title)}」`;
-          return `<div class="flex items-start gap-3 py-2.5 border-b border-gray-100 last:border-0 opacity-60">
-            <span class="text-base leading-none mt-0.5 shrink-0">✅</span>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm text-gray-600">${label}の受付が終了しました</p>
-              <p class="text-xs text-gray-400 mt-0.5">${dt} 終了</p>
-            </div>
-          </div>`;
-        })()
-      }));
-
-      // 日時順にマージ（新しい順）
-      const merged = [...notifItems, ...expiredItems]
-        .sort((a, b) => b.sortKey.localeCompare(a.sortKey))
-        .map(item => item.html);
-
-      const html = merged.length === 0
+      const html = (error || !data || data.length === 0)
         ? '<p class="text-gray-400 text-sm text-center py-4">お知らせはありません</p>'
-        : merged.join('');
+        : data.map(n => {
+            const dt = new Date(n.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+            return `<div class="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-0" id="notif-row-${n.id}">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-800">${escHtml(n.message)}</p>
+                <p class="text-xs text-gray-400 mt-0.5">${dt}</p>
+              </div>
+              <button type="button" onclick="dismissNotification('${n.id}')"
+                class="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-green-100 text-gray-400 hover:text-green-600 transition-colors text-sm"
+                title="確認済みにする">✓</button>
+            </div>`;
+          }).join('');
 
       panels.forEach(el => { el.innerHTML = html; });
     } catch(e) { console.warn('お知らせ描画エラー:', e); }
+  }
+
+  async function dismissNotification(id) {
+    // 即座にUIから消す
+    document.querySelectorAll(`#notif-row-${id}`).forEach(el => el.remove());
+    // 空になったら「お知らせはありません」を表示
+    document.querySelectorAll('.notifications-panel-list').forEach(panel => {
+      if (!panel.querySelector('[id^="notif-row-"]')) {
+        panel.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">お知らせはありません</p>';
+      }
+    });
+    // Supabaseから削除
+    if (supabaseClient) {
+      await supabaseClient.from(TABLE_NOTIFICATIONS).delete().eq('id', id).catch(() => {});
+    }
   }
 
   // ─── イベント自動削除（イベント日から7日後） ─────────────────────────────
