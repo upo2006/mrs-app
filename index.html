@@ -4404,10 +4404,15 @@ ${error?.message || ''}`);
     }
 
     async function checkSubscription(email) {
-      const { data } = await getAuthClient()
+      const { data, error } = await getAuthClient()
         .from('subscriptions').select('status, plan').eq('email', email).maybeSingle();
+      if (error) {
+        console.warn('checkSubscription error:', error);
+        return true; // テーブルエラー時はブロックしない
+      }
+      if (!data) return false;
       // mrs単体 または セットプランのみ許可
-      return data?.status === 'active' && (data?.plan === 'mrs' || data?.plan === 'set');
+      return data.status === 'active' && (data.plan === 'mrs' || data.plan === 'set');
     }
 
     function showLoginModal() {
