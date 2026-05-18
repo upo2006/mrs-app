@@ -2792,12 +2792,15 @@
     function validateMatchPayload(payload) {
       if (!payload.date) throw new Error('日付を入力してください');
       if (!payload.opponent) throw new Error('対戦相手を入力してください');
-      if (!Number.isFinite(payload.our_score) || payload.our_score < 0) throw new Error('甲子園SSの得点が不正です');
+      if (!Number.isFinite(payload.our_score) || payload.our_score < 0) throw new Error('自チームの得点が不正です');
       if (!Number.isFinite(payload.opponent_score) || payload.opponent_score < 0) throw new Error('対戦相手の得点が不正です');
       if (currentScorers.length > payload.our_score) throw new Error('得点者の人数が得点数を超えています');
     }
 
     async function createMatchRecord(payload) {
+      if (!SUPABASE_CONFIG.url) {
+        throw new Error('Supabase URLが設定されていません。設定メニュー →「接続設定」から再設定してください。');
+      }
       validateMatchPayload(payload);
       const client = getSupabaseClient();
       const { error } = await client
@@ -2807,7 +2810,17 @@
           payload,
           created_at: payload.created_at
         });
-      if (error) throw new Error(error.message || '試合記録の保存に失敗しました');
+      if (error) {
+        const parts = [error.message || '不明なエラー'];
+        if (error.code) parts.push(`コード: ${error.code}`);
+        if (error.hint) parts.push(`ヒント: ${error.hint}`);
+        if (error.details) parts.push(`詳細: ${error.details}`);
+        // RLS policy violation
+        if ((error.message || '').includes('row-level security') || error.code === '42501') {
+          parts.push('→ Supabaseの「SQL Editor」で「alter table app_records disable row level security;」を実行してください。');
+        }
+        throw new Error(parts.join('\n'));
+      }
     }
 
     async function createPlayerRecord(payload) {
@@ -2823,12 +2836,22 @@
     }
 
     async function updateRecord(id, type, payload) {
+      if (!SUPABASE_CONFIG.url) {
+        throw new Error('Supabase URLが設定されていません。設定メニュー →「接続設定」から再設定してください。');
+      }
       const client = getSupabaseClient();
       const { error } = await client
         .from(SUPABASE_CONFIG.table)
         .update({ type, payload })
         .eq('id', id);
-      if (error) throw error;
+      if (error) {
+        const parts = [error.message || '不明なエラー'];
+        if (error.code) parts.push(`コード: ${error.code}`);
+        if ((error.message || '').includes('row-level security') || error.code === '42501') {
+          parts.push('→ Supabaseの「SQL Editor」で「alter table app_records disable row level security;」を実行してください。');
+        }
+        throw new Error(parts.join('\n'));
+      }
     }
 
     async function deleteRecord(id) {
@@ -3181,9 +3204,9 @@
         await initData();
         closeMatchModal();
       } catch (error) {
-        console.error(error);
-        window.alert(`試合記録の保存に失敗しました
-${error?.message || ''}`);
+        console.error('試合記録保存エラー:', error);
+        const msg = error?.message || '不明なエラーが発生しました';
+        window.alert(`【保存に失敗しました】\n\n${msg}`);
       } finally {
         submitBtn.disabled = false;
         submitText.classList.remove('hidden');
