@@ -1127,16 +1127,6 @@
 
   // ─── URL短縮（is.gd） ─────────────────────────────────────────────────────
   async function shortenUrl(url) {
-    // TinyURL（CORS対応・無料）
-    try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 6000);
-      const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
-      clearTimeout(t);
-      const text = await res.text();
-      if (text.startsWith('https://tinyurl.com/')) return text.trim();
-    } catch(e) {}
-    // is.gd（フォールバック）
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 6000);
@@ -2422,9 +2412,18 @@
         } catch(e) {}
       }
 
-      // 管理者モード：認証チェック
+      // 管理者モード：認証チェック（8秒タイムアウト付き）
       if (!skipAuth) {
-        const { data: { session } } = await getAuthClient().auth.getSession();
+        let session = null;
+        try {
+          const result = await Promise.race([
+            getAuthClient().auth.getSession(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('auth_timeout')), 8000))
+          ]);
+          session = result?.data?.session ?? null;
+        } catch(e) {
+          // タイムアウトまたは通信エラー → ログイン画面へ
+        }
         if (!session) { showLoginModal(); return; }
         const subOk = await checkSubscription(session.user.email);
         if (!subOk) { showSubscriptionModal(); return; }
