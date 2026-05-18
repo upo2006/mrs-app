@@ -211,6 +211,13 @@
   </style>
 </head>
 <body class="h-full bg-white">
+
+  <!-- ローディングスプラッシュ: 認証確認が終わるまで画面を覆う -->
+  <div id="loading-splash" class="fixed inset-0 bg-white z-[500] flex flex-col items-center justify-center gap-4">
+    <div class="text-5xl">⚽</div>
+    <div class="w-8 h-8 border-4 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
+  </div>
+
   <div id="app" class="h-full w-full overflow-auto">
     <header class="p-4">
       <div class="max-w-[750px] mx-auto bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 shadow-lg rounded-2xl">
@@ -4531,6 +4538,8 @@ ${error?.message || ''}`);
         // 保護者モード以外は認証チェック
         if (!isParentMode) {
           const { data: { session } } = await getAuthClient().auth.getSession();
+          // 認証確認完了 → スプラッシュを消す
+          document.getElementById('loading-splash')?.remove();
           if (!session) { showLoginModal(); return; }
           const ok = await checkSubscription(session.user.email);
           if (!ok) { showSubscriptionModal(); return; }
@@ -4541,6 +4550,7 @@ ${error?.message || ''}`);
         migrateOldConfig();
 
         // 保護者モード
+        document.getElementById('loading-splash')?.remove();
         if (isParentMode) applyParentModeUI();
 
         // UI初期化
