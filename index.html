@@ -2004,6 +2004,47 @@
       panel.style.width = pw + 'px';
     }
 
+    (function initNumpadDrag() {
+      let dragging = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
+      function onStart(e) {
+        if (e.target.closest('button')) return;
+        dragging = true;
+        const panel = document.getElementById('numpad-panel');
+        const rect = panel.getBoundingClientRect();
+        origLeft = rect.left;
+        origTop  = rect.top;
+        const pt = e.touches ? e.touches[0] : e;
+        startX = pt.clientX;
+        startY = pt.clientY;
+        e.preventDefault();
+      }
+      function onMove(e) {
+        if (!dragging) return;
+        const pt = e.touches ? e.touches[0] : e;
+        const dx = pt.clientX - startX;
+        const dy = pt.clientY - startY;
+        const panel = document.getElementById('numpad-panel');
+        const margin = 8;
+        const pw = panel.offsetWidth, ph = panel.offsetHeight;
+        const newLeft = Math.max(margin, Math.min(origLeft + dx, window.innerWidth  - pw - margin));
+        const newTop  = Math.max(margin, Math.min(origTop  + dy, window.innerHeight - ph - margin));
+        panel.style.left = newLeft + 'px';
+        panel.style.top  = newTop  + 'px';
+        e.preventDefault();
+      }
+      function onEnd() { dragging = false; }
+      document.addEventListener('DOMContentLoaded', function() {
+        const handle = document.getElementById('numpad-drag-handle');
+        if (!handle) return;
+        handle.addEventListener('mousedown',  onStart, { passive: false });
+        handle.addEventListener('touchstart', onStart, { passive: false });
+        document.addEventListener('mousemove',  onMove, { passive: false });
+        document.addEventListener('touchmove',  onMove, { passive: false });
+        document.addEventListener('mouseup',  onEnd);
+        document.addEventListener('touchend', onEnd);
+      });
+    })();
+
     function numpadClose() {
       // 未確定の入力をリセット
       if (numpadTarget === 'scorer') {
@@ -4920,8 +4961,11 @@ ${error?.message || ''}`);
     <div id="numpad-backdrop" class="fixed inset-0 z-[59] hidden" onclick="numpadClose()"></div>
     <div id="numpad-panel" class="fixed z-[60] hidden bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
       <div class="p-3 space-y-2">
-        <div class="flex items-center justify-between px-1">
-          <span id="numpad-label" class="text-xs font-bold text-gray-500 tracking-wide"></span>
+        <div id="numpad-drag-handle" class="flex items-center justify-between px-1 cursor-grab active:cursor-grabbing select-none" style="touch-action:none;">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-300 text-base leading-none">⠿</span>
+            <span id="numpad-label" class="text-xs font-bold text-gray-500 tracking-wide"></span>
+          </div>
           <button type="button" onclick="numpadClose()" class="text-gray-400 hover:text-gray-600 text-xl leading-none px-1">×</button>
         </div>
         <div id="numpad-display" class="bg-gray-100 rounded-xl text-center text-4xl font-black text-gray-800 py-2 min-h-[56px] flex items-center justify-center tracking-widest">—</div>
