@@ -2413,11 +2413,22 @@
         return;
       }
 
+      // 管理者リンク経由（ハッシュに接続設定あり）はログイン不要
+      let skipAuth = false;
+      if (location.hash) {
+        try {
+          const d = parseHashConfig();
+          if (d?.u && d?.k) skipAuth = true;
+        } catch(e) {}
+      }
+
       // 管理者モード：認証チェック
-      const { data: { session } } = await getAuthClient().auth.getSession();
-      if (!session) { showLoginModal(); return; }
-      const subOk = await checkSubscription(session.user.email);
-      if (!subOk) { showSubscriptionModal(); return; }
+      if (!skipAuth) {
+        const { data: { session } } = await getAuthClient().auth.getSession();
+        if (!session) { showLoginModal(); return; }
+        const subOk = await checkSubscription(session.user.email);
+        if (!subOk) { showSubscriptionModal(); return; }
+      }
 
       // ログアウトボタンを追加
       const settingsMenuEl2 = document.getElementById('settings-menu');
