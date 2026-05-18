@@ -760,6 +760,7 @@
               <div class="space-y-2">
                 <input type="text" id="attendee-input" readonly placeholder="背番号をタップ" onclick="showNumpad('attendee')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 text-center text-base font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <div id="attendees-list" class="flex flex-wrap gap-2"></div>
+                <p id="attendee-duplicate-msg" class="hidden text-xs text-red-500 font-medium">この選手はすでに追加されています</p>
               </div>
             </div>
             <button type="submit" id="submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-4 rounded-xl shadow-lg">
@@ -2078,6 +2079,12 @@
       const number = String(input.value || '').trim();
       if (!number) return;
       choosePlayerNumber(number, selected => {
+        if (currentAttendees.includes(selected)) {
+          input.value = '';
+          const msg = document.getElementById('attendee-duplicate-msg');
+          if (msg) { msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 2000); }
+          return;
+        }
         currentAttendees.push(selected);
         renderAttendeesList();
       });
