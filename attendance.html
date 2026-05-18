@@ -2305,19 +2305,23 @@
     btnText?.classList.add('hidden');
     btnLoad?.classList.remove('hidden');
     try {
+      setLoginStatus('認証中… しばらくお待ちください', 'info');
       const { data, error } = await Promise.race([
         getAuthClient().auth.signInWithPassword({ email, password }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000))
       ]);
       if (error) { setLoginStatus('メールアドレスまたはパスワードが違います', 'error'); return; }
-      const ok = await Promise.race([
-        checkSubscription(email),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
-      ]);
+      let ok = false;
+      try {
+        ok = await Promise.race([
+          checkSubscription(email),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20000))
+        ]);
+      } catch(e) { ok = false; }
       if (!ok) { hideLoginModal(); showSubscriptionModal(); return; }
       location.reload();
     } catch(e) {
-      setLoginStatus(e.message === 'timeout' ? '通信がタイムアウトしました。再度お試しください' : 'ログインに失敗しました', 'error');
+      setLoginStatus(e.message === 'timeout' ? '通信がタイムアウトしました（30秒）。もう一度お試しください' : 'ログインに失敗しました', 'error');
     } finally {
       btn.disabled = false;
       btnText?.classList.remove('hidden');
