@@ -74,7 +74,7 @@
             <button type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-blue-600 font-bold">🏟️ チーム管理</button>
             <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">⚙️ 接続設定</button>
             <button type="button" id="menu-login-btn" onclick="openLoginModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-blue-600 font-bold">🔑 管理者ログイン</button>
-            <button type="button" id="menu-admin-link-btn" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
+            <button type="button" id="menu-admin-link-btn" onclick="openAdminLinkModal()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
             <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 保護者リンクを発行</button>
             <button type="button" id="menu-logout-btn" onclick="handleLogout()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold">🚪 ログアウト</button>
           </div>
@@ -412,46 +412,48 @@
 <!-- ══ イベント詳細モーダル ══════════════════════════════════════════ -->
 <div id="detail-modal" class="fixed inset-0 z-[100] hidden">
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeDetailModal()"></div>
-  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+  <div class="absolute bottom-0 left-0 right-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-xs bg-white rounded-t-2xl md:rounded-2xl shadow-2xl overflow-auto" style="max-height:80vh">
     <!-- ヘッダー：カテゴリーバッジ + タイトル + 情報 -->
-    <div class="px-5 pt-5 pb-4 border-b border-gray-100">
-      <div class="flex items-start justify-between gap-2 mb-3">
-        <div class="flex items-center gap-2 flex-wrap min-w-0 flex-1">
-          <span id="detail-cat-badge" class="hidden text-xs font-black text-white px-2.5 py-0.5 rounded-full shrink-0"></span>
-          <h2 id="detail-title" class="text-lg font-black text-gray-800 leading-snug"></h2>
+    <div class="px-4 pt-4 pb-3 border-b border-gray-100">
+      <!-- ドラッグハンドル（モバイル） -->
+      <div class="w-8 h-1 bg-gray-300 rounded-full mx-auto mb-3 md:hidden"></div>
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <div class="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
+          <span id="detail-cat-badge" class="hidden text-xs font-black text-white px-2 py-0.5 rounded-full shrink-0"></span>
+          <h2 id="detail-title" class="text-base font-black text-gray-800 leading-snug"></h2>
         </div>
-        <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none shrink-0 ml-1">×</button>
+        <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none shrink-0 ml-1">×</button>
       </div>
-      <div id="detail-info" class="space-y-1 text-sm text-gray-700"></div>
-      <div id="detail-memo" class="hidden mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-800 text-sm"></div>
+      <div id="detail-info" class="space-y-0.5 text-xs text-gray-600"></div>
+      <div id="detail-memo" class="hidden mt-2 bg-amber-50 rounded-lg px-2.5 py-1.5 text-amber-800 text-xs"></div>
     </div>
     <!-- ボタン群 -->
-    <div class="p-4 space-y-2">
+    <div class="p-3 space-y-2">
       <!-- 行1：リンクコピー + 回答確認 -->
       <div class="grid grid-cols-2 gap-2">
         <button onclick="copyEventLink()"
-          class="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+          class="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">
           🔗 リンクをコピー
         </button>
         <button onclick="viewResponses()"
-          class="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+          class="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-colors">
           <span id="detail-resp-label">📋 回答を確認</span>
         </button>
       </div>
       <!-- 行2：編集・削除（管理者のみ） -->
       <div id="detail-admin-btns" class="hidden grid grid-cols-2 gap-2">
         <button onclick="editCurrentEvent()"
-          class="flex items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">
+          class="flex items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs transition-colors">
           ✏️ 編集
         </button>
         <button onclick="deleteCurrentEvent()"
-          class="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl text-sm transition-colors">
+          class="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs transition-colors">
           🗑️ 削除
         </button>
       </div>
       <!-- カレンダーに追加 -->
       <button onclick="downloadICS()"
-        class="w-full flex items-center justify-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-500 font-bold py-2.5 rounded-xl text-sm transition-colors border border-gray-200">
+        class="w-full flex items-center justify-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-500 font-bold py-2 rounded-xl text-xs transition-colors border border-gray-200">
         📅 カレンダーに追加（.ics）
       </button>
     </div>
@@ -503,6 +505,7 @@
   const STORAGE_ACTIVE_KEY = 'mrs_active_team_v1'; // attendance.html と共用
   const TABLE_EVENTS    = 'attendance_events';
   const TABLE_RESPONSES = 'attendance_responses';
+  const STORAGE_FILTER_KEY = 'mrs_cal_filter_v1';  // カテゴリーフィルター記憶用
 
   const CAT_COLORS = {
     'U7': '#8B5CF6', 'U8': '#3B82F6', 'U9': '#10B981',
@@ -518,6 +521,7 @@
   let viewMode = 'month';
   let currentDetailEvent = null;
   let isAdmin = false;
+  let selectedCategory = null; // null = 全カテゴリー表示
 
   // ─── 設定読み書き ────────────────────────────────────────────────────
   function loadConfig() {
@@ -676,7 +680,7 @@
   function applyCalConfig(cfg) {
     if (!cfg) return;
     if (cfg.team_name) {
-      document.getElementById('app-team-name').textContent = cfg.team_name + ' カレンダー';
+      document.getElementById('app-team-name').textContent = cfg.team_name;
       document.title = cfg.team_name + ' カレンダー';
     }
     const footerEl = document.getElementById('footer-text');
@@ -931,21 +935,51 @@
     renderLegend();
   }
 
-  // ─── カテゴリー凡例 ──────────────────────────────────────────────────
+  // ─── カテゴリーフィルター ─────────────────────────────────────────────
   const CAT_ORDER = ['U7','U8','U9','U10','U11','U12'];
 
+  function loadFilter() {
+    try { return localStorage.getItem(STORAGE_FILTER_KEY) || null; } catch(e) { return null; }
+  }
+  function saveFilter(cat) {
+    try {
+      if (cat) localStorage.setItem(STORAGE_FILTER_KEY, cat);
+      else localStorage.removeItem(STORAGE_FILTER_KEY);
+    } catch(e) {}
+  }
+
+  function toggleCategoryFilter(cat) {
+    selectedCategory = (selectedCategory === cat) ? null : cat;
+    saveFilter(selectedCategory);
+    renderLegend();
+    renderCalendar();
+  }
+
+  function filteredEvents() {
+    if (!selectedCategory) return events;
+    return events.filter(ev => ev.category === selectedCategory);
+  }
+
   function renderLegend() {
-    const used = new Set(events.map(e => e.category).filter(Boolean));
-    // U7→U12 の固定順、データにあるカテゴリーのみ表示
-    const cats = CAT_ORDER.filter(c => used.has(c));
-    // CAT_ORDER にないカテゴリー（未設定以外）は末尾に追加
-    used.forEach(c => { if (!CAT_ORDER.includes(c)) cats.push(c); });
     const el = document.getElementById('cat-legend');
-    el.innerHTML = cats.map(cat =>
-      `<span class="flex items-center gap-1 text-xs font-bold text-gray-700 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-200">
-        <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:${catColor(cat)}"></span>${cat}
-      </span>`
-    ).join('');
+    const hasFilter = selectedCategory !== null;
+    // 「全て」ボタン
+    const allBtn = `<button onclick="toggleCategoryFilter(null)" class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full border transition-all ${!hasFilter ? 'bg-gray-800 text-white border-gray-800 shadow' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'}">全て</button>`;
+    // カテゴリーボタン
+    const catBtns = CAT_ORDER.map(cat => {
+      const isSelected = selectedCategory === cat;
+      const color = catColor(cat);
+      if (isSelected) {
+        return `<button onclick="toggleCategoryFilter('${cat}')" class="flex items-center gap-1 text-xs font-black text-white px-2 py-1 rounded-full border-2 shadow-md transition-all" style="background:${color};border-color:${color}">
+          <span class="w-2 h-2 rounded-full inline-block bg-white/60"></span>${cat}
+        </button>`;
+      } else {
+        return `<button onclick="toggleCategoryFilter('${cat}')" class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full border transition-all ${hasFilter ? 'bg-white text-gray-400 border-gray-200 opacity-60 hover:opacity-100' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'}" style="${hasFilter ? '' : `hover:border-color:${color}`}">
+          <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:${color}"></span>${cat}
+        </button>`;
+      }
+    }).join('');
+    el.innerHTML = allBtn + catBtns;
   }
 
   // ─── ビュー切り替え ──────────────────────────────────────────────────
@@ -987,7 +1021,7 @@
     const today = new Date().toISOString().slice(0, 10);
 
     const evMap = {};
-    events.forEach(ev => {
+    filteredEvents().forEach(ev => {
       if (!evMap[ev.event_date]) evMap[ev.event_date] = [];
       evMap[ev.event_date].push(ev);
     });
@@ -1020,10 +1054,13 @@
     const body = document.getElementById('list-body');
     const today = new Date().toISOString().slice(0, 10);
     const ym = `${currentYear}-${String(currentMonth + 1).padStart(2,'0')}`;
-    const monthEvs = events.filter(ev => ev.event_date && ev.event_date.startsWith(ym));
+    const monthEvs = filteredEvents().filter(ev => ev.event_date && ev.event_date.startsWith(ym));
 
     if (monthEvs.length === 0) {
-      body.innerHTML = '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow border border-gray-200">この月のイベントはありません</div>';
+      const msg = selectedCategory
+        ? `<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow border border-gray-200">${selectedCategory} のイベントはありません</div>`
+        : '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow border border-gray-200">この月のイベントはありません</div>';
+      body.innerHTML = msg;
       return;
     }
     body.innerHTML = monthEvs.map(ev => {
@@ -1283,6 +1320,9 @@
           }
         } catch(e) {}
       }
+
+      // カテゴリーフィルターを復元
+      selectedCategory = loadFilter();
 
       if (!initSupabase()) {
         document.getElementById('loading-screen').classList.add('hidden');
