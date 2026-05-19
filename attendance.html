@@ -36,9 +36,9 @@
 
     /* ラジオボタン */
     .radio-btn {
-      width: 100%; padding: 0.75rem 0.25rem; border-radius: 0.75rem;
+      width: 100%; padding: 0.5rem 0.15rem; border-radius: 0.75rem;
       border: 2px solid #e5e7eb; background: #fff; color: #4b5563;
-      font-weight: 700; font-size: min(0.875rem, 3.8vw); cursor: pointer;
+      font-weight: 700; font-size: min(0.8rem, 3.5vw); cursor: pointer;
       transition: all 0.15s; text-align: center; display: block;
       white-space: nowrap;
     }
@@ -2119,49 +2119,49 @@
     const container = document.getElementById(cId);
     if (!container) return;
     container.innerHTML = `
-      <form id="attend-form" class="bg-white p-5 space-y-6">
+      <form id="attend-form" class="bg-white p-4 space-y-3">
 
         <div>
-          <label class="block text-gray-700 font-bold mb-2">背番号 <span class="text-red-500">*</span></label>
+          <label class="block text-gray-700 font-bold text-sm mb-1">背番号 <span class="text-red-500">*</span></label>
           <div class="flex items-center gap-3">
             <input type="number" id="f-jersey" min="1" max="99" inputmode="numeric"
-              class="w-28 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-red-400 text-2xl font-black text-center"
+              class="w-24 bg-gray-50 border-2 border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-red-400 text-2xl font-black text-center"
               placeholder="10" oninput="onJerseyInput(this.value)">
-            <p id="f-player-name" class="text-lg font-black text-gray-700"></p>
+            <p id="f-player-name" class="text-base font-black text-gray-700"></p>
           </div>
         </div>
 
         <div>
-          <label class="block text-gray-700 font-bold mb-3">出欠確認 <span class="text-red-500">*</span></label>
-          <div class="grid grid-cols-3 gap-2">
+          <label class="block text-gray-700 font-bold text-sm mb-1">出欠確認 <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-1.5">
             ${radios('f-attend', [{v:'出席',i:'✅',c:'green'},{v:'欠席',i:'❌',c:'red'},{v:'未定',i:'❓',c:'gray'}])}
           </div>
         </div>
 
         <div>
-          <label class="block text-gray-700 font-bold mb-3">送迎について <span class="text-red-500">*</span></label>
-          <div class="grid grid-cols-3 gap-2">
+          <label class="block text-gray-700 font-bold text-sm mb-1">送迎について <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-1.5">
             ${radios('f-transport', [{v:'大丈夫',i:'👍',c:'gray'},{v:'乗せて欲しい',i:'🙏',c:'blue'},{v:'未定',i:'❓',c:'gray'}])}
           </div>
         </div>
 
         <div>
-          <label class="block text-gray-700 font-bold mb-3">配車について <span class="text-red-500">*</span></label>
-          <div class="grid grid-cols-3 gap-2">
+          <label class="block text-gray-700 font-bold text-sm mb-1">配車について <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-1.5">
             ${radios('f-carpool', [{v:'できる',i:'🚗',c:'amber'},{v:'難しい',i:'🚫',c:'red'},{v:'未定',i:'❓',c:'gray'}])}
           </div>
         </div>
 
         <div>
-          <label class="block text-gray-700 font-bold mb-2">備考（何かあれば）</label>
+          <label class="block text-gray-700 font-bold text-sm mb-1">備考（何かあれば）</label>
           <input type="text" id="f-notes" placeholder="自由入力"
-            class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-red-400">
+            class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-red-400">
         </div>
 
-        <div id="form-status" class="hidden text-sm rounded-xl px-4 py-3 font-medium"></div>
+        <div id="form-status" class="hidden text-sm rounded-xl px-3 py-2 font-medium"></div>
 
         <button type="button" id="submit-btn" onclick="submitResponse('${eventId}', '${cId}')"
-          class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl text-lg transition-colors">
+          class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-2xl text-base transition-colors">
           <span id="submit-text">回答を送信する</span>
           <span id="submit-loading" class="hidden">送信中...</span>
         </button>
