@@ -70,11 +70,13 @@
         </div>
         <div class="relative shrink-0">
           <button id="settings-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors">⚙️</button>
-          <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
-            <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-red-600 font-bold">⚙️ 接続設定</button>
+          <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 w-52 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
+            <button type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-blue-600 font-bold">🏟️ チーム管理</button>
+            <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">⚙️ 接続設定</button>
             <button type="button" id="menu-login-btn" onclick="openLoginModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-blue-600 font-bold">🔑 管理者ログイン</button>
+            <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
+            <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 保護者リンクを発行</button>
             <button type="button" id="menu-logout-btn" onclick="handleLogout()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold">🚪 ログアウト</button>
-            <button type="button" id="menu-admin-link-btn" onclick="openAdminLinkModal()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
           </div>
         </div>
       </div>
@@ -159,6 +161,60 @@
   </footer>
 
 </div><!-- /app -->
+
+
+<!-- ══ チーム管理モーダル ══════════════════════════════════════════════ -->
+<div id="cal-team-manager-modal" class="fixed inset-0 z-[110] hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTeamManager()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-blue-700 to-blue-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+      <h2 class="text-xl font-black">🏟️ チーム管理</h2>
+      <button onclick="closeTeamManager()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="p-4 space-y-3">
+      <div id="cal-team-list" class="space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 保護者リンク発行モーダル ════════════════════════════════════════ -->
+<div id="parent-link-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeParentLinkModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="bg-gradient-to-r from-green-700 to-green-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-black">🔗 保護者リンクを発行</h2>
+        <p class="text-sm text-white/80 mt-1">カレンダーを閲覧できるリンク</p>
+      </div>
+      <button onclick="closeParentLinkModal()" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
+    </div>
+    <div class="p-6 space-y-4">
+      <p class="text-sm text-gray-600">このリンクを保護者に共有すると、接続設定なしでカレンダーを閲覧できます。</p>
+      <div>
+        <label class="block text-gray-700 text-sm font-bold mb-1">アプリの公開URL <span class="text-red-500">*</span></label>
+        <input type="url" id="parent-link-base-url" placeholder="https://your-site.netlify.app/calendar.html"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" oninput="updateParentLink()">
+      </div>
+      <div id="parent-link-result" class="hidden space-y-2">
+        <label class="block text-gray-700 text-sm font-bold">生成されたリンク</label>
+        <div class="flex gap-2">
+          <input type="text" id="parent-link-url" readonly
+            class="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 font-mono">
+          <button onclick="copyParentLink()"
+            class="shrink-0 bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors">コピー</button>
+        </div>
+        <p id="parent-link-copy-msg" class="hidden text-xs text-green-600 font-medium">✅ クリップボードにコピーしました</p>
+      </div>
+      <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-xs text-green-700 space-y-1">
+        <p class="font-bold">ℹ️ このリンクでできること</p>
+        <p>✅ カレンダーの閲覧（月表示・リスト）</p>
+        <p>✅ イベント詳細の確認・カレンダーへの追加</p>
+        <p>❌ イベントの追加・編集・削除はできません</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <!-- ══ 管理者リンク発行モーダル ══════════════════════════════════════ -->
@@ -426,6 +482,8 @@
 <script>
   // ─── 定数 ────────────────────────────────────────────────────────────
   const STORAGE_CONFIG_KEY = 'mrs_app_config_v1'; // attendance.html と共用
+  const STORAGE_TEAMS_KEY  = 'mrs_teams_v1';       // attendance.html と共用
+  const STORAGE_ACTIVE_KEY = 'mrs_active_team_v1'; // attendance.html と共用
   const TABLE_EVENTS = 'attendance_events';
 
   const CAT_COLORS = {
@@ -445,10 +503,33 @@
 
   // ─── 設定読み書き ────────────────────────────────────────────────────
   function loadConfig() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_CONFIG_KEY) || 'null'); } catch(e) { return null; }
+    try {
+      // アクティブチームがあればそちらを優先
+      const teams    = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+      const activeId = localStorage.getItem(STORAGE_ACTIVE_KEY);
+      const active   = activeId ? teams.find(t => t.id === activeId) : teams[0];
+      if (active?.supabase_url) {
+        return { supabase_url: active.supabase_url, supabase_anon_key: active.supabase_anon_key, team_name: active.team_name, primary_color: active.primary_color, footer_text: active.footer_text };
+      }
+      return JSON.parse(localStorage.getItem(STORAGE_CONFIG_KEY) || 'null');
+    } catch(e) { return null; }
   }
   function saveConfig(cfg) {
-    try { localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(cfg)); } catch(e) {}
+    try {
+      localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(cfg));
+      // STORAGE_TEAMS_KEY のアクティブチームも同期更新
+      const teams    = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+      const activeId = localStorage.getItem(STORAGE_ACTIVE_KEY);
+      const idx = activeId
+        ? teams.findIndex(t => t.id === activeId)
+        : teams.findIndex(t => t.supabase_url === cfg.supabase_url);
+      if (idx >= 0) {
+        if (cfg.primary_color) teams[idx].primary_color = cfg.primary_color;
+        if (cfg.team_name)     teams[idx].team_name     = cfg.team_name;
+        if (cfg.footer_text)   teams[idx].footer_text   = cfg.footer_text;
+        localStorage.setItem(STORAGE_TEAMS_KEY, JSON.stringify(teams));
+      }
+    } catch(e) {}
   }
 
   function applyColor(hex) {
@@ -467,13 +548,7 @@
     if (!cfg?.supabase_url || !cfg?.supabase_anon_key) return false;
     try {
       supabaseClient = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
-      if (cfg.team_name) {
-        document.getElementById('app-team-name').textContent = cfg.team_name + ' カレンダー';
-        document.title = cfg.team_name + ' カレンダー';
-      }
-      const footerEl = document.getElementById('footer-text');
-      if (footerEl && cfg.footer_text) footerEl.textContent = cfg.footer_text;
-      if (cfg.primary_color) applyColor(cfg.primary_color);
+      applyCalConfig(cfg);
       return true;
     } catch(e) { return false; }
   }
@@ -513,16 +588,108 @@
     }
   });
 
+  // ─── チーム管理 ──────────────────────────────────────────────────────
+  let calSetupMode     = 'edit';
+  let calEditingTeamId = null;
+
+  function openTeamManager() {
+    document.getElementById('settings-menu')?.classList.add('hidden');
+    renderCalTeamList();
+    document.getElementById('cal-team-manager-modal').classList.remove('hidden');
+  }
+  function closeTeamManager() {
+    document.getElementById('cal-team-manager-modal').classList.add('hidden');
+  }
+  function renderCalTeamList() {
+    const teams    = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+    const activeId = localStorage.getItem(STORAGE_ACTIVE_KEY);
+    const container = document.getElementById('cal-team-list');
+    if (!container) return;
+    const resolvedActive = activeId || teams[0]?.id;
+    container.innerHTML = (teams.length === 0
+      ? '<p class="text-center text-gray-400 text-sm py-4">チームがまだ登録されていません</p>'
+      : teams.map(team => {
+          const isActive = team.id === resolvedActive;
+          return `<div class="flex items-center gap-2 p-3 rounded-xl border-2 ${isActive ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} transition-colors">
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-gray-800 truncate">${escHtml(team.team_name || '名前なし')}</p>
+              ${isActive ? '<p class="text-xs text-blue-600 font-medium">✓ 使用中</p>' : ''}
+            </div>
+            ${!isActive ? `<button onclick="switchToCalTeam('${team.id}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors">切替</button>` : ''}
+            <button onclick="editCalTeam('${team.id}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-colors">編集</button>
+            <button onclick="deleteCalTeam('${team.id}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 text-xs font-bold transition-colors">削除</button>
+          </div>`;
+        }).join('')
+    ) + `<button onclick="openSetupModal('new')" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-blue-300 text-blue-600 font-bold hover:bg-blue-50 transition-colors mt-1">＋ チームを追加</button>`;
+  }
+  async function switchToCalTeam(teamId) {
+    const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+    const team  = teams.find(t => t.id === teamId);
+    if (!team) return;
+    localStorage.setItem(STORAGE_ACTIVE_KEY, teamId);
+    const cfg = { supabase_url: team.supabase_url, supabase_anon_key: team.supabase_anon_key, team_name: team.team_name, primary_color: team.primary_color, footer_text: team.footer_text };
+    localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(cfg));
+    applyCalConfig(cfg);
+    supabaseClient = null;
+    initSupabase();
+    closeTeamManager();
+    events = [];
+    await loadEvents();
+  }
+  function editCalTeam(teamId) {
+    closeTeamManager();
+    openSetupModal('edit-team', teamId);
+  }
+  async function deleteCalTeam(teamId) {
+    const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+    const team  = teams.find(t => t.id === teamId);
+    if (!team) return;
+    if (teams.length === 1) { alert('最後のチームは削除できません'); return; }
+    if (!confirm(`「${team.team_name}」を削除しますか？`)) return;
+    const newTeams = teams.filter(t => t.id !== teamId);
+    localStorage.setItem(STORAGE_TEAMS_KEY, JSON.stringify(newTeams));
+    if ((localStorage.getItem(STORAGE_ACTIVE_KEY) || teams[0]?.id) === teamId) {
+      await switchToCalTeam(newTeams[0].id);
+    } else {
+      renderCalTeamList();
+    }
+  }
+
+  function applyCalConfig(cfg) {
+    if (!cfg) return;
+    if (cfg.team_name) {
+      document.getElementById('app-team-name').textContent = cfg.team_name + ' カレンダー';
+      document.title = cfg.team_name + ' カレンダー';
+    }
+    const footerEl = document.getElementById('footer-text');
+    if (footerEl) footerEl.textContent = cfg.footer_text || '© CALENDAR';
+    if (cfg.primary_color) applyColor(cfg.primary_color);
+  }
+
   // ─── 接続設定 ────────────────────────────────────────────────────────
-  function openSetupModal() {
-    const cfg = loadConfig();
-    document.getElementById('setup-team-name').value  = cfg?.team_name       || '';
-    document.getElementById('setup-url').value        = cfg?.supabase_url    || '';
-    document.getElementById('setup-anon-key').value   = cfg?.supabase_anon_key || '';
-    document.getElementById('setup-footer-text').value= cfg?.footer_text     || '';
-    const color = cfg?.primary_color || '#c0392b';
-    document.getElementById('setup-primary-color').value = color;
-    calUpdateColorPanelUI(color);
+  function openSetupModal(mode = 'edit', teamId = null) {
+    document.getElementById('settings-menu')?.classList.add('hidden');
+    calSetupMode     = mode;
+    calEditingTeamId = teamId;
+    let cfg = null;
+    if (mode === 'new') {
+      cfg = { team_name:'', supabase_url:'', supabase_anon_key:'', primary_color:'#c0392b', footer_text:'' };
+    } else if (mode === 'edit-team' && teamId) {
+      const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+      const team  = teams.find(t => t.id === teamId);
+      cfg = team ? { team_name: team.team_name, supabase_url: team.supabase_url, supabase_anon_key: team.supabase_anon_key, primary_color: team.primary_color, footer_text: team.footer_text } : loadConfig();
+    } else {
+      cfg = loadConfig();
+    }
+    if (cfg) {
+      document.getElementById('setup-team-name').value  = cfg.team_name       || '';
+      document.getElementById('setup-url').value        = cfg.supabase_url    || '';
+      document.getElementById('setup-anon-key').value   = cfg.supabase_anon_key || '';
+      document.getElementById('setup-footer-text').value= cfg.footer_text     || '';
+      const color = cfg.primary_color || '#c0392b';
+      document.getElementById('setup-primary-color').value = color;
+      calUpdateColorPanelUI(color);
+    }
     document.getElementById('setup-status').classList.add('hidden');
     document.getElementById('setup-modal').classList.remove('hidden');
   }
@@ -544,41 +711,109 @@
   });
 
   async function handleSetupSave() {
-    const url    = document.getElementById('setup-url').value.trim();
-    const key    = document.getElementById('setup-anon-key').value.trim();
-    const team   = document.getElementById('setup-team-name').value.trim();
-    const footer = document.getElementById('setup-footer-text').value.trim();
-    const color  = document.getElementById('setup-primary-color').value || '#c0392b';
-    const status = document.getElementById('setup-status');
-    const btn    = document.getElementById('setup-save-btn');
-    const txt    = document.getElementById('setup-save-text');
-    const load   = document.getElementById('setup-save-loading');
+    const btn      = document.getElementById('setup-save-btn');
+    const txt      = document.getElementById('setup-save-text');
+    const load     = document.getElementById('setup-save-loading');
+    const statusEl = document.getElementById('setup-status');
 
-    if (!url || !key) { setStatus(status, 'URLとキーを入力してください', 'error'); return; }
+    const teamName = document.getElementById('setup-team-name').value.trim();
+    const url      = document.getElementById('setup-url').value.trim();
+    const key      = document.getElementById('setup-anon-key').value.trim();
+    const footer   = document.getElementById('setup-footer-text').value.trim();
+    const color    = document.getElementById('setup-primary-color')?.value || '#c0392b';
+
+    if (!teamName) { setStatus(statusEl, 'チーム名を入力してください', 'error'); return; }
+    if (!url || !url.startsWith('https://')) { setStatus(statusEl, 'URLを正しく入力してください（https://...）', 'error'); return; }
+    if (!key || !key.startsWith('eyJ'))       { setStatus(statusEl, 'anon キーを確認してください', 'error'); return; }
 
     btn.disabled = true; txt.classList.add('hidden'); load.classList.remove('hidden');
+    setStatus(statusEl, '接続テスト中...', 'info');
+
+    let testOk = false;
     try {
-      // 接続テスト
-      const testClient = window.supabase.createClient(url, key);
-      await Promise.race([
-        testClient.from(TABLE_EVENTS).select('id').limit(1),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
-      ]);
-      const cfg = { supabase_url: url, supabase_anon_key: key, team_name: team, primary_color: color, footer_text: footer };
-      saveConfig(cfg);
-      setStatus(status, '✅ 接続OK！保存しました', 'success');
-      setTimeout(() => location.reload(), 800);
+      const res = await fetch(`${url.replace(/\/$/, '')}/rest/v1/${TABLE_EVENTS}?select=id&limit=1`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` }
+      });
+      if (res.status === 401 || res.status === 403) {
+        setStatus(statusEl, '認証エラー：anon キーを確認してください', 'error');
+      } else if (res.status === 404) {
+        setStatus(statusEl, 'テーブルが見つかりません', 'error');
+      } else {
+        testOk = true;
+      }
     } catch(e) {
-      setStatus(status, e.message === 'timeout' ? 'タイムアウトしました。URLを確認してください' : '接続に失敗しました: ' + (e.message || '不明'), 'error');
-    } finally {
-      btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
+      setStatus(statusEl, '接続できませんでした。URLを確認してください', 'error');
     }
+
+    btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
+    if (!testOk) return;
+
+    const newCfg = { team_name: teamName, supabase_url: url.replace(/\/$/, ''), supabase_anon_key: key, primary_color: color, footer_text: footer || '© CALENDAR' };
+
+    if (calSetupMode === 'new') {
+      const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+      const newId = Date.now().toString();
+      teams.push({ id: newId, ...newCfg });
+      localStorage.setItem(STORAGE_TEAMS_KEY, JSON.stringify(teams));
+      localStorage.setItem(STORAGE_ACTIVE_KEY, newId);
+      localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(newCfg));
+    } else if (calSetupMode === 'edit-team' && calEditingTeamId) {
+      const teams = JSON.parse(localStorage.getItem(STORAGE_TEAMS_KEY) || '[]');
+      const idx   = teams.findIndex(t => t.id === calEditingTeamId);
+      if (idx >= 0) { teams[idx] = { ...teams[idx], ...newCfg }; localStorage.setItem(STORAGE_TEAMS_KEY, JSON.stringify(teams)); }
+      if (localStorage.getItem(STORAGE_ACTIVE_KEY) === calEditingTeamId) {
+        localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(newCfg));
+      }
+    } else {
+      saveConfig(newCfg);
+    }
+
+    applyCalConfig(newCfg);
+    supabaseClient = null;
+    initSupabase();
+    setStatus(statusEl, '✅ 接続OK！保存しました', 'success');
+    setTimeout(async () => {
+      document.getElementById('setup-modal').classList.add('hidden');
+      events = [];
+      await loadEvents();
+    }, 800);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     const saveBtn = document.getElementById('setup-save-btn');
     if (saveBtn) saveBtn.addEventListener('click', handleSetupSave);
   });
+
+  // ─── 保護者リンク発行 ────────────────────────────────────────────────
+  function openParentLinkModal() {
+    document.getElementById('settings-menu')?.classList.add('hidden');
+    const base = getBaseUrl();
+    document.getElementById('parent-link-base-url').value = base;
+    document.getElementById('parent-link-result').classList.add('hidden');
+    document.getElementById('parent-link-copy-msg').classList.add('hidden');
+    document.getElementById('parent-link-modal').classList.remove('hidden');
+    if (base) updateParentLink();
+  }
+  function closeParentLinkModal() { document.getElementById('parent-link-modal').classList.add('hidden'); }
+  function updateParentLink() {
+    const base = document.getElementById('parent-link-base-url').value.trim();
+    if (!base) { document.getElementById('parent-link-result').classList.add('hidden'); return; }
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url) return;
+    // 保護者リンクは接続情報のみ（管理者認証なし）
+    const payload = { u: cfg.supabase_url, k: cfg.supabase_anon_key, t: cfg.team_name || '', c: cfg.primary_color || '#c0392b' };
+    const link = base + '#' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    document.getElementById('parent-link-url').value = link;
+    document.getElementById('parent-link-result').classList.remove('hidden');
+  }
+  function copyParentLink() {
+    const val = document.getElementById('parent-link-url').value;
+    navigator.clipboard.writeText(val).then(() => {
+      const msg = document.getElementById('parent-link-copy-msg');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 2000);
+    }).catch(() => {});
+  }
 
   // ─── 管理者リンク発行 ────────────────────────────────────────────────
   function openAdminLinkModal() {
@@ -680,8 +915,14 @@
   }
 
   // ─── カテゴリー凡例 ──────────────────────────────────────────────────
+  const CAT_ORDER = ['U7','U8','U9','U10','U11','U12'];
+
   function renderLegend() {
-    const cats = [...new Set(events.map(e => e.category).filter(Boolean))].sort();
+    const used = new Set(events.map(e => e.category).filter(Boolean));
+    // U7→U12 の固定順、データにあるカテゴリーのみ表示
+    const cats = CAT_ORDER.filter(c => used.has(c));
+    // CAT_ORDER にないカテゴリー（未設定以外）は末尾に追加
+    used.forEach(c => { if (!CAT_ORDER.includes(c)) cats.push(c); });
     const el = document.getElementById('cat-legend');
     el.innerHTML = cats.map(cat =>
       `<span class="flex items-center gap-1 text-xs font-bold text-gray-700 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-200">
@@ -939,8 +1180,13 @@
   }
   function setStatus(el, msg, type) {
     if (!el) return;
+    const cls = {
+      error:   'bg-red-50 border border-red-200 text-red-700',
+      success: 'bg-green-50 border border-green-200 text-green-700',
+      info:    'bg-blue-50 border border-blue-200 text-blue-700',
+    };
     el.textContent = msg;
-    el.className = `text-sm rounded-lg px-4 py-3 font-medium ${type === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`;
+    el.className = `text-sm rounded-xl px-4 py-3 font-medium ${cls[type] || cls.info}`;
     el.classList.remove('hidden');
   }
 
