@@ -413,30 +413,47 @@
 <div id="detail-modal" class="fixed inset-0 z-[100] hidden">
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeDetailModal()"></div>
   <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
-    <div id="detail-header" class="text-white px-6 py-5 rounded-t-2xl flex items-start justify-between gap-2">
-      <div class="min-w-0 flex-1">
-        <p id="detail-cat" class="text-xs font-bold text-white/80 mb-1"></p>
-        <h2 id="detail-title" class="text-lg font-black leading-snug"></h2>
+    <!-- ヘッダー：カテゴリーバッジ + タイトル + 情報 -->
+    <div class="px-5 pt-5 pb-4 border-b border-gray-100">
+      <div class="flex items-start justify-between gap-2 mb-3">
+        <div class="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+          <span id="detail-cat-badge" class="hidden text-xs font-black text-white px-2.5 py-0.5 rounded-full shrink-0"></span>
+          <h2 id="detail-title" class="text-lg font-black text-gray-800 leading-snug"></h2>
+        </div>
+        <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none shrink-0 ml-1">×</button>
       </div>
-      <button onclick="closeDetailModal()" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-2">×</button>
+      <div id="detail-info" class="space-y-1 text-sm text-gray-700"></div>
+      <div id="detail-memo" class="hidden mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-800 text-sm"></div>
     </div>
-    <div class="p-5 space-y-3">
-      <div id="detail-info" class="space-y-1.5 text-sm text-gray-700"></div>
-      <div id="detail-memo" class="hidden bg-amber-50 rounded-xl px-3 py-2 text-amber-800 text-sm"></div>
-      <div class="flex gap-2 pt-1">
-        <button onclick="downloadICS()"
-          class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
-          📅 カレンダーに追加
+    <!-- ボタン群 -->
+    <div class="p-4 space-y-2">
+      <!-- 行1：リンクコピー + 回答確認 -->
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="copyEventLink()"
+          class="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+          🔗 リンクをコピー
         </button>
-        <button id="detail-edit-btn" onclick="editCurrentEvent()"
-          class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-colors">
+        <button onclick="viewResponses()"
+          class="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+          <span id="detail-resp-label">📋 回答を確認</span>
+        </button>
+      </div>
+      <!-- 行2：編集・削除（管理者のみ） -->
+      <div id="detail-admin-btns" class="hidden grid grid-cols-2 gap-2">
+        <button onclick="editCurrentEvent()"
+          class="flex items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">
           ✏️ 編集
         </button>
-        <button id="detail-delete-btn" onclick="deleteCurrentEvent()"
-          class="hidden bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 px-3 rounded-xl text-sm transition-colors">
-          🗑️
+        <button onclick="deleteCurrentEvent()"
+          class="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl text-sm transition-colors">
+          🗑️ 削除
         </button>
       </div>
+      <!-- カレンダーに追加 -->
+      <button onclick="downloadICS()"
+        class="w-full flex items-center justify-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-500 font-bold py-2.5 rounded-xl text-sm transition-colors border border-gray-200">
+        📅 カレンダーに追加（.ics）
+      </button>
     </div>
   </div>
 </div>
@@ -484,7 +501,8 @@
   const STORAGE_CONFIG_KEY = 'mrs_app_config_v1'; // attendance.html と共用
   const STORAGE_TEAMS_KEY  = 'mrs_teams_v1';       // attendance.html と共用
   const STORAGE_ACTIVE_KEY = 'mrs_active_team_v1'; // attendance.html と共用
-  const TABLE_EVENTS = 'attendance_events';
+  const TABLE_EVENTS    = 'attendance_events';
+  const TABLE_RESPONSES = 'attendance_responses';
 
   const CAT_COLORS = {
     'U7': '#8B5CF6', 'U8': '#3B82F6', 'U9': '#10B981',
@@ -992,7 +1010,7 @@
           <span class="${isToday ? 'bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black' : `text-xs font-bold ${textColor}`}">${d}</span>
         </div>
         ${dayEvs.map(ev =>
-          `<span class="event-pill" style="background:${catColor(ev.category)}" onclick="openDetail('${ev.id}')" title="${escHtml(ev.title)}">${escHtml(ev.title)}</span>`
+          `<span class="event-pill" style="background:${catColor(ev.category)}" onclick="openDetail('${ev.id}')" title="${escHtml(ev.title)}">${ev.category ? escHtml(ev.category) : escHtml(ev.title)}</span>`
         ).join('')}
       </div>`;
     }
@@ -1034,18 +1052,26 @@
   }
 
   // ─── イベント詳細 ────────────────────────────────────────────────────
-  function openDetail(id) {
+  async function openDetail(id) {
     const ev = events.find(e => e.id === id);
     if (!ev) return;
     currentDetailEvent = ev;
-    const color = catColor(ev.category);
-    document.getElementById('detail-header').style.background = `linear-gradient(to right, ${color}cc, ${color})`;
-    document.getElementById('detail-cat').textContent = ev.category || '';
+
+    // カテゴリーバッジ
+    const badge = document.getElementById('detail-cat-badge');
+    if (ev.category) {
+      badge.textContent = ev.category;
+      badge.style.background = catColor(ev.category);
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
     document.getElementById('detail-title').textContent = ev.title;
 
+    // 情報
     const d = new Date(ev.event_date + 'T00:00:00');
-    const dateLabel = d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
-    let infoHtml = `<p>📆 ${dateLabel}</p>`;
+    const dateLabel = d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+    let infoHtml = `<p>📅 ${dateLabel}</p>`;
     if (ev.event_time) infoHtml += `<p>🕐 ${escHtml(ev.event_time)}</p>`;
     if (ev.location)   infoHtml += `<p>📍 ${escHtml(ev.location)}</p>`;
     if (ev.transport)  infoHtml += `<p>🚗 移動：${escHtml(ev.transport)}</p>`;
@@ -1055,10 +1081,22 @@
     if (ev.memo) { memoEl.textContent = '📝 ' + ev.memo; memoEl.classList.remove('hidden'); }
     else memoEl.classList.add('hidden');
 
-    document.getElementById('detail-edit-btn').classList.toggle('hidden', !isAdmin);
-    document.getElementById('detail-delete-btn').classList.toggle('hidden', !isAdmin);
+    // 管理者ボタン表示
+    document.getElementById('detail-admin-btns').classList.toggle('hidden', !isAdmin);
+
+    // 回答件数を非同期取得
+    document.getElementById('detail-resp-label').textContent = '📋 回答を確認';
     document.getElementById('detail-modal').classList.remove('hidden');
+    if (supabaseClient) {
+      try {
+        const { data } = await supabaseClient
+          .from(TABLE_RESPONSES).select('id').eq('event_id', ev.id);
+        const count = data?.length ?? 0;
+        document.getElementById('detail-resp-label').textContent = `📋 回答を確認（${count}件）`;
+      } catch(e) {}
+    }
   }
+
   function closeDetailModal() {
     document.getElementById('detail-modal').classList.add('hidden');
     currentDetailEvent = null;
@@ -1077,6 +1115,41 @@
       closeDetailModal();
       loadEvents();
     } catch(e) { alert('削除に失敗しました'); }
+  }
+
+  // ─── リンクをコピー・回答を確認 ──────────────────────────────────────
+  function getAttendanceBaseUrl() {
+    const base = getBaseUrl();
+    return base ? base.replace(/calendar\.html$/i, 'attendance.html') : '';
+  }
+  function copyEventLink() {
+    const ev = currentDetailEvent;
+    if (!ev) return;
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url) return;
+    const hash = buildHashString(cfg);
+    const attUrl = getAttendanceBaseUrl();
+    const link = attUrl ? `${attUrl}?respond=${ev.id}#${hash}` : '';
+    if (!link) { alert('公開URLが取得できません。接続設定のURLを確認してください。'); return; }
+    navigator.clipboard.writeText(link).then(() => {
+      const btn = document.querySelector('[onclick="copyEventLink()"]');
+      if (btn) {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '✅ コピーしました';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }
+    }).catch(() => alert('コピーに失敗しました'));
+  }
+  function viewResponses() {
+    const ev = currentDetailEvent;
+    if (!ev) return;
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url) return;
+    const hash = buildHashString(cfg);
+    const attUrl = getAttendanceBaseUrl();
+    if (attUrl) {
+      window.open(`${attUrl}#${hash}`, '_blank');
+    }
   }
 
   // ─── .ics ダウンロード ───────────────────────────────────────────────
