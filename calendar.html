@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>カレンダー</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary: #c0392b;
+      --primary-dark: #96281b;
+    }
+    body { background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .cal-day { min-height: 80px; }
+    @media (max-width: 640px) { .cal-day { min-height: 56px; } }
+    .event-pill {
+      display: block; font-size: 11px; line-height: 1.3;
+      padding: 1px 4px; border-radius: 3px; margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer; color: #fff; font-weight: 600;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ローディング -->
+<div id="loading-screen" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-[150] gap-4">
+  <div class="text-5xl">📅</div>
+  <div class="w-8 h-8 border-4 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
+</div>
+
+<!-- ヘッダー -->
+<header class="sticky top-0 z-40 shadow-md text-white" style="background: linear-gradient(to right, var(--primary-dark), var(--primary));">
+  <div class="max-w-[750px] mx-auto px-4 py-3 flex items-center justify-between gap-2">
+    <h1 id="app-team-name" class="text-base font-black truncate">カレンダー</h1>
+    <div class="flex items-center gap-2 shrink-0">
+      <button id="login-btn" onclick="openLoginModal()"
+        class="text-xs bg-white/20 hover:bg-white/30 text-white font-bold px-3 py-1.5 rounded-lg transition-colors hidden">
+        管理者ログイン
+      </button>
+      <button id="logout-btn" onclick="handleLogout()"
+        class="text-xs bg-white/20 hover:bg-white/30 text-white font-bold px-3 py-1.5 rounded-lg transition-colors hidden">
+        ログアウト
+      </button>
+      <button id="add-event-btn" onclick="openEventModal()"
+        class="text-xs bg-white/20 hover:bg-white/30 text-white font-bold px-3 py-1.5 rounded-lg transition-colors hidden">
+        ＋ 追加
+      </button>
+      <button onclick="openSetupModal()" class="text-white/60 hover:text-white text-xl leading-none" title="設定">⚙</button>
+    </div>
+  </div>
+</header>
+
+<!-- メインコンテンツ -->
+<main class="max-w-[750px] mx-auto px-4 pb-8 pt-4 space-y-3">
+
+  <!-- ビュー切り替え + 月ナビ -->
+  <div class="bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center gap-2">
+    <button id="btn-month" onclick="setView('month')"
+      class="px-3 py-2 rounded-xl text-sm font-bold bg-red-500 text-white transition-colors">月表示</button>
+    <button id="btn-list" onclick="setView('list')"
+      class="px-3 py-2 rounded-xl text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">リスト</button>
+    <div class="flex-1"></div>
+    <button id="prev-btn" onclick="changeMonth(-1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 text-lg transition-colors">‹</button>
+    <span id="month-label" class="text-sm font-black text-gray-800 min-w-[80px] text-center"></span>
+    <button id="next-btn" onclick="changeMonth(1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 text-lg transition-colors">›</button>
+    <button onclick="goToToday()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-2 py-1.5 rounded-lg transition-colors">今日</button>
+  </div>
+
+  <!-- カテゴリー凡例 -->
+  <div id="cat-legend" class="flex flex-wrap gap-2 px-1"></div>
+
+  <!-- 月表示 -->
+  <div id="view-month">
+    <div class="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
+      <div class="cal-grid border-b border-gray-100">
+        <div class="text-center text-xs font-bold text-red-500 py-2">日</div>
+        <div class="text-center text-xs font-bold text-gray-500 py-2">月</div>
+        <div class="text-center text-xs font-bold text-gray-500 py-2">火</div>
+        <div class="text-center text-xs font-bold text-gray-500 py-2">水</div>
+        <div class="text-center text-xs font-bold text-gray-500 py-2">木</div>
+        <div class="text-center text-xs font-bold text-gray-500 py-2">金</div>
+        <div class="text-center text-xs font-bold text-blue-500 py-2">土</div>
+      </div>
+      <div id="cal-body" class="cal-grid"></div>
+    </div>
+  </div>
+
+  <!-- リスト表示 -->
+  <div id="view-list" class="hidden space-y-2">
+    <div id="list-body"></div>
+  </div>
+
+</main>
+
+<!-- ─── イベント詳細モーダル ─────────────────────────────────────────── -->
+<div id="detail-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDetailModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div id="detail-header" class="text-white px-6 py-5 rounded-t-2xl flex items-start justify-between gap-2">
+      <div>
+        <p id="detail-cat" class="text-xs font-bold text-white/80 mb-1"></p>
+        <h2 id="detail-title" class="text-lg font-black leading-snug"></h2>
+      </div>
+      <button onclick="closeDetailModal()" class="text-white/70 hover:text-white text-2xl leading-none shrink-0">×</button>
+    </div>
+    <div class="p-5 space-y-3">
+      <div id="detail-info" class="space-y-1.5 text-sm text-gray-700"></div>
+      <div id="detail-memo" class="hidden bg-amber-50 rounded-xl px-3 py-2 text-amber-800 text-sm"></div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="downloadICS()"
+          class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+          📅 カレンダーに追加
+        </button>
+        <button id="detail-edit-btn" onclick="editCurrentEvent()"
+          class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-colors">
+          ✏️ 編集
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── イベント作成／編集モーダル ────────────────────────────────────── -->
+<div id="event-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeEventModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="text-white px-6 py-5 rounded-t-2xl flex items-center justify-between" style="background: linear-gradient(to right, var(--primary-dark), var(--primary));">
+      <h2 id="event-modal-title" class="text-xl font-black">📅 イベントを追加</h2>
+      <button onclick="closeEventModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="edit-event-id" />
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">タイトル <span class="text-red-500">*</span></label>
+        <input id="ev-title" type="text" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2" style="--tw-ring-color:var(--primary)" placeholder="例：U8 練習" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">日付 <span class="text-red-500">*</span></label>
+          <input id="ev-date" type="date" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">時間</label>
+          <input id="ev-time" type="text" placeholder="例：10:00〜12:00" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">カテゴリー</label>
+          <select id="ev-category" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 bg-white">
+            <option value="">なし</option>
+            <option>U7</option><option>U8</option><option>U9</option>
+            <option>U10</option><option>U11</option><option>U12</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">場所</label>
+          <input id="ev-location" type="text" placeholder="例：〇〇グラウンド" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">移動手段</label>
+        <input id="ev-transport" type="text" placeholder="例：各自移動" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2" />
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">メモ</label>
+        <textarea id="ev-memo" rows="2" placeholder="備考など" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 resize-none"></textarea>
+      </div>
+      <div id="event-modal-status" class="hidden"></div>
+      <button id="event-save-btn" onclick="saveEvent()"
+        class="w-full text-white font-bold py-3 rounded-xl transition-colors" style="background:var(--primary)">
+        <span id="event-save-text">保存する</span>
+        <span id="event-save-loading" class="hidden">保存中…</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ログインモーダル ──────────────────────────────────────────────── -->
+<div id="login-modal" class="fixed inset-0 z-[200] hidden">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeLoginModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="text-white px-6 py-6 rounded-t-2xl text-center" style="background: linear-gradient(to right, var(--primary-dark), var(--primary));">
+      <div class="text-4xl mb-2">📅</div>
+      <h2 class="text-xl font-black">管理者ログイン</h2>
+    </div>
+    <div class="p-6 space-y-4">
+      <input id="login-email" type="email" placeholder="メールアドレス"
+        class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2" />
+      <div class="relative">
+        <input id="login-password" type="password" placeholder="パスワード"
+          class="w-full border border-gray-300 rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2" />
+        <button type="button" onclick="togglePw()"
+          id="pw-eye" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">👁</button>
+      </div>
+      <div id="login-status" class="hidden text-sm text-red-600 font-medium"></div>
+      <button onclick="handleLogin()" id="login-btn-submit"
+        class="w-full text-white font-black py-3 rounded-xl transition-colors" style="background:var(--primary)">
+        <span id="login-btn-text">ログイン</span>
+        <span id="login-btn-load" class="hidden">ログイン中…</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 設定モーダル ──────────────────────────────────────────────────── -->
+<div id="setup-modal" class="fixed inset-0 z-[200] hidden">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="text-white px-6 py-5 rounded-t-2xl" style="background: linear-gradient(to right, var(--primary-dark), var(--primary));">
+      <h2 class="text-xl font-black">⚙ 接続設定</h2>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">チーム名</label>
+        <input id="setup-team" type="text" placeholder="○○サッカースクール"
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2" />
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Supabase URL</label>
+        <input id="setup-url" type="url" placeholder="https://xxx.supabase.co"
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2" />
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Supabase Anon Key</label>
+        <input id="setup-key" type="text" placeholder="eyJ..."
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2" />
+      </div>
+      <div id="setup-status" class="hidden text-sm font-medium"></div>
+      <button onclick="saveSetup()"
+        class="w-full text-white font-black py-3 rounded-xl transition-colors" style="background:var(--primary)">
+        保存して接続
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── 定数 ────────────────────────────────────────────────────────────
+  const STORAGE_CONFIG_KEY = 'mrs_app_config_v1'; // attendance.htmlと共用
+  const TABLE_EVENTS = 'attendance_events';
+
+  const CAT_COLORS = {
+    'U7': '#8B5CF6', 'U8': '#3B82F6', 'U9': '#10B981',
+    'U10': '#F59E0B', 'U11': '#F97316', 'U12': '#EF4444',
+  };
+  function catColor(cat) { return CAT_COLORS[cat] || '#6B7280'; }
+
+  // ─── 状態 ────────────────────────────────────────────────────────────
+  let supabaseClient = null;
+  let events = [];
+  let currentYear  = new Date().getFullYear();
+  let currentMonth = new Date().getMonth(); // 0-indexed
+  let viewMode = 'month'; // 'month' | 'list'
+  let currentDetailEvent = null;
+  let isAdmin = false;
+
+  // ─── 設定 ────────────────────────────────────────────────────────────
+  function loadConfig() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_CONFIG_KEY) || 'null'); } catch(e) { return null; }
+  }
+  function saveConfig(cfg) {
+    try { localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(cfg)); } catch(e) {}
+  }
+  function applyColor(color) {
+    if (!color) return;
+    document.documentElement.style.setProperty('--primary', color);
+    const dark = color; // simplified
+    document.documentElement.style.setProperty('--primary-dark', dark);
+  }
+
+  function initSupabase() {
+    const cfg = loadConfig();
+    if (!cfg?.supabase_url || !cfg?.supabase_anon_key) return false;
+    try {
+      supabaseClient = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
+      if (cfg.team_name) document.getElementById('app-team-name').textContent = cfg.team_name + ' カレンダー';
+      if (cfg.primary_color) applyColor(cfg.primary_color);
+      document.title = (cfg.team_name || '') + ' カレンダー';
+      return true;
+    } catch(e) { return false; }
+  }
+
+  // ─── ハッシュ設定（管理者リンク対応） ───────────────────────────────
+  function parseHashConfig() {
+    try {
+      const hash = location.hash.replace('#', '');
+      if (!hash) return null;
+      const d = JSON.parse(atob(hash));
+      return d;
+    } catch(e) { return null; }
+  }
+
+  // ─── 認証 ────────────────────────────────────────────────────────────
+  function openLoginModal()  { document.getElementById('login-modal').classList.remove('hidden'); }
+  function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
+  function togglePw() {
+    const i = document.getElementById('login-password');
+    const b = document.getElementById('pw-eye');
+    i.type = i.type === 'password' ? 'text' : 'password';
+    b.textContent = i.type === 'password' ? '👁' : '🙈';
+  }
+
+  async function handleLogin() {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn      = document.getElementById('login-btn-submit');
+    const txt      = document.getElementById('login-btn-text');
+    const load     = document.getElementById('login-btn-load');
+    const status   = document.getElementById('login-status');
+    if (!email || !password) { showStatus(status, 'メールアドレスとパスワードを入力してください', 'error'); return; }
+    btn.disabled = true; txt.classList.add('hidden'); load.classList.remove('hidden');
+    try {
+      const { error } = await Promise.race([
+        supabaseClient.auth.signInWithPassword({ email, password }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 30000))
+      ]);
+      if (error) { showStatus(status, 'メールアドレスまたはパスワードが違います', 'error'); return; }
+      closeLoginModal();
+      setAdminMode(true);
+    } catch(e) {
+      showStatus(status, e.message === 'timeout' ? 'タイムアウトしました' : 'ログインに失敗しました', 'error');
+    } finally {
+      btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
+    }
+  }
+
+  async function handleLogout() {
+    try { await Promise.race([supabaseClient.auth.signOut(), new Promise(r => setTimeout(r, 3000))]); } catch(e) {}
+    setAdminMode(false);
+  }
+
+  function setAdminMode(admin) {
+    isAdmin = admin;
+    document.getElementById('login-btn').classList.toggle('hidden', admin);
+    document.getElementById('logout-btn').classList.toggle('hidden', !admin);
+    document.getElementById('add-event-btn').classList.toggle('hidden', !admin);
+    document.getElementById('detail-edit-btn').classList.toggle('hidden', !admin);
+    renderCalendar();
+  }
+
+  // ─── データ取得 ──────────────────────────────────────────────────────
+  async function loadEvents() {
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from(TABLE_EVENTS).select('*').order('event_date', { ascending: true });
+    if (!error && data) events = data;
+    renderCalendar();
+    renderLegend();
+  }
+
+  // ─── 凡例 ────────────────────────────────────────────────────────────
+  function renderLegend() {
+    const cats = [...new Set(events.map(e => e.category).filter(Boolean))].sort();
+    const el = document.getElementById('cat-legend');
+    el.innerHTML = cats.map(cat =>
+      `<span class="flex items-center gap-1 text-xs font-bold text-gray-700 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-200">
+        <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:${catColor(cat)}"></span>${cat}
+      </span>`
+    ).join('');
+  }
+
+  // ─── ビュー切り替え ──────────────────────────────────────────────────
+  function setView(mode) {
+    viewMode = mode;
+    document.getElementById('view-month').classList.toggle('hidden', mode !== 'month');
+    document.getElementById('view-list').classList.toggle('hidden', mode !== 'list');
+    document.getElementById('btn-month').className = `px-3 py-2 rounded-xl text-sm font-bold transition-colors ${mode === 'month' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+    document.getElementById('btn-list').className  = `px-3 py-2 rounded-xl text-sm font-bold transition-colors ${mode === 'list'  ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+    renderCalendar();
+  }
+
+  function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+    renderCalendar();
+  }
+  function goToToday() {
+    const now = new Date();
+    currentYear = now.getFullYear(); currentMonth = now.getMonth();
+    renderCalendar();
+  }
+
+  // ─── カレンダー描画 ──────────────────────────────────────────────────
+  function renderCalendar() {
+    document.getElementById('month-label').textContent =
+      `${currentYear}年${currentMonth + 1}月`;
+    if (viewMode === 'month') renderMonthView();
+    else renderListView();
+  }
+
+  function renderMonthView() {
+    const body = document.getElementById('cal-body');
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const today = new Date().toISOString().slice(0, 10);
+
+    // イベントを日付でマップ
+    const evMap = {};
+    events.forEach(ev => {
+      if (!evMap[ev.event_date]) evMap[ev.event_date] = [];
+      evMap[ev.event_date].push(ev);
+    });
+
+    let html = '';
+    // 空白マス
+    for (let i = 0; i < firstDay; i++) {
+      html += `<div class="cal-day border-r border-b border-gray-100 bg-gray-50/50 p-1"></div>`;
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dow = (firstDay + d - 1) % 7;
+      const isToday = dateStr === today;
+      const dayEvs = evMap[dateStr] || [];
+      const isLastCol = dow === 6;
+      const textColor = dow === 0 ? 'text-red-500' : dow === 6 ? 'text-blue-500' : 'text-gray-700';
+      const bgClass = isToday ? 'bg-red-50' : '';
+
+      html += `<div class="cal-day border-r border-b border-gray-100 p-1 ${bgClass}${isLastCol ? ' border-r-0' : ''}">
+        <div class="flex items-center justify-between mb-0.5">
+          <span class="text-xs font-bold ${textColor} ${isToday ? 'bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]' : ''}">${d}</span>
+        </div>
+        ${dayEvs.map(ev =>
+          `<span class="event-pill" style="background:${catColor(ev.category)}"
+            onclick="openDetail('${ev.id}')" title="${ev.title}">
+            ${ev.title}
+          </span>`
+        ).join('')}
+        ${isAdmin ? `<button onclick="openEventModalWithDate('${dateStr}')" class="hidden group-hover:block w-full text-left text-[10px] text-gray-300 hover:text-gray-500 mt-0.5">＋</button>` : ''}
+      </div>`;
+    }
+    body.innerHTML = html;
+  }
+
+  function renderListView() {
+    const body = document.getElementById('list-body');
+    const today = new Date().toISOString().slice(0, 10);
+    // 今月のイベント
+    const ym = `${currentYear}-${String(currentMonth + 1).padStart(2,'0')}`;
+    const monthEvs = events.filter(ev => ev.event_date && ev.event_date.startsWith(ym));
+
+    if (monthEvs.length === 0) {
+      body.innerHTML = '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow">この月のイベントはありません</div>';
+      return;
+    }
+
+    body.innerHTML = monthEvs.map(ev => {
+      const d = new Date(ev.event_date + 'T00:00:00');
+      const dateLabel = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
+      const isPast = ev.event_date < today;
+      const color = catColor(ev.category);
+      return `<div class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden flex ${isPast ? 'opacity-60' : ''}" onclick="openDetail('${ev.id}')" style="cursor:pointer">
+        <div class="w-1.5 shrink-0" style="background:${color}"></div>
+        <div class="p-4 flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              ${ev.category ? `<span class="inline-block text-xs font-bold text-white px-2 py-0.5 rounded-full mb-1" style="background:${color}">${ev.category}</span>` : ''}
+              <p class="font-black text-gray-800 leading-snug">${escHtml(ev.title)}</p>
+            </div>
+            <span class="text-xs text-gray-400 shrink-0 mt-0.5">${dateLabel}</span>
+          </div>
+          <div class="text-xs text-gray-500 mt-1 space-y-0.5">
+            ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
+            ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ─── イベント詳細 ────────────────────────────────────────────────────
+  function openDetail(id) {
+    const ev = events.find(e => e.id === id);
+    if (!ev) return;
+    currentDetailEvent = ev;
+    const color = catColor(ev.category);
+    document.getElementById('detail-header').style.background = `linear-gradient(to right, ${color}cc, ${color})`;
+    document.getElementById('detail-cat').textContent = ev.category || '';
+    document.getElementById('detail-title').textContent = ev.title;
+
+    const d = new Date(ev.event_date + 'T00:00:00');
+    const dateLabel = d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+    let infoHtml = `<p>📆 ${dateLabel}</p>`;
+    if (ev.event_time) infoHtml += `<p>🕐 ${escHtml(ev.event_time)}</p>`;
+    if (ev.location)   infoHtml += `<p>📍 ${escHtml(ev.location)}</p>`;
+    if (ev.transport)  infoHtml += `<p>🚗 移動：${escHtml(ev.transport)}</p>`;
+    document.getElementById('detail-info').innerHTML = infoHtml;
+
+    const memoEl = document.getElementById('detail-memo');
+    if (ev.memo) { memoEl.textContent = '📝 ' + ev.memo; memoEl.classList.remove('hidden'); }
+    else memoEl.classList.add('hidden');
+
+    document.getElementById('detail-edit-btn').classList.toggle('hidden', !isAdmin);
+    document.getElementById('detail-modal').classList.remove('hidden');
+  }
+  function closeDetailModal() {
+    document.getElementById('detail-modal').classList.add('hidden');
+    currentDetailEvent = null;
+  }
+  function editCurrentEvent() {
+    if (!currentDetailEvent) return;
+    closeDetailModal();
+    openEventModal(currentDetailEvent.id);
+  }
+
+  // ─── .ics ダウンロード ───────────────────────────────────────────────
+  function downloadICS() {
+    const ev = currentDetailEvent;
+    if (!ev) return;
+    const dt = ev.event_date.replace(/-/g, '');
+    const dtNext = (() => {
+      const d = new Date(ev.event_date + 'T00:00:00');
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().slice(0, 10).replace(/-/g, '');
+    })();
+    const desc = [ev.event_time, ev.transport, ev.memo].filter(Boolean).join('\\n');
+    const ics = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SoccerCalendar//JA',
+      'BEGIN:VEVENT',
+      `UID:${ev.id}@soccer-calendar`,
+      `DTSTART;VALUE=DATE:${dt}`,
+      `DTEND;VALUE=DATE:${dtNext}`,
+      `SUMMARY:${ev.title}`,
+      ev.location  ? `LOCATION:${ev.location}` : '',
+      desc         ? `DESCRIPTION:${desc}` : '',
+      `END:VEVENT`, `END:VCALENDAR`
+    ].filter(l => l !== '').join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${ev.title}.ics`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ─── イベント作成／編集 ──────────────────────────────────────────────
+  function openEventModal(id = null) {
+    document.getElementById('event-modal-title').textContent = id ? '📅 イベントを編集' : '📅 イベントを追加';
+    document.getElementById('edit-event-id').value = id || '';
+    if (id) {
+      const ev = events.find(e => e.id === id);
+      if (ev) {
+        document.getElementById('ev-title').value    = ev.title || '';
+        document.getElementById('ev-date').value     = ev.event_date || '';
+        document.getElementById('ev-time').value     = ev.event_time || '';
+        document.getElementById('ev-category').value = ev.category || '';
+        document.getElementById('ev-location').value = ev.location || '';
+        document.getElementById('ev-transport').value= ev.transport || '';
+        document.getElementById('ev-memo').value     = ev.memo || '';
+      }
+    } else {
+      ['ev-title','ev-time','ev-location','ev-transport','ev-memo'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('ev-date').value     = '';
+      document.getElementById('ev-category').value = '';
+    }
+    document.getElementById('event-modal-status').classList.add('hidden');
+    document.getElementById('event-modal').classList.remove('hidden');
+  }
+  function openEventModalWithDate(date) {
+    openEventModal();
+    document.getElementById('ev-date').value = date;
+  }
+  function closeEventModal() {
+    document.getElementById('event-modal').classList.add('hidden');
+  }
+
+  async function saveEvent() {
+    const btn    = document.getElementById('event-save-btn');
+    const txt    = document.getElementById('event-save-text');
+    const load   = document.getElementById('event-save-loading');
+    const status = document.getElementById('event-modal-status');
+    const editId = document.getElementById('edit-event-id').value;
+    const title  = document.getElementById('ev-title').value.trim();
+    const date   = document.getElementById('ev-date').value;
+    if (!title) { showStatus(status, 'タイトルを入力してください', 'error'); return; }
+    if (!date)  { showStatus(status, '日付を入力してください', 'error'); return; }
+
+    btn.disabled = true; txt.classList.add('hidden'); load.classList.remove('hidden');
+    try {
+      const payload = {
+        title, event_date: date,
+        event_time: document.getElementById('ev-time').value.trim()      || null,
+        category:   document.getElementById('ev-category').value          || null,
+        location:   document.getElementById('ev-location').value.trim()   || null,
+        transport:  document.getElementById('ev-transport').value.trim()  || null,
+        memo:       document.getElementById('ev-memo').value.trim()       || null,
+      };
+      const { error } = editId
+        ? await supabaseClient.from(TABLE_EVENTS).update(payload).eq('id', editId)
+        : await supabaseClient.from(TABLE_EVENTS).insert(payload);
+      if (error) { showStatus(status, '保存に失敗しました: ' + error.message, 'error'); return; }
+      closeEventModal();
+      await loadEvents();
+    } catch(e) {
+      showStatus(status, 'エラーが発生しました', 'error');
+    } finally {
+      btn.disabled = false; txt.classList.remove('hidden'); load.classList.add('hidden');
+    }
+  }
+
+  // ─── 設定 ────────────────────────────────────────────────────────────
+  function openSetupModal() {
+    const cfg = loadConfig();
+    document.getElementById('setup-team').value = cfg?.team_name || '';
+    document.getElementById('setup-url').value  = cfg?.supabase_url || '';
+    document.getElementById('setup-key').value  = cfg?.supabase_anon_key || '';
+    document.getElementById('setup-status').classList.add('hidden');
+    document.getElementById('setup-modal').classList.remove('hidden');
+  }
+  async function saveSetup() {
+    const url    = document.getElementById('setup-url').value.trim();
+    const key    = document.getElementById('setup-key').value.trim();
+    const team   = document.getElementById('setup-team').value.trim();
+    const status = document.getElementById('setup-status');
+    if (!url || !key) { showStatus(status, 'URLとKeyを入力してください', 'error'); return; }
+    const cfg = { supabase_url: url, supabase_anon_key: key, team_name: team, primary_color: '#c0392b' };
+    saveConfig(cfg);
+    location.reload();
+  }
+
+  // ─── ユーティリティ ──────────────────────────────────────────────────
+  function escHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function showStatus(el, msg, type) {
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `text-sm font-medium ${type === 'error' ? 'text-red-600' : 'text-green-600'}`;
+    el.classList.remove('hidden');
+  }
+
+  // ─── ログインEnterキー対応 ───────────────────────────────────────────
+  document.addEventListener('keypress', e => {
+    if (e.key === 'Enter' && !document.getElementById('login-modal').classList.contains('hidden')) {
+      handleLogin();
+    }
+  });
+
+  // ─── 起動 ────────────────────────────────────────────────────────────
+  (async () => {
+    try {
+      // ハッシュ設定対応
+      if (location.hash) {
+        try {
+          const d = parseHashConfig();
+          if (d?.u && d?.k) {
+            saveConfig({ supabase_url: d.u, supabase_anon_key: d.k, team_name: d.t || '', primary_color: d.c || '#c0392b' });
+            history.replaceState(null, '', location.pathname + location.search);
+          }
+        } catch(e) {}
+      }
+
+      if (!initSupabase()) {
+        document.getElementById('loading-screen').classList.add('hidden');
+        openSetupModal();
+        return;
+      }
+
+      // ログイン状態確認
+      let session = null;
+      try {
+        const result = await Promise.race([
+          supabaseClient.auth.getSession(),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+        ]);
+        session = result?.data?.session ?? null;
+      } catch(e) {}
+
+      setAdminMode(!!session);
+      await loadEvents();
+    } catch(e) {
+      console.error('起動エラー:', e);
+    } finally {
+      document.getElementById('loading-screen').classList.add('hidden');
+    }
+  })();
+</script>
+
+</body>
+</html>
