@@ -552,7 +552,10 @@
     <!-- ヘッダー -->
     <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
       <div class="min-w-0 flex-1">
-        <div id="resp-modal-title" class="text-xl font-black leading-tight mb-1"></div>
+        <div class="flex items-center gap-2 mb-1">
+          <span id="resp-modal-cat-badge" class="hidden text-[11px] font-black px-2 py-0.5 rounded-full bg-white/20 text-white shrink-0"></span>
+          <div id="resp-modal-title" class="text-xl font-black leading-tight"></div>
+        </div>
         <div id="resp-modal-subtitle" class="text-xs text-white/80 space-y-0.5"></div>
       </div>
       <button onclick="closeResponseModal()" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
@@ -1115,7 +1118,7 @@
       class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all
         ${!hasFilter ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-50'}">
       <span class="text-[11px] font-bold leading-tight">全て</span>
-      <span class="h-0.5 w-4/5 rounded-full mt-0.5" style="background:${!hasFilter ? '#fff' : '#d1d5db'}"></span>
+      <span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${!hasFilter ? '#fff' : '#d1d5db'}"></span>
     </button>`;
     // カテゴリーボタン
     const catBtns = CAT_ORDER.map(cat => {
@@ -1126,14 +1129,14 @@
           class="flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white"
           style="background:${color}">
           <span class="text-[11px] font-black leading-tight">${cat}</span>
-          <span class="h-0.5 w-4/5 rounded-full mt-0.5 bg-white/50"></span>
+          <span class="h-1 w-4/5 rounded-full mt-0.5 bg-white/50"></span>
         </button>`;
       } else {
         return `<button onclick="toggleCategoryFilter('${cat}')"
           class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all
             ${hasFilter ? 'text-gray-300 hover:text-gray-500' : 'text-gray-700 hover:bg-gray-50'}">
           <span class="text-[11px] font-bold leading-tight">${cat}</span>
-          <span class="h-0.5 w-4/5 rounded-full mt-0.5" style="background:${hasFilter ? '#e5e7eb' : color}"></span>
+          <span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${hasFilter ? '#e5e7eb' : color}"></span>
         </button>`;
       }
     }).join('');
@@ -1296,8 +1299,9 @@
   }
   function editCurrentEvent() {
     if (!currentDetailEvent) return;
+    const id = currentDetailEvent.id;
     closeDetailModal();
-    openEventModal(currentDetailEvent.id);
+    openEventModal(id);
   }
   async function deleteCurrentEvent() {
     const ev = currentDetailEvent;
@@ -1442,8 +1446,30 @@
     if (!ev || !supabaseClient) return;
 
     // モーダルを先に開いてローディング
+    // カテゴリーバッジ
+    const respBadge = document.getElementById('resp-modal-cat-badge');
+    if (ev.category) {
+      const badgeColor = catColor(ev.category);
+      respBadge.textContent = ev.category;
+      respBadge.style.background = 'rgba(255,255,255,0.25)';
+      respBadge.style.border = '1.5px solid rgba(255,255,255,0.5)';
+      respBadge.classList.remove('hidden');
+    } else {
+      respBadge.classList.add('hidden');
+    }
     document.getElementById('resp-modal-title').textContent = ev.title;
-    document.getElementById('resp-modal-subtitle').textContent = '';
+    // イベント情報サブタイトル
+    const d = new Date(ev.event_date + 'T00:00:00');
+    const dateLabel = d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+    let subtitleParts = [];
+    let line1 = '';
+    let line2 = '';
+    if (ev.event_date) line1 += `📅 ${dateLabel}`;
+    if (ev.location)   line1 += (line1 ? '　' : '') + `📍 ${ev.location}`;
+    if (ev.event_time) line2 += `🕐 ${ev.event_time}`;
+    if (ev.transport)  line2 += (line2 ? '　' : '') + `🚗 ${ev.transport}`;
+    const subtitleEl = document.getElementById('resp-modal-subtitle');
+    subtitleEl.innerHTML = [line1, line2].filter(Boolean).map(l => `<p>${l}</p>`).join('');
     document.getElementById('cal-summary-total').textContent     = '…';
     document.getElementById('cal-summary-attend').textContent    = '…';
     document.getElementById('cal-summary-need-ride').textContent = '…';
