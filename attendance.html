@@ -1433,7 +1433,9 @@
     } catch(e) { console.warn('お知らせ描画エラー:', e); }
   }
 
-  async function dismissNotification(id) {
+  function dismissNotification(id) {
+    // 管理者・保護者ともにlocalStorageで端末ごとに非表示（互いに影響しない）
+    saveDismissedId(id);
     // 即座にUIから消す
     document.querySelectorAll(`#notif-row-${id}`).forEach(el => el.remove());
     document.querySelectorAll('.notifications-panel-list').forEach(panel => {
@@ -1441,23 +1443,23 @@
         panel.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">お知らせはありません</p>';
       }
     });
-
-    if (_notifIsAdmin) {
-      // 管理者：Supabaseから完全削除（全員に影響）
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from(TABLE_NOTIFICATIONS).delete().eq('id', id);
-        if (error) console.warn('お知らせ削除失敗:', error);
-      }
-    } else {
-      // 保護者：この端末のみ非表示（localStorageに保存）
-      saveDismissedId(id);
-    }
   }
 
-  // ─── イベント自動削除（イベント日から7日後） ─────────────────────────────
+  // ─── イベント自動削除（イベント日から7日後）＆お知らせ削除（イベント日翌日） ───
   async function autoCleanupEvents() {
     if (!supabaseClient) return;
     try {
+      const today = new Date().toISOString().slice(0, 10);
+
+      // ① イベント日が過ぎたお知らせを完全削除（event_id経由）
+      const { data: pastEvents } = await supabaseClient
+        .from(TABLE_EVENTS).select('id').lt('event_date', today);
+      if (pastEvents && pastEvents.length > 0) {
+        const pastIds = pastEvents.map(e => e.id);
+        await supabaseClient.from(TABLE_NOTIFICATIONS).delete().in('event_id', pastIds).catch(() => {});
+      }
+
+      // ② イベント日から7日後のイベント・出欠データを完全削除
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - 7);
       const cutoffStr = cutoff.toISOString().slice(0, 10);
@@ -1468,7 +1470,6 @@
 
       const ids = oldEvents.map(e => e.id);
       await supabaseClient.from(TABLE_RESPONSES).delete().in('event_id', ids);
-      await supabaseClient.from(TABLE_NOTIFICATIONS).delete().in('event_id', ids).catch(() => {});
       await supabaseClient.from(TABLE_EVENTS).delete().in('id', ids);
       console.log(`自動削除: ${ids.length}件のイベントを削除しました`);
     } catch(e) { console.warn('自動削除エラー:', e); }
@@ -2736,7 +2737,6 @@
           await loadPlayersMap();
           await loadEvents();
           await renderNotificationsPanel(true);
-          checkAndShowNotifications();
         }
       } else {
         openSetupModal();
