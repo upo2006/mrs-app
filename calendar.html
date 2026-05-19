@@ -1458,16 +1458,24 @@
       respBadge.classList.add('hidden');
     }
     document.getElementById('resp-modal-title').textContent = ev.title;
-    // イベント情報サブタイトル（attendance.html の formatDate と同形式）
+    // イベント情報サブタイトル（attendance.html の openDetail と同形式）
     const d = new Date(ev.event_date + 'T00:00:00');
-    const dateLabel = d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+    const dateShort = ev.event_date
+      ? d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' })
+      : '';
+    const col1 = [
+      dateShort      ? `📆 ${dateShort}`                  : '',
+      ev.event_time  ? `🕐 ${escHtml(ev.event_time)}`    : '',
+    ];
+    const col2 = [
+      ev.location    ? `📍 ${escHtml(ev.location)}`      : '',
+      ev.transport   ? `🚗 移動：${escHtml(ev.transport)}` : '',
+    ];
+    const gridItems = [col1[0], col2[0], col1[1], col2[1]]
+      .map(s => `<div>${s}</div>`).join('');
     const subtitleEl = document.getElementById('resp-modal-subtitle');
-    subtitleEl.innerHTML = `<div class="space-y-0.5">
-      ${ev.event_date ? `<p>📆 ${dateLabel}</p>` : ''}
-      ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
-      ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-      ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
-    </div>`;
+    subtitleEl.innerHTML =
+      `<div style="display:inline-grid;grid-template-columns:auto auto;gap:1px 12px">${gridItems}</div>`;
     document.getElementById('cal-summary-total').textContent     = '…';
     document.getElementById('cal-summary-attend').textContent    = '…';
     document.getElementById('cal-summary-need-ride').textContent = '…';
