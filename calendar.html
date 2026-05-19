@@ -1458,9 +1458,9 @@
       respBadge.classList.add('hidden');
     }
     document.getElementById('resp-modal-title').textContent = ev.title;
-    // イベント情報サブタイトル（月日のみ・アイコン揃え）
+    // イベント情報サブタイトル（attendance.html の formatDate と同形式）
     const d = new Date(ev.event_date + 'T00:00:00');
-    const dateLabel = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
+    const dateLabel = d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
     const subtitleEl = document.getElementById('resp-modal-subtitle');
     subtitleEl.innerHTML = `<div class="space-y-0.5">
       ${ev.event_date ? `<p>📆 ${dateLabel}</p>` : ''}
