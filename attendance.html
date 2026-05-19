@@ -1371,27 +1371,32 @@
   }
 
   // ─── 常設お知らせパネル ───────────────────────────────────────────────────
-  const NOTIF_DISMISSED_KEY = 'att_notif_dismissed_v1';
+  // 管理者・保護者で別キーを使い、同一デバイスでも互いに影響しない
+  const NOTIF_DISMISSED_ADMIN_KEY  = 'att_notif_dismissed_admin_v1';
+  const NOTIF_DISMISSED_PARENT_KEY = 'att_notif_dismissed_parent_v1';
 
+  let _notifIsAdmin = false;
+
+  function _dismissedKey() {
+    return _notifIsAdmin ? NOTIF_DISMISSED_ADMIN_KEY : NOTIF_DISMISSED_PARENT_KEY;
+  }
   function getDismissedIds() {
-    try { return JSON.parse(localStorage.getItem(NOTIF_DISMISSED_KEY) || '[]'); } catch(e) { return []; }
+    try { return JSON.parse(localStorage.getItem(_dismissedKey()) || '[]'); } catch(e) { return []; }
   }
   function saveDismissedId(id) {
     try {
       const ids = getDismissedIds();
       if (!ids.includes(id)) ids.push(id);
-      localStorage.setItem(NOTIF_DISMISSED_KEY, JSON.stringify(ids));
+      localStorage.setItem(_dismissedKey(), JSON.stringify(ids));
     } catch(e) {}
   }
   function cleanupDismissedIds(existingIds) {
-    // Supabaseに存在しないIDをlocalStorageから削除（肥大化防止）
     try {
-      const ids = getDismissedIds().filter(id => existingIds.includes(id));
-      localStorage.setItem(NOTIF_DISMISSED_KEY, JSON.stringify(ids));
+      const key = _dismissedKey();
+      const ids = JSON.parse(localStorage.getItem(key) || '[]').filter(id => existingIds.includes(id));
+      localStorage.setItem(key, JSON.stringify(ids));
     } catch(e) {}
   }
-
-  let _notifIsAdmin = false; // renderNotificationsPanel呼び出し時に設定
 
   async function renderNotificationsPanel(isAdmin = false) {
     _notifIsAdmin = isAdmin;
@@ -1409,11 +1414,11 @@
         return;
       }
 
-      // 不要になったdismissedIDを掃除（保護者用）
+      // 不要なIDをlocalStorageから掃除
       cleanupDismissedIds(data.map(n => n.id));
 
-      // 保護者：確認済みを除外 / 管理者：全件表示
-      const dismissed = isAdmin ? [] : getDismissedIds();
+      // 確認済みを除外（管理者・保護者それぞれのキーで独立管理）
+      const dismissed = getDismissedIds();
       const visible = data.filter(n => !dismissed.includes(n.id));
 
       const html = visible.length === 0
@@ -1425,7 +1430,7 @@
               </div>
               <button type="button" onclick="dismissNotification('${n.id}')"
                 class="shrink-0 text-gray-300 hover:text-gray-500 text-base leading-none px-1 transition-colors"
-                title="${isAdmin ? 'Supabaseから削除' : '確認済みにする'}">🗑️</button>
+                title="削除">🗑️</button>
             </div>`
           ).join('');
 
@@ -1434,9 +1439,7 @@
   }
 
   function dismissNotification(id) {
-    // 管理者・保護者ともにlocalStorageで端末ごとに非表示（互いに影響しない）
     saveDismissedId(id);
-    // 即座にUIから消す
     document.querySelectorAll(`#notif-row-${id}`).forEach(el => el.remove());
     document.querySelectorAll('.notifications-panel-list').forEach(panel => {
       if (!panel.querySelector('[id^="notif-row-"]')) {
