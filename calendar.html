@@ -74,7 +74,7 @@
             <button type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-blue-600 font-bold">🏟️ チーム管理</button>
             <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">⚙️ 接続設定</button>
             <button type="button" id="menu-login-btn" onclick="openLoginModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-blue-600 font-bold">🔑 管理者ログイン</button>
-            <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
+            <button type="button" id="menu-admin-link-btn" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
             <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 保護者リンクを発行</button>
             <button type="button" id="menu-logout-btn" onclick="handleLogout()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold">🚪 ログアウト</button>
           </div>
@@ -911,12 +911,11 @@
 
   function setAdminMode(admin) {
     isAdmin = admin;
-    document.getElementById('menu-login-btn').classList.toggle('hidden', admin);
-    document.getElementById('menu-logout-btn').classList.toggle('hidden', !admin);
-    document.getElementById('menu-admin-link-btn').classList.toggle('hidden', !admin);
-    document.getElementById('add-event-btn').classList.toggle('hidden', !admin);
-    document.getElementById('detail-edit-btn').classList.toggle('hidden', !admin);
-    document.getElementById('detail-delete-btn').classList.toggle('hidden', !admin);
+    document.getElementById('menu-login-btn')?.classList.toggle('hidden', admin);
+    document.getElementById('menu-logout-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('menu-admin-link-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('add-event-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('detail-admin-btns')?.classList.toggle('hidden', !admin);
     renderCalendar();
   }
 
