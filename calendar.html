@@ -744,9 +744,8 @@
       return JSON.parse(decodeURIComponent(escape(atob(hash))));
     } catch(e) { return null; }
   }
-  function buildHashString(cfg, adminMode = false) {
+  function buildHashString(cfg) {
     const payload = { u: cfg.supabase_url, k: cfg.supabase_anon_key, t: cfg.team_name || '', c: cfg.primary_color || '#c0392b' };
-    if (adminMode) payload.a = 1; // 管理者フラグ
     return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   }
   function getBaseUrl() {
@@ -980,31 +979,30 @@
   }
   function closeParentLinkModal() { document.getElementById('parent-link-modal').classList.add('hidden'); }
   function updateParentLink() {
-    const base = document.getElementById('parent-link-base-url').value.trim();
-    if (!base) { document.getElementById('parent-link-result').classList.add('hidden'); return; }
+    const base   = document.getElementById('parent-link-base-url')?.value.trim();
+    const result = document.getElementById('parent-link-result');
+    if (!base) { result?.classList.add('hidden'); return; }
     const cfg = loadConfig();
-    if (!cfg?.supabase_url) return;
-    // 保護者リンクは接続情報のみ（管理者認証なし）
-    const payload = { u: cfg.supabase_url, k: cfg.supabase_anon_key, t: cfg.team_name || '', c: cfg.primary_color || '#c0392b' };
-    const link = base + '#' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-    document.getElementById('parent-link-url').value = link;
-    document.getElementById('parent-link-result').classList.remove('hidden');
+    if (!cfg?.supabase_url || !cfg?.supabase_anon_key) { result?.classList.add('hidden'); return; }
+    const link = base.replace(/\/?$/, '') + '?view=parent#' + buildHashString(cfg);
+    const linkInput = document.getElementById('parent-link-url');
+    if (linkInput) linkInput.value = link;
+    result?.classList.remove('hidden');
+    document.getElementById('parent-link-copy-msg')?.classList.add('hidden');
   }
   async function copyParentLink() {
-    const inputEl = document.getElementById('parent-link-url');
-    const url = inputEl?.value;
+    const url = document.getElementById('parent-link-url')?.value;
     if (!url) return;
     const msg = document.getElementById('parent-link-copy-msg');
     if (msg) { msg.textContent = '🔄 短縮URL生成中...'; msg.classList.remove('hidden'); }
     const short = await shortenUrl(url);
     const finalUrl = short || url;
-    if (short && inputEl) inputEl.value = short; // 入力欄を短縮URLに更新
     try { await navigator.clipboard.writeText(finalUrl); }
-    catch(e) { inputEl?.select(); }
+    catch(e) { document.getElementById('parent-link-url')?.select(); }
     if (msg) {
-      msg.textContent = short ? `✅ 短縮URLをコピーしました` : '✅ URLをコピーしました';
+      msg.textContent = short ? `✅ 短縮URLをコピー: ${short}` : '✅ クリップボードにコピーしました';
       msg.classList.remove('hidden');
-      setTimeout(() => msg.classList.add('hidden'), 3000);
+      setTimeout(() => msg.classList.add('hidden'), 4000);
     }
   }
 
@@ -1020,29 +1018,30 @@
   }
   function closeAdminLinkModal() { document.getElementById('admin-link-modal').classList.add('hidden'); }
   function updateAdminLink() {
-    const base = document.getElementById('admin-link-base-url').value.trim();
-    if (!base) { document.getElementById('admin-link-result').classList.add('hidden'); return; }
+    const base   = document.getElementById('admin-link-base-url')?.value.trim();
+    const result = document.getElementById('admin-link-result');
+    if (!base) { result?.classList.add('hidden'); return; }
     const cfg = loadConfig();
-    if (!cfg?.supabase_url) return;
-    const link = base + '#' + buildHashString(cfg, true); // 管理者フラグ付き
-    document.getElementById('admin-link-url').value = link;
-    document.getElementById('admin-link-result').classList.remove('hidden');
+    if (!cfg?.supabase_url || !cfg?.supabase_anon_key) { result?.classList.add('hidden'); return; }
+    const link = base.replace(/\/?$/, '') + '#' + buildHashString(cfg);
+    const linkInput = document.getElementById('admin-link-url');
+    if (linkInput) linkInput.value = link;
+    result?.classList.remove('hidden');
+    document.getElementById('admin-link-copy-msg')?.classList.add('hidden');
   }
   async function copyAdminLink() {
-    const inputEl = document.getElementById('admin-link-url');
-    const url = inputEl?.value;
+    const url = document.getElementById('admin-link-url')?.value;
     if (!url) return;
     const msg = document.getElementById('admin-link-copy-msg');
     if (msg) { msg.textContent = '🔄 短縮URL生成中...'; msg.classList.remove('hidden'); }
     const short = await shortenUrl(url);
     const finalUrl = short || url;
-    if (short && inputEl) inputEl.value = short; // 入力欄を短縮URLに更新
     try { await navigator.clipboard.writeText(finalUrl); }
-    catch(e) { inputEl?.select(); }
+    catch(e) { document.getElementById('admin-link-url')?.select(); }
     if (msg) {
-      msg.textContent = short ? `✅ 短縮URLをコピーしました` : '✅ URLをコピーしました';
+      msg.textContent = short ? `✅ 短縮URLをコピー: ${short}` : '✅ クリップボードにコピーしました';
       msg.classList.remove('hidden');
-      setTimeout(() => msg.classList.add('hidden'), 3000);
+      setTimeout(() => msg.classList.add('hidden'), 4000);
     }
   }
 
@@ -1102,7 +1101,6 @@
 
   async function handleLogout() {
     document.getElementById('settings-menu')?.classList.add('hidden');
-    sessionStorage.removeItem('cal_admin'); // 管理者フラグをクリア
     try { await Promise.race([supabaseClient.auth.signOut(), new Promise(r => setTimeout(r, 3000))]); } catch(e) {}
     setAdminMode(false);
   }
@@ -1956,27 +1954,23 @@
   // ─── 起動 ────────────────────────────────────────────────────────────
   (async () => {
     try {
-      // ハッシュ設定（管理者リンク / 保護者リンク経由）
-      let hashAdminFlag = false;
+      const params       = new URLSearchParams(location.search);
+      const isParentMode = params.get('view') === 'parent';
+
+      // ハッシュから接続設定を読み込み（管理者リンク / 保護者リンク経由）
       let hadHash = !!location.hash;
       if (hadHash) {
         try {
           const d = parseHashConfig();
           if (d?.u && d?.k) {
             const existing = loadConfig() || {};
-            saveConfig({ ...existing, supabase_url: d.u, supabase_anon_key: d.k, team_name: d.t || existing.team_name || '', primary_color: d.c || existing.primary_color || '#c0392b' });
-            if (d.a === 1) hashAdminFlag = true; // 管理者フラグ
+            saveConfig({ ...existing, supabase_url: d.u, supabase_anon_key: d.k,
+              team_name: d.t || existing.team_name || '',
+              primary_color: d.c || existing.primary_color || '#c0392b' });
             history.replaceState(null, '', location.pathname + location.search);
           }
         } catch(e) {}
       }
-      // 管理者フラグの管理：保護者リンクを開いたときは明示的にクリア
-      if (hashAdminFlag) {
-        sessionStorage.setItem('cal_admin', '1');
-      } else if (hadHash) {
-        sessionStorage.removeItem('cal_admin'); // 保護者リンク → 管理者フラグ削除
-      }
-      const isAdminByLink = sessionStorage.getItem('cal_admin') === '1';
 
       // カテゴリーフィルターを復元
       selectedCategory = loadFilter();
@@ -1987,19 +1981,31 @@
         return;
       }
 
-      // ログイン状態確認（管理者リンク経由の場合はスキップ）
-      let session = null;
-      if (!isAdminByLink) {
-        try {
-          const result = await Promise.race([
-            supabaseClient.auth.getSession(),
-            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
-          ]);
-          session = result?.data?.session ?? null;
-        } catch(e) {}
+      // 保護者モード（?view=parent）：ログイン不要・保護者UIで表示
+      if (isParentMode) {
+        setAdminMode(false);
+        await loadEvents();
+        return;
       }
 
-      setAdminMode(isAdminByLink || !!session);
+      // 管理者リンク経由（ハッシュあり）：ログイン不要・管理者UIで表示
+      if (hadHash) {
+        setAdminMode(true);
+        await loadEvents();
+        return;
+      }
+
+      // 通常起動：Supabase 認証チェック
+      let session = null;
+      try {
+        const result = await Promise.race([
+          supabaseClient.auth.getSession(),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+        ]);
+        session = result?.data?.session ?? null;
+      } catch(e) {}
+
+      setAdminMode(!!session);
       await loadEvents();
     } catch(e) {
       console.error('起動エラー:', e);
