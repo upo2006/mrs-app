@@ -1391,7 +1391,10 @@
     } catch(e) {}
   }
 
-  async function renderNotificationsPanel() {
+  let _notifIsAdmin = false; // renderNotificationsPanel呼び出し時に設定
+
+  async function renderNotificationsPanel(isAdmin = false) {
+    _notifIsAdmin = isAdmin;
     const panels = document.querySelectorAll('.notifications-panel-list');
     if (!panels.length || !supabaseClient) return;
     try {
@@ -1406,11 +1409,11 @@
         return;
       }
 
-      // 不要になったdismissedIDを掃除
+      // 不要になったdismissedIDを掃除（保護者用）
       cleanupDismissedIds(data.map(n => n.id));
 
-      // 確認済みを除外
-      const dismissed = getDismissedIds();
+      // 保護者：確認済みを除外 / 管理者：全件表示
+      const dismissed = isAdmin ? [] : getDismissedIds();
       const visible = data.filter(n => !dismissed.includes(n.id));
 
       const html = visible.length === 0
@@ -1422,7 +1425,7 @@
               </div>
               <button type="button" onclick="dismissNotification('${n.id}')"
                 class="shrink-0 text-gray-300 hover:text-gray-500 text-base leading-none px-1 transition-colors"
-                title="削除">🗑️</button>
+                title="${isAdmin ? 'Supabaseから削除' : '確認済みにする'}">🗑️</button>
             </div>`
           ).join('');
 
@@ -1430,17 +1433,25 @@
     } catch(e) { console.warn('お知らせ描画エラー:', e); }
   }
 
-  function dismissNotification(id) {
-    // localStorageに確認済みとして保存（ページ更新後も非表示）
-    saveDismissedId(id);
+  async function dismissNotification(id) {
     // 即座にUIから消す
     document.querySelectorAll(`#notif-row-${id}`).forEach(el => el.remove());
-    // 空になったら「お知らせはありません」を表示
     document.querySelectorAll('.notifications-panel-list').forEach(panel => {
       if (!panel.querySelector('[id^="notif-row-"]')) {
         panel.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">お知らせはありません</p>';
       }
     });
+
+    if (_notifIsAdmin) {
+      // 管理者：Supabaseから完全削除（全員に影響）
+      if (supabaseClient) {
+        const { error } = await supabaseClient.from(TABLE_NOTIFICATIONS).delete().eq('id', id);
+        if (error) console.warn('お知らせ削除失敗:', error);
+      }
+    } else {
+      // 保護者：この端末のみ非表示（localStorageに保存）
+      saveDismissedId(id);
+    }
   }
 
   // ─── イベント自動削除（イベント日から7日後） ─────────────────────────────
@@ -1510,7 +1521,7 @@
       // モーダルを先に閉じてから更新（閉じるのをブロックしない）
       closeCreateEventModal();
       loadEvents();
-      renderNotificationsPanel();
+      renderNotificationsPanel(true);
 
     } catch(e) {
       setStatus(statusEl, 'エラーが発生しました: ' + (e.message || '不明'), 'error');
@@ -2711,7 +2722,7 @@
               await autoCleanupEvents();
               await loadPlayersMap();
               await loadEvents();
-              await renderNotificationsPanel();
+              await renderNotificationsPanel(true);
             }
             return;
           }
@@ -2725,7 +2736,7 @@
           await autoCleanupEvents();
           await loadPlayersMap();
           await loadEvents();
-          await renderNotificationsPanel();
+          await renderNotificationsPanel(true);
           checkAndShowNotifications();
         }
       } else {
