@@ -1462,13 +1462,11 @@
     const d = new Date(ev.event_date + 'T00:00:00');
     const dateLabel = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
     const subtitleEl = document.getElementById('resp-modal-subtitle');
-    // 2列レイアウト：左=日付、右=場所 / 左=時間、右=移動手段
-    const cell = (icon, text) => text
-      ? `<span class="flex items-start gap-1 min-w-0"><span class="shrink-0">${icon}</span><span class="truncate">${text}</span></span>`
-      : `<span></span>`;
-    subtitleEl.innerHTML = `<div class="grid gap-x-3 gap-y-0.5 text-xs" style="grid-template-columns:1fr 1fr">
-      ${cell('📅', ev.event_date ? dateLabel : '')}${cell('📍', ev.location ? escHtml(ev.location) : '')}
-      ${cell('🕐', ev.event_time ? escHtml(ev.event_time) : '')}${cell('🚗', ev.transport ? escHtml(ev.transport) : '')}
+    subtitleEl.innerHTML = `<div class="space-y-0.5">
+      ${ev.event_date ? `<p>📆 ${dateLabel}</p>` : ''}
+      ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
+      ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
+      ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
     </div>`;
     document.getElementById('cal-summary-total').textContent     = '…';
     document.getElementById('cal-summary-attend').textContent    = '…';
