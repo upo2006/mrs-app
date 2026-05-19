@@ -88,7 +88,7 @@
   </header>
 
   <!-- メインコンテンツ -->
-  <main class="max-w-[750px] mx-auto px-4 pb-8 space-y-3">
+  <main class="max-w-[750px] mx-auto px-4 pb-3 space-y-3">
 
     <!-- ビュー切り替え + 追加ボタン -->
     <div class="bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center gap-2">
@@ -107,9 +107,9 @@
       </button>
     </div>
 
-    <!-- カテゴリーフィルター（横スクロール・一行） -->
-    <div class="cat-scroll px-1">
-      <div id="cat-legend" class="flex gap-2" style="width:max-content"></div>
+    <!-- カテゴリーフィルター（一行・均等配置） -->
+    <div class="bg-white rounded-2xl shadow border border-gray-200 px-3 py-2">
+      <div id="cat-legend" class="flex items-center gap-1"></div>
     </div>
 
     <!-- 月表示 -->
@@ -162,7 +162,7 @@
 
   </main>
 
-  <footer class="mt-6 pb-4">
+  <footer class="mt-2 pb-4">
     <div class="max-w-[750px] mx-auto px-4">
       <div class="py-6 text-center bg-gradient-to-r from-red-700 to-red-600 text-white rounded-xl shadow-lg">
         <p id="footer-text" class="text-xs text-white/90 mt-1">© CALENDAR</p>
@@ -465,6 +465,26 @@
         📅 カレンダーに追加（.ics）
       </button>
     </div>
+  </div>
+</div>
+
+
+<!-- ══ 回答確認モーダル ══════════════════════════════════════════════ -->
+<div id="response-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeResponseModal()"></div>
+  <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="max-height:85vh">
+    <!-- ヘッダー -->
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 flex items-start justify-between shrink-0">
+      <div class="min-w-0 flex-1">
+        <h2 class="font-black text-base">📋 回答一覧</h2>
+        <p id="resp-modal-subtitle" class="text-xs text-white/80 mt-0.5 truncate"></p>
+      </div>
+      <button onclick="closeResponseModal()" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
+    </div>
+    <!-- サマリー -->
+    <div id="resp-summary" class="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-3 text-xs font-bold shrink-0"></div>
+    <!-- リスト -->
+    <div id="resp-list" class="overflow-y-auto flex-1"></div>
   </div>
 </div>
 
@@ -971,20 +991,23 @@
   function renderLegend() {
     const el = document.getElementById('cat-legend');
     const hasFilter = selectedCategory !== null;
-    // 「全て」ボタン
-    const allBtn = `<button onclick="toggleCategoryFilter(null)" class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full border transition-all ${!hasFilter ? 'bg-gray-800 text-white border-gray-800 shadow' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'}">全て</button>`;
-    // カテゴリーボタン
+    // 「全て」ボタン（flex-1 で均等）
+    const allBtn = `<button onclick="toggleCategoryFilter(null)"
+      class="flex-1 text-center text-[11px] font-bold py-1.5 rounded-lg transition-all
+        ${!hasFilter ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-100'}">全て</button>`;
+    // カテゴリーボタン（flex-1 で均等）
     const catBtns = CAT_ORDER.map(cat => {
       const isSelected = selectedCategory === cat;
       const color = catColor(cat);
       if (isSelected) {
-        return `<button onclick="toggleCategoryFilter('${cat}')" class="flex items-center gap-1 text-xs font-black text-white px-2 py-1 rounded-full border-2 shadow-md transition-all" style="background:${color};border-color:${color}">
-          <span class="w-2 h-2 rounded-full inline-block bg-white/60"></span>${cat}
-        </button>`;
+        return `<button onclick="toggleCategoryFilter('${cat}')"
+          class="flex-1 text-center text-[11px] font-black text-white py-1.5 rounded-lg shadow-sm transition-all"
+          style="background:${color}">${cat}</button>`;
       } else {
-        return `<button onclick="toggleCategoryFilter('${cat}')" class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full border transition-all ${hasFilter ? 'bg-white text-gray-400 border-gray-200 opacity-60 hover:opacity-100' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'}" style="${hasFilter ? '' : `hover:border-color:${color}`}">
-          <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:${color}"></span>${cat}
-        </button>`;
+        return `<button onclick="toggleCategoryFilter('${cat}')"
+          class="flex-1 text-center text-[11px] font-bold py-1.5 rounded-lg transition-all
+            ${hasFilter ? 'text-gray-300 hover:text-gray-500' : 'text-gray-600 hover:bg-gray-100'}">
+          <span class="inline-block w-1.5 h-1.5 rounded-full mr-0.5 align-middle" style="background:${color}"></span>${cat}</button>`;
       }
     }).join('');
     el.innerHTML = allBtn + catBtns;
@@ -1184,15 +1207,83 @@
       }
     }).catch(() => alert('コピーに失敗しました'));
   }
-  function viewResponses() {
+  function closeResponseModal() {
+    document.getElementById('response-modal').classList.add('hidden');
+  }
+
+  async function viewResponses() {
     const ev = currentDetailEvent;
-    if (!ev) return;
-    const cfg = loadConfig();
-    if (!cfg?.supabase_url) return;
-    const hash = buildHashString(cfg);
-    const attUrl = getAttendanceBaseUrl();
-    if (attUrl) {
-      window.open(`${attUrl}#${hash}`, '_blank');
+    if (!ev || !supabaseClient) return;
+
+    // モーダルを先に開いてローディング表示
+    document.getElementById('resp-modal-subtitle').textContent = ev.title;
+    document.getElementById('resp-summary').innerHTML = '<span class="text-gray-400">読み込み中…</span>';
+    document.getElementById('resp-list').innerHTML =
+      '<div class="p-8 text-center text-gray-400 text-sm">読み込み中…</div>';
+    document.getElementById('response-modal').classList.remove('hidden');
+
+    try {
+      // 回答データ取得
+      const { data: responses, error } = await supabaseClient
+        .from(TABLE_RESPONSES).select('*').eq('event_id', ev.id).order('jersey_number');
+      if (error) throw error;
+
+      // 選手名マップを取得（失敗しても続行）
+      let playersMap = {};
+      try {
+        const { data: players } = await supabaseClient
+          .from('app_records').select('payload').eq('type', 'player');
+        if (players) players.forEach(row => {
+          const p = row.payload || {};
+          if (p.number) playersMap[String(p.number).trim()] = p.name || '';
+        });
+      } catch(e) {}
+
+      if (!responses || responses.length === 0) {
+        document.getElementById('resp-summary').innerHTML =
+          '<span class="text-gray-400">まだ回答がありません</span>';
+        document.getElementById('resp-list').innerHTML =
+          '<div class="p-8 text-center text-gray-400 text-sm">まだ回答がありません</div>';
+        return;
+      }
+
+      // サマリー集計
+      const cnt = { '出席': 0, '欠席': 0, '未定': 0 };
+      responses.forEach(r => {
+        if (cnt[r.attendance] !== undefined) cnt[r.attendance]++;
+        else cnt['未定']++;
+      });
+      document.getElementById('resp-summary').innerHTML = `
+        <span class="text-green-600">✅ 出席 ${cnt['出席']}人</span>
+        <span class="text-red-500">❌ 欠席 ${cnt['欠席']}人</span>
+        <span class="text-yellow-600">❓ 未定 ${cnt['未定']}人</span>
+        <span class="text-gray-400 ml-auto">計 ${responses.length}件</span>`;
+
+      // 回答リスト
+      const ABADGE = {
+        '出席': 'bg-green-100 text-green-700',
+        '欠席': 'bg-red-100 text-red-500',
+        '未定': 'bg-yellow-100 text-yellow-600',
+      };
+      document.getElementById('resp-list').innerHTML = responses.map(r => {
+        const name = playersMap[String(r.jersey_number || '').trim()] || '';
+        const transp = r.transport_need && r.transport_need !== '未定'
+          ? `<span class="text-[10px] text-gray-400">${escHtml(r.transport_need)}</span>` : '';
+        const notes = r.notes
+          ? `<span class="text-[10px] text-gray-400 truncate">${escHtml(r.notes)}</span>` : '';
+        return `<div class="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 last:border-0">
+          <span class="text-xs font-black text-gray-400 w-7 shrink-0 text-right">${escHtml(String(r.jersey_number || ''))}</span>
+          <span class="text-sm font-bold text-gray-800 flex-1 truncate">${escHtml(name || r.jersey_number || '—')}</span>
+          <span class="text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${ABADGE[r.attendance] || 'bg-gray-100 text-gray-500'}">${escHtml(r.attendance || '未定')}</span>
+          <div class="flex flex-col items-end gap-0.5 shrink-0">${transp}${notes}</div>
+        </div>`;
+      }).join('');
+
+    } catch(e) {
+      document.getElementById('resp-summary').innerHTML =
+        '<span class="text-red-500 text-xs">取得に失敗しました</span>';
+      document.getElementById('resp-list').innerHTML =
+        '<div class="p-6 text-center text-red-400 text-sm">読み込みに失敗しました</div>';
     }
   }
 
