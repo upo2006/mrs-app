@@ -1226,20 +1226,16 @@
       const dateLabel = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
       const isPast = ev.event_date < today;
       const color = catColor(ev.category);
+      const catTitle = ev.category
+        ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
+        : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
       return `<div class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden flex${isPast ? ' opacity-60' : ''}" onclick="openDetail('${ev.id}')" style="cursor:pointer">
         <div class="w-1.5 shrink-0" style="background:${color}"></div>
-        <div class="p-4 flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              ${ev.category ? `<span class="inline-block text-xs font-bold text-white px-2 py-0.5 rounded-full mb-1" style="background:${color}">${ev.category}</span>` : ''}
-              <p class="font-black text-gray-800 leading-snug">${escHtml(ev.title)}</p>
-            </div>
-            <span class="text-xs text-gray-400 shrink-0 mt-0.5">${dateLabel}</span>
-          </div>
-          <div class="text-xs text-gray-500 mt-1 space-y-0.5">
-            ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
-            ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-          </div>
+        <div class="px-4 py-3 flex-1 min-w-0 space-y-0.5">
+          <p class="text-sm leading-snug">${catTitle}</p>
+          <p class="text-xs text-gray-500">📅 ${dateLabel}</p>
+          ${ev.event_time ? `<p class="text-xs text-gray-500">🕐 ${escHtml(ev.event_time)}</p>` : ''}
+          ${ev.location   ? `<p class="text-xs text-gray-500">📍 ${escHtml(ev.location)}</p>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -1251,16 +1247,19 @@
     if (!ev) return;
     currentDetailEvent = ev;
 
-    // カテゴリーバッジ
+    // カテゴリー/タイトル
     const badge = document.getElementById('detail-cat-badge');
+    badge.classList.add('hidden'); // badge は非表示（タイトル行で代用）
+    const color = catColor(ev.category);
+    const titleEl = document.getElementById('detail-title');
     if (ev.category) {
-      badge.textContent = ev.category;
-      badge.style.background = catColor(ev.category);
-      badge.classList.remove('hidden');
+      titleEl.innerHTML =
+        `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span>` +
+        `<span class="text-gray-300 mx-1">/</span>` +
+        `<span class="text-gray-800">${escHtml(ev.title)}</span>`;
     } else {
-      badge.classList.add('hidden');
+      titleEl.textContent = ev.title;
     }
-    document.getElementById('detail-title').textContent = ev.title;
 
     // 情報
     const d = new Date(ev.event_date + 'T00:00:00');
