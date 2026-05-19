@@ -66,6 +66,20 @@
     .resp-table tr:last-child td { border-bottom:none; }
     .resp-table tr:hover td { background:#f9fafb; }
     .badge { display:inline-block; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+
+    /* 回答フォーム ラジオボタン */
+    .cal-radio-btn {
+      width: 100%; padding: 0.75rem 0.25rem; border-radius: 0.75rem;
+      border: 2px solid #e5e7eb; background: #fff; color: #4b5563;
+      font-weight: 700; font-size: min(0.875rem, 3.8vw); cursor: pointer;
+      transition: all 0.15s; text-align: center; display: block; white-space: nowrap;
+    }
+    .cal-radio-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+    .cal-radio-btn[data-selected="1"][data-color="green"]  { border-color:#22c55e; background:#f0fdf4; color:#15803d; }
+    .cal-radio-btn[data-selected="1"][data-color="red"]    { border-color:#ef4444; background:#fef2f2; color:#dc2626; }
+    .cal-radio-btn[data-selected="1"][data-color="blue"]   { border-color:#3b82f6; background:#eff6ff; color:#1d4ed8; }
+    .cal-radio-btn[data-selected="1"][data-color="amber"]  { border-color:#f59e0b; background:#fffbeb; color:#b45309; }
+    .cal-radio-btn[data-selected="1"][data-color="gray"]   { border-color:#6b7280; background:#f9fafb; color:#374151; }
   </style>
 </head>
 <body class="h-full bg-gray-50">
@@ -1374,16 +1388,193 @@
     } catch(e) { alert('削除に失敗しました'); }
   }
 
-  // ─── 保護者：回答する ────────────────────────────────────────────────
+  // ─── 保護者：回答する（ポップアップモーダル） ───────────────────────────
   function openParentRespond() {
     const ev = currentDetailEvent;
     if (!ev) return;
-    const cfg = loadConfig();
-    if (!cfg?.supabase_url) { alert('接続設定が見つかりません'); return; }
-    const hash = buildHashString(cfg);
-    const attUrl = getAttendanceBaseUrl();
-    if (!attUrl) { alert('公開URLが取得できません。接続設定のURLを確認してください。'); return; }
-    window.location.href = `${attUrl}?respond=${ev.id}#${hash}`;
+    if (!supabaseClient) { alert('接続設定が見つかりません'); return; }
+
+    // ヘッダー情報（showParentResultsと同じ形式）
+    const _catBadge = ev.category
+      ? `<span class="inline-block text-xs font-bold bg-white/25 text-white px-2 py-0.5 rounded-full mr-2">${escHtml(ev.category)}</span>` : '';
+    const _dateShort = ev.event_date
+      ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' }) : '';
+    const _col1 = [_dateShort ? `📆 ${_dateShort}` : '', ev.event_time ? `🕐 ${escHtml(ev.event_time)}` : ''];
+    const _col2 = [ev.location ? `📍 ${escHtml(ev.location)}` : '', ev.transport ? `🚗 移動：${escHtml(ev.transport)}` : ''];
+    const _gridItems = [_col1[0], _col2[0], _col1[1], _col2[1]].map(s => `<div>${s}</div>`).join('');
+
+    const cId = 'cal-respond-popup-container';
+    let modal = document.getElementById('cal-respond-popup-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'cal-respond-popup-modal';
+      modal.className = 'fixed inset-0 z-[110]';
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="document.getElementById('cal-respond-popup-modal').classList.add('hidden')"></div>
+      <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:calc(100vh - 2rem)">
+        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
+          <div class="min-w-0 flex-1">
+            <div class="text-xl font-black leading-tight mb-1">${_catBadge}${escHtml(ev.title)}</div>
+            <div class="text-xs text-white/80"><div style="display:inline-grid;grid-template-columns:auto auto;gap:1px 12px">${_gridItems}</div></div>
+          </div>
+          <button onclick="document.getElementById('cal-respond-popup-modal').classList.add('hidden')" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
+        </div>
+        <div class="overflow-y-auto flex-1" id="${cId}"></div>
+      </div>`;
+
+    modal.classList.remove('hidden');
+    calRenderRespondForm(ev.id, '', cId);
+  }
+
+  // ─── 回答フォーム（カレンダー内蔵） ─────────────────────────────────────
+  function calRadios(name, opts) {
+    return opts.map(o =>
+      `<button type="button" class="cal-radio-btn" data-name="${name}" data-value="${o.v}" data-color="${o.c}" data-selected="0">
+        ${o.i}<br>${o.v}
+      </button>`
+    ).join('');
+  }
+  function calGetRadioValue(name) {
+    return document.querySelector(`.cal-radio-btn[data-name="${name}"][data-selected="1"]`)?.dataset.value || null;
+  }
+  function calOnJerseyInput(val) {
+    const nameEl = document.getElementById('cal-f-player-name');
+    if (!nameEl) return;
+    const name = calPlayersMap[String(val).trim()] || '';
+    nameEl.textContent = name || '';
+  }
+
+  function calRenderRespondForm(eventId, prefillJersey = '', cId = 'cal-respond-popup-container') {
+    const container = document.getElementById(cId);
+    if (!container) return;
+    container.innerHTML = `
+      <form id="cal-attend-form" class="bg-white p-5 space-y-6">
+        <div>
+          <label class="block text-gray-700 font-bold mb-2">背番号 <span class="text-red-500">*</span></label>
+          <div class="flex items-center gap-3">
+            <input type="number" id="cal-f-jersey" min="1" max="99" inputmode="numeric"
+              class="w-28 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-red-400 text-2xl font-black text-center"
+              placeholder="10" oninput="calOnJerseyInput(this.value)">
+            <p id="cal-f-player-name" class="text-lg font-black text-gray-700"></p>
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-bold mb-3">出欠確認 <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2">
+            ${calRadios('cal-f-attend', [{v:'出席',i:'✅',c:'green'},{v:'欠席',i:'❌',c:'red'},{v:'未定',i:'❓',c:'gray'}])}
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-bold mb-3">送迎について <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2">
+            ${calRadios('cal-f-transport', [{v:'大丈夫',i:'👍',c:'gray'},{v:'乗せて欲しい',i:'🙏',c:'blue'},{v:'未定',i:'❓',c:'gray'}])}
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-bold mb-3">配車について <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2">
+            ${calRadios('cal-f-carpool', [{v:'できる',i:'🚗',c:'amber'},{v:'難しい',i:'🚫',c:'red'},{v:'未定',i:'❓',c:'gray'}])}
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-bold mb-2">備考（何かあれば）</label>
+          <input type="text" id="cal-f-notes" placeholder="自由入力"
+            class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-red-400">
+        </div>
+        <div id="cal-form-status" class="hidden text-sm rounded-xl px-4 py-3 font-medium"></div>
+        <button type="button" id="cal-submit-btn" onclick="calSubmitResponse('${eventId}', '${cId}')"
+          class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl text-lg transition-colors">
+          <span id="cal-submit-text">回答を送信する</span>
+          <span id="cal-submit-loading" class="hidden">送信中...</span>
+        </button>
+      </form>`;
+
+    container.querySelectorAll('.cal-radio-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        container.querySelectorAll(`.cal-radio-btn[data-name="${name}"]`).forEach(b => {
+          b.dataset.selected = (b === btn) ? '1' : '0';
+        });
+      });
+    });
+
+    // 選手名マップを読み込み（まだ読み込んでいない場合）
+    if (Object.keys(calPlayersMap).length === 0) {
+      supabaseClient.from('app_records').select('payload').eq('type', 'player').then(({ data }) => {
+        if (data) data.forEach(row => {
+          const p = row.payload || {};
+          if (p.number) calPlayersMap[String(p.number).trim()] = p.name || '';
+        });
+      });
+    }
+
+    if (prefillJersey) {
+      const jerseyInput = document.getElementById('cal-f-jersey');
+      if (jerseyInput) { jerseyInput.value = prefillJersey; calOnJerseyInput(prefillJersey); }
+    }
+  }
+
+  async function calSubmitResponse(eventId, cId = 'cal-respond-popup-container') {
+    const btn      = document.getElementById('cal-submit-btn');
+    const statusEl = document.getElementById('cal-form-status');
+    const setStatus = (el, msg, type) => {
+      el.className = `text-sm rounded-xl px-4 py-3 font-medium ${type === 'error' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    };
+
+    const jersey    = document.getElementById('cal-f-jersey').value.trim();
+    const attend    = calGetRadioValue('cal-f-attend');
+    const transport = calGetRadioValue('cal-f-transport');
+    const carpool   = calGetRadioValue('cal-f-carpool');
+
+    if (!jersey)    { setStatus(statusEl, '背番号を入力してください', 'error'); return; }
+    if (!attend)    { setStatus(statusEl, '出欠確認を選択してください', 'error'); return; }
+    if (!transport) { setStatus(statusEl, '送迎について選択してください', 'error'); return; }
+    if (!carpool)   { setStatus(statusEl, '配車について選択してください', 'error'); return; }
+
+    btn.disabled = true;
+    document.getElementById('cal-submit-text').classList.add('hidden');
+    document.getElementById('cal-submit-loading').classList.remove('hidden');
+
+    const { error } = await supabaseClient
+      .from(TABLE_RESPONSES)
+      .upsert({
+        event_id:       eventId,
+        jersey_number:  jersey,
+        attendance:     attend,
+        transport_need: transport,
+        carpool,
+        notes: document.getElementById('cal-f-notes').value.trim() || null,
+      }, { onConflict: 'event_id,jersey_number' });
+
+    btn.disabled = false;
+    document.getElementById('cal-submit-text').classList.remove('hidden');
+    document.getElementById('cal-submit-loading').classList.add('hidden');
+
+    if (error) {
+      setStatus(statusEl, '送信に失敗しました。もう一度お試しください。', 'error');
+      console.error(error);
+      return;
+    }
+
+    const name = calPlayersMap[String(jersey).trim()] || '';
+    document.getElementById(cId).innerHTML = `
+      <div class="bg-white p-10 text-center space-y-4">
+        <div class="text-6xl">✅</div>
+        <h3 class="text-xl font-black text-gray-800">回答を送信しました</h3>
+        ${name ? `<p class="text-gray-500 font-bold">#${escHtml(jersey)} ${escHtml(name)}</p>` : ''}
+        <p class="text-gray-400 text-sm">ありがとうございました</p>
+        <button type="button" onclick="calRenderRespondForm('${eventId}', '', '${cId}')"
+          class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-2xl text-base transition-colors">
+          👨‍👩‍👦 兄弟・別の選手の回答をする
+        </button>
+        <button type="button" onclick="calRenderRespondForm('${eventId}', '${jersey}', '${cId}')"
+          class="mt-1 text-sm text-gray-400 underline">この背番号の回答を修正する</button>
+      </div>`;
   }
 
   // ─── 保護者：結果を見る ──────────────────────────────────────────────
