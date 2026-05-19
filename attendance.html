@@ -1371,6 +1371,26 @@
   }
 
   // ─── 常設お知らせパネル ───────────────────────────────────────────────────
+  const NOTIF_DISMISSED_KEY = 'att_notif_dismissed_v1';
+
+  function getDismissedIds() {
+    try { return JSON.parse(localStorage.getItem(NOTIF_DISMISSED_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function saveDismissedId(id) {
+    try {
+      const ids = getDismissedIds();
+      if (!ids.includes(id)) ids.push(id);
+      localStorage.setItem(NOTIF_DISMISSED_KEY, JSON.stringify(ids));
+    } catch(e) {}
+  }
+  function cleanupDismissedIds(existingIds) {
+    // Supabaseに存在しないIDをlocalStorageから削除（肥大化防止）
+    try {
+      const ids = getDismissedIds().filter(id => existingIds.includes(id));
+      localStorage.setItem(NOTIF_DISMISSED_KEY, JSON.stringify(ids));
+    } catch(e) {}
+  }
+
   async function renderNotificationsPanel() {
     const panels = document.querySelectorAll('.notifications-panel-list');
     if (!panels.length || !supabaseClient) return;
@@ -1381,24 +1401,38 @@
         .order('created_at', { ascending: false })
         .limit(20);
 
-      const html = (error || !data || data.length === 0)
+      if (error || !data) {
+        panels.forEach(el => { el.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">お知らせはありません</p>'; });
+        return;
+      }
+
+      // 不要になったdismissedIDを掃除
+      cleanupDismissedIds(data.map(n => n.id));
+
+      // 確認済みを除外
+      const dismissed = getDismissedIds();
+      const visible = data.filter(n => !dismissed.includes(n.id));
+
+      const html = visible.length === 0
         ? '<p class="text-gray-400 text-sm text-center py-4">お知らせはありません</p>'
-        : data.map(n => {
-            return `<div class="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-0" id="notif-row-${n.id}">
+        : visible.map(n =>
+            `<div class="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-0" id="notif-row-${n.id}">
               <div class="flex-1 min-w-0">
                 <p class="text-sm text-gray-800 leading-snug">${escHtml(n.message)}</p>
               </div>
               <button type="button" onclick="dismissNotification('${n.id}')"
-                class="shrink-0 text-gray-300 hover:text-gray-500 text-base leading-none mt-0.5 px-1 transition-colors"
+                class="shrink-0 text-gray-300 hover:text-gray-500 text-base leading-none px-1 transition-colors"
                 title="削除">🗑️</button>
-            </div>`;
-          }).join('');
+            </div>`
+          ).join('');
 
       panels.forEach(el => { el.innerHTML = html; });
     } catch(e) { console.warn('お知らせ描画エラー:', e); }
   }
 
-  async function dismissNotification(id) {
+  function dismissNotification(id) {
+    // localStorageに確認済みとして保存（ページ更新後も非表示）
+    saveDismissedId(id);
     // 即座にUIから消す
     document.querySelectorAll(`#notif-row-${id}`).forEach(el => el.remove());
     // 空になったら「お知らせはありません」を表示
@@ -1407,10 +1441,6 @@
         panel.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">お知らせはありません</p>';
       }
     });
-    // Supabaseから削除
-    if (supabaseClient) {
-      await supabaseClient.from(TABLE_NOTIFICATIONS).delete().eq('id', id).catch(() => {});
-    }
   }
 
   // ─── イベント自動削除（イベント日から7日後） ─────────────────────────────
