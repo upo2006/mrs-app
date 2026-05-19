@@ -48,10 +48,12 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       cursor: pointer; color: #fff; font-weight: 600;
     }
-    /* カテゴリー横スクロール */
-    .cat-scroll { overflow-x: auto; }
-    .cat-scroll::-webkit-scrollbar { display: none; }
-    .cat-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    /* 回答テーブル */
+    .resp-table th { background:#f9fafb; font-size:0.75rem; font-weight:700; color:#6b7280; padding:8px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap; }
+    .resp-table td { font-size:0.8rem; padding:8px 10px; text-align:center; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+    .resp-table tr:last-child td { border-bottom:none; }
+    .resp-table tr:hover td { background:#f9fafb; }
+    .badge { display:inline-block; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; }
   </style>
 </head>
 <body class="h-full bg-gray-50">
@@ -470,21 +472,54 @@
 
 
 <!-- ══ 回答確認モーダル ══════════════════════════════════════════════ -->
-<div id="response-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+<div id="response-modal" class="fixed inset-0 z-[110] hidden">
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeResponseModal()"></div>
-  <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="max-height:85vh">
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:calc(100vh - 2rem)">
     <!-- ヘッダー -->
-    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 flex items-start justify-between shrink-0">
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
       <div class="min-w-0 flex-1">
-        <h2 class="font-black text-base">📋 回答一覧</h2>
-        <p id="resp-modal-subtitle" class="text-xs text-white/80 mt-0.5 truncate"></p>
+        <div id="resp-modal-title" class="text-xl font-black leading-tight mb-1"></div>
+        <div id="resp-modal-subtitle" class="text-xs text-white/80 space-y-0.5"></div>
       </div>
-      <button onclick="closeResponseModal()" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
+      <button onclick="closeResponseModal()" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
     </div>
-    <!-- サマリー -->
-    <div id="resp-summary" class="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-3 text-xs font-bold shrink-0"></div>
-    <!-- リスト -->
-    <div id="resp-list" class="overflow-y-auto flex-1"></div>
+    <!-- 集計 -->
+    <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 shrink-0">
+      <div class="grid grid-cols-4 gap-2 text-center">
+        <div class="bg-white rounded-xl p-2.5 shadow-sm flex flex-col">
+          <p class="text-xs text-gray-400 leading-tight flex-1 flex items-end justify-center pb-1">回答数</p>
+          <p id="cal-summary-total" class="text-xl font-black text-gray-700">0</p>
+        </div>
+        <div class="bg-green-50 rounded-xl p-2.5 flex flex-col">
+          <p class="text-xs text-gray-400 leading-tight flex-1 flex items-end justify-center pb-1">出席</p>
+          <p id="cal-summary-attend" class="text-xl font-black text-green-600">0</p>
+        </div>
+        <div class="bg-red-50 rounded-xl p-2.5 flex flex-col">
+          <p class="text-xs text-gray-400 leading-tight flex-1 flex items-end justify-center pb-1">乗せて<br>欲しい</p>
+          <p id="cal-summary-need-ride" class="text-xl font-black text-red-600">0</p>
+        </div>
+        <div class="bg-blue-50 rounded-xl p-2.5 flex flex-col">
+          <p class="text-xs text-gray-400 leading-tight flex-1 flex items-end justify-center pb-1">配車<br>できる</p>
+          <p id="cal-summary-can-drive" class="text-xl font-black text-blue-600">0</p>
+        </div>
+      </div>
+    </div>
+    <!-- 回答一覧 -->
+    <div class="overflow-y-auto flex-1">
+      <div id="cal-response-list"></div>
+      <p id="cal-no-responses" class="hidden text-center text-gray-400 text-sm py-8">まだ回答がありません</p>
+    </div>
+  </div>
+</div>
+
+<!-- 回答行詳細ポップアップ -->
+<div id="cal-memo-popup" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" onclick="closeCalMemoPopup()"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full">
+    <div id="cal-memo-popup-content" class="p-5"></div>
+    <div class="px-5 pb-5">
+      <button onclick="closeCalMemoPopup()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-sm transition-colors">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -535,11 +570,21 @@
   const TABLE_RESPONSES = 'attendance_responses';
   const STORAGE_FILTER_KEY = 'mrs_cal_filter_v1';  // カテゴリーフィルター記憶用
 
+  // 色を全カテゴリーで明確に区別（紫→青→緑→シアン→黄→赤）
   const CAT_COLORS = {
-    'U7': '#8B5CF6', 'U8': '#3B82F6', 'U9': '#10B981',
-    'U10': '#F59E0B', 'U11': '#F97316', 'U12': '#EF4444',
+    'U7':  '#8B5CF6',  // 紫
+    'U8':  '#3B82F6',  // 青
+    'U9':  '#10B981',  // 緑
+    'U10': '#06B6D4',  // シアン
+    'U11': '#F59E0B',  // 黄/アンバー
+    'U12': '#EF4444',  // 赤
   };
   function catColor(cat) { return CAT_COLORS[cat] || '#6B7280'; }
+
+  // 回答バッジカラー（attendance.html と共通）
+  const ATTEND_COLOR    = { '出席':'bg-green-100 text-green-700', '欠席':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
+  const TRANSPORT_COLOR = { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
+  const CARPOOL_COLOR   = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
 
   // ─── 状態 ────────────────────────────────────────────────────────────
   let supabaseClient = null;
@@ -991,23 +1036,31 @@
   function renderLegend() {
     const el = document.getElementById('cat-legend');
     const hasFilter = selectedCategory !== null;
-    // 「全て」ボタン（flex-1 で均等）
+    // 「全て」ボタン
     const allBtn = `<button onclick="toggleCategoryFilter(null)"
-      class="flex-1 text-center text-[11px] font-bold py-1.5 rounded-lg transition-all
-        ${!hasFilter ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-100'}">全て</button>`;
-    // カテゴリーボタン（flex-1 で均等）
+      class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all
+        ${!hasFilter ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-50'}">
+      <span class="text-[11px] font-bold leading-tight">全て</span>
+      <span class="h-0.5 w-4/5 rounded-full mt-0.5" style="background:${!hasFilter ? '#fff' : '#d1d5db'}"></span>
+    </button>`;
+    // カテゴリーボタン
     const catBtns = CAT_ORDER.map(cat => {
       const isSelected = selectedCategory === cat;
       const color = catColor(cat);
       if (isSelected) {
         return `<button onclick="toggleCategoryFilter('${cat}')"
-          class="flex-1 text-center text-[11px] font-black text-white py-1.5 rounded-lg shadow-sm transition-all"
-          style="background:${color}">${cat}</button>`;
+          class="flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white"
+          style="background:${color}">
+          <span class="text-[11px] font-black leading-tight">${cat}</span>
+          <span class="h-0.5 w-4/5 rounded-full mt-0.5 bg-white/50"></span>
+        </button>`;
       } else {
         return `<button onclick="toggleCategoryFilter('${cat}')"
-          class="flex-1 text-center text-[11px] font-bold py-1.5 rounded-lg transition-all
-            ${hasFilter ? 'text-gray-300 hover:text-gray-500' : 'text-gray-600 hover:bg-gray-100'}">
-          <span class="inline-block w-1.5 h-1.5 rounded-full mr-0.5 align-middle" style="background:${color}"></span>${cat}</button>`;
+          class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all
+            ${hasFilter ? 'text-gray-300 hover:text-gray-500' : 'text-gray-700 hover:bg-gray-50'}">
+          <span class="text-[11px] font-bold leading-tight">${cat}</span>
+          <span class="h-0.5 w-4/5 rounded-full mt-0.5" style="background:${hasFilter ? '#e5e7eb' : color}"></span>
+        </button>`;
       }
     }).join('');
     el.innerHTML = allBtn + catBtns;
@@ -1207,83 +1260,169 @@
       }
     }).catch(() => alert('コピーに失敗しました'));
   }
+  // ─── 回答確認モーダル（attendance.html と同等） ──────────────────────
+  let calDetailResponses = [];
+  let calDetailSortCol   = null;
+  let calDetailSortAsc   = true;
+  let calPlayersMap      = {};
+
   function closeResponseModal() {
     document.getElementById('response-modal').classList.add('hidden');
+  }
+  function closeCalMemoPopup() {
+    document.getElementById('cal-memo-popup').classList.add('hidden');
+  }
+
+  const CAL_SORT_ORDER = {
+    attendance:     { '出席':0, '欠席':1, '未定':2 },
+    transport_need: { '乗せて欲しい':0, '大丈夫':1, '未定':2 },
+    carpool:        { 'できる':0, '難しい':1, '未定':2 },
+  };
+  function calApplySort(arr, col, asc) {
+    if (!col) return arr;
+    const map = CAL_SORT_ORDER[col] || {};
+    return [...arr].sort((a, b) => {
+      const va = map[a[col]] ?? 99, vb = map[b[col]] ?? 99;
+      return asc ? va - vb : vb - va;
+    });
+  }
+  function calSortIcon(col) {
+    if (calDetailSortCol !== col) return '<span class="text-gray-300 ml-0.5">⇅</span>';
+    return calDetailSortAsc ? '<span class="text-red-400 ml-0.5">▲</span>' : '<span class="text-red-400 ml-0.5">▼</span>';
+  }
+  function sortCalDetailTable(col) {
+    if (calDetailSortCol === col) calDetailSortAsc = !calDetailSortAsc;
+    else { calDetailSortCol = col; calDetailSortAsc = true; }
+    const listEl = document.getElementById('cal-response-list');
+    if (!listEl) return;
+    const sorted = calApplySort(calDetailResponses, calDetailSortCol, calDetailSortAsc);
+    listEl.innerHTML = buildCalDetailTableHtml(sorted);
+    listEl.querySelectorAll('tbody tr[data-resp]').forEach(tr => {
+      tr.addEventListener('click', () => showCalResponseDetail(JSON.parse(tr.dataset.resp)));
+    });
+  }
+  function buildCalDetailTableHtml(responses) {
+    const rideLabel = r => r.transport_need === '乗せて欲しい'
+      ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3">乗せて<br>欲しい</span>'
+      : `<span class="badge ${TRANSPORT_COLOR[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need || '—'}</span>`;
+    if (responses.length === 0) return '<p class="text-center text-gray-400 text-sm py-8">まだ回答がありません</p>';
+    return `<table class="resp-table w-full">
+      <colgroup>
+        <col style="width:30%"><col style="width:15%"><col style="width:15%"><col style="width:15%"><col style="width:25%">
+      </colgroup>
+      <thead style="position:sticky;top:0;z-index:10;background:#f9fafb">
+        <tr>
+          <th class="text-left">#名前</th>
+          <th class="cursor-pointer select-none" onclick="sortCalDetailTable('attendance')">出欠${calSortIcon('attendance')}</th>
+          <th class="cursor-pointer select-none" onclick="sortCalDetailTable('transport_need')">送迎${calSortIcon('transport_need')}</th>
+          <th class="cursor-pointer select-none" onclick="sortCalDetailTable('carpool')">配車${calSortIcon('carpool')}</th>
+          <th class="text-left">備考</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${responses.map(r => {
+          const name  = calPlayersMap[String(r.jersey_number || '').trim()] || '';
+          const notes = r.notes || '';
+          const trunc = notes.length > 10 ? notes.slice(0,10) + '…' : notes;
+          const rowData = escHtml(JSON.stringify({ jersey_number: r.jersey_number, attendance: r.attendance, transport_need: r.transport_need, carpool: r.carpool, notes }));
+          return `<tr class="cursor-pointer hover:bg-blue-50 active:bg-blue-100" data-resp="${rowData}">
+            <td class="text-left">
+              <span class="block text-xs font-black text-gray-400">${escHtml(String(r.jersey_number || ''))}</span>
+              <span class="font-medium text-gray-800">${escHtml(name)}</span>
+            </td>
+            <td><span class="badge ${ATTEND_COLOR[r.attendance] || 'bg-gray-100 text-gray-500'}">${r.attendance || '—'}</span></td>
+            <td>${rideLabel(r)}</td>
+            <td><span class="badge ${CARPOOL_COLOR[r.carpool] || 'bg-gray-100 text-gray-500'}">${r.carpool || '—'}</span></td>
+            <td class="text-left text-gray-500 text-xs">${escHtml(trunc)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+  }
+  function showCalResponseDetail(d) {
+    const name = calPlayersMap[String(d.jersey_number || '').trim()] || '';
+    const rideHtml = d.transport_need === '乗せて欲しい'
+      ? '<span class="badge bg-red-100 text-red-600">乗せて欲しい</span>'
+      : `<span class="badge ${TRANSPORT_COLOR[d.transport_need] || 'bg-gray-100 text-gray-500'}">${escHtml(d.transport_need || '—')}</span>`;
+    document.getElementById('cal-memo-popup-content').innerHTML = `
+      <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl -mx-5 -mt-5 mb-4 flex items-center gap-3">
+        <span class="text-3xl font-black text-white/30">${escHtml(String(d.jersey_number || ''))}</span>
+        <span class="text-xl font-black">${escHtml(name || String(d.jersey_number || ''))}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center mb-3">
+        <div class="text-xs font-medium text-gray-400">出欠</div>
+        <div class="text-xs font-medium text-gray-400">送迎</div>
+        <div class="text-xs font-medium text-gray-400">配車</div>
+        <div><span class="badge ${ATTEND_COLOR[d.attendance] || 'bg-gray-100 text-gray-500'}">${escHtml(d.attendance || '—')}</span></div>
+        <div>${rideHtml}</div>
+        <div><span class="badge ${CARPOOL_COLOR[d.carpool] || 'bg-gray-100 text-gray-500'}">${escHtml(d.carpool || '—')}</span></div>
+      </div>
+      <div class="border-t border-gray-100 pt-3">
+        <span class="text-xs font-medium text-gray-400 block mb-1">備考</span>
+        <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[1.5rem]">${escHtml(d.notes || '')}</p>
+      </div>`;
+    document.getElementById('cal-memo-popup').classList.remove('hidden');
   }
 
   async function viewResponses() {
     const ev = currentDetailEvent;
     if (!ev || !supabaseClient) return;
 
-    // モーダルを先に開いてローディング表示
-    document.getElementById('resp-modal-subtitle').textContent = ev.title;
-    document.getElementById('resp-summary').innerHTML = '<span class="text-gray-400">読み込み中…</span>';
-    document.getElementById('resp-list').innerHTML =
-      '<div class="p-8 text-center text-gray-400 text-sm">読み込み中…</div>';
+    // モーダルを先に開いてローディング
+    document.getElementById('resp-modal-title').textContent = ev.title;
+    document.getElementById('resp-modal-subtitle').textContent = '';
+    document.getElementById('cal-summary-total').textContent     = '…';
+    document.getElementById('cal-summary-attend').textContent    = '…';
+    document.getElementById('cal-summary-need-ride').textContent = '…';
+    document.getElementById('cal-summary-can-drive').textContent = '…';
+    document.getElementById('cal-response-list').innerHTML =
+      '<p class="text-center text-gray-400 text-sm py-8">読み込み中…</p>';
+    document.getElementById('cal-no-responses').classList.add('hidden');
     document.getElementById('response-modal').classList.remove('hidden');
+    calDetailResponses = [];
+    calDetailSortCol   = null;
+    calDetailSortAsc   = true;
 
     try {
-      // 回答データ取得
-      const { data: responses, error } = await supabaseClient
-        .from(TABLE_RESPONSES).select('*').eq('event_id', ev.id).order('jersey_number');
-      if (error) throw error;
-
-      // 選手名マップを取得（失敗しても続行）
-      let playersMap = {};
+      // 選手名マップを取得
+      calPlayersMap = {};
       try {
         const { data: players } = await supabaseClient
           .from('app_records').select('payload').eq('type', 'player');
         if (players) players.forEach(row => {
           const p = row.payload || {};
-          if (p.number) playersMap[String(p.number).trim()] = p.name || '';
+          if (p.number) calPlayersMap[String(p.number).trim()] = p.name || '';
         });
       } catch(e) {}
 
-      if (!responses || responses.length === 0) {
-        document.getElementById('resp-summary').innerHTML =
-          '<span class="text-gray-400">まだ回答がありません</span>';
-        document.getElementById('resp-list').innerHTML =
-          '<div class="p-8 text-center text-gray-400 text-sm">まだ回答がありません</div>';
-        return;
+      // 回答データ取得
+      const { data: responses, error } = await supabaseClient
+        .from(TABLE_RESPONSES).select('*').eq('event_id', ev.id).order('jersey_number');
+      if (error) throw error;
+
+      calDetailResponses = responses || [];
+
+      // サマリー更新
+      document.getElementById('cal-summary-total').textContent     = responses.length;
+      document.getElementById('cal-summary-attend').textContent    = responses.filter(r => r.attendance    === '出席').length;
+      document.getElementById('cal-summary-need-ride').textContent = responses.filter(r => r.transport_need === '乗せて欲しい').length;
+      document.getElementById('cal-summary-can-drive').textContent = responses.filter(r => r.carpool       === 'できる').length;
+
+      const listEl = document.getElementById('cal-response-list');
+      const noEl   = document.getElementById('cal-no-responses');
+      if (responses.length === 0) {
+        listEl.innerHTML = '';
+        noEl.classList.remove('hidden');
+      } else {
+        noEl.classList.add('hidden');
+        listEl.innerHTML = buildCalDetailTableHtml(responses);
+        listEl.querySelectorAll('tbody tr[data-resp]').forEach(tr => {
+          tr.addEventListener('click', () => showCalResponseDetail(JSON.parse(tr.dataset.resp)));
+        });
       }
-
-      // サマリー集計
-      const cnt = { '出席': 0, '欠席': 0, '未定': 0 };
-      responses.forEach(r => {
-        if (cnt[r.attendance] !== undefined) cnt[r.attendance]++;
-        else cnt['未定']++;
-      });
-      document.getElementById('resp-summary').innerHTML = `
-        <span class="text-green-600">✅ 出席 ${cnt['出席']}人</span>
-        <span class="text-red-500">❌ 欠席 ${cnt['欠席']}人</span>
-        <span class="text-yellow-600">❓ 未定 ${cnt['未定']}人</span>
-        <span class="text-gray-400 ml-auto">計 ${responses.length}件</span>`;
-
-      // 回答リスト
-      const ABADGE = {
-        '出席': 'bg-green-100 text-green-700',
-        '欠席': 'bg-red-100 text-red-500',
-        '未定': 'bg-yellow-100 text-yellow-600',
-      };
-      document.getElementById('resp-list').innerHTML = responses.map(r => {
-        const name = playersMap[String(r.jersey_number || '').trim()] || '';
-        const transp = r.transport_need && r.transport_need !== '未定'
-          ? `<span class="text-[10px] text-gray-400">${escHtml(r.transport_need)}</span>` : '';
-        const notes = r.notes
-          ? `<span class="text-[10px] text-gray-400 truncate">${escHtml(r.notes)}</span>` : '';
-        return `<div class="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 last:border-0">
-          <span class="text-xs font-black text-gray-400 w-7 shrink-0 text-right">${escHtml(String(r.jersey_number || ''))}</span>
-          <span class="text-sm font-bold text-gray-800 flex-1 truncate">${escHtml(name || r.jersey_number || '—')}</span>
-          <span class="text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${ABADGE[r.attendance] || 'bg-gray-100 text-gray-500'}">${escHtml(r.attendance || '未定')}</span>
-          <div class="flex flex-col items-end gap-0.5 shrink-0">${transp}${notes}</div>
-        </div>`;
-      }).join('');
-
     } catch(e) {
-      document.getElementById('resp-summary').innerHTML =
-        '<span class="text-red-500 text-xs">取得に失敗しました</span>';
-      document.getElementById('resp-list').innerHTML =
-        '<div class="p-6 text-center text-red-400 text-sm">読み込みに失敗しました</div>';
+      document.getElementById('cal-response-list').innerHTML =
+        '<p class="text-center text-red-400 text-sm py-8">読み込みに失敗しました</p>';
     }
   }
 
