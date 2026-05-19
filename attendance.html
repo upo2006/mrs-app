@@ -1155,8 +1155,18 @@
     el.innerHTML = buildCategoryTabsHtml(groups, buildAdminEventCard, 'admin');
   }
 
-  // ─── URL短縮（is.gd） ─────────────────────────────────────────────────────
+  // ─── URL短縮（TinyURL優先・is.gdフォールバック） ───────────────────────────
   async function shortenUrl(url) {
+    // TinyURL（CORS対応・無料）
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
+      clearTimeout(t);
+      const text = await res.text();
+      if (text.startsWith('https://tinyurl.com/')) return text.trim();
+    } catch(e) {}
+    // is.gd（フォールバック）
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 6000);
