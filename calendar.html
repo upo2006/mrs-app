@@ -744,8 +744,9 @@
       return JSON.parse(decodeURIComponent(escape(atob(hash))));
     } catch(e) { return null; }
   }
-  function buildHashString(cfg) {
+  function buildHashString(cfg, adminMode = false) {
     const payload = { u: cfg.supabase_url, k: cfg.supabase_anon_key, t: cfg.team_name || '', c: cfg.primary_color || '#c0392b' };
+    if (adminMode) payload.a = 1; // 管理者フラグ
     return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   }
   function getBaseUrl() {
@@ -1021,7 +1022,7 @@
     if (!base) { document.getElementById('admin-link-result').classList.add('hidden'); return; }
     const cfg = loadConfig();
     if (!cfg?.supabase_url) return;
-    const link = base + '#' + buildHashString(cfg);
+    const link = base + '#' + buildHashString(cfg, true); // 管理者フラグ付き
     document.getElementById('admin-link-url').value = link;
     document.getElementById('admin-link-result').classList.remove('hidden');
   }
@@ -1097,6 +1098,7 @@
 
   async function handleLogout() {
     document.getElementById('settings-menu')?.classList.add('hidden');
+    sessionStorage.removeItem('cal_admin'); // 管理者フラグをクリア
     try { await Promise.race([supabaseClient.auth.signOut(), new Promise(r => setTimeout(r, 3000))]); } catch(e) {}
     setAdminMode(false);
   }
@@ -1950,17 +1952,22 @@
   // ─── 起動 ────────────────────────────────────────────────────────────
   (async () => {
     try {
-      // ハッシュ設定（管理者リンク経由）
+      // ハッシュ設定（管理者リンク / 保護者リンク経由）
+      let hashAdminFlag = false;
       if (location.hash) {
         try {
           const d = parseHashConfig();
           if (d?.u && d?.k) {
             const existing = loadConfig() || {};
             saveConfig({ ...existing, supabase_url: d.u, supabase_anon_key: d.k, team_name: d.t || existing.team_name || '', primary_color: d.c || existing.primary_color || '#c0392b' });
+            if (d.a === 1) hashAdminFlag = true; // 管理者フラグ
             history.replaceState(null, '', location.pathname + location.search);
           }
         } catch(e) {}
       }
+      // 管理者フラグをセッション中維持
+      if (hashAdminFlag) sessionStorage.setItem('cal_admin', '1');
+      const isAdminByLink = sessionStorage.getItem('cal_admin') === '1';
 
       // カテゴリーフィルターを復元
       selectedCategory = loadFilter();
@@ -1971,17 +1978,19 @@
         return;
       }
 
-      // ログイン状態確認
+      // ログイン状態確認（管理者リンク経由の場合はスキップ）
       let session = null;
-      try {
-        const result = await Promise.race([
-          supabaseClient.auth.getSession(),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
-        ]);
-        session = result?.data?.session ?? null;
-      } catch(e) {}
+      if (!isAdminByLink) {
+        try {
+          const result = await Promise.race([
+            supabaseClient.auth.getSession(),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+          ]);
+          session = result?.data?.session ?? null;
+        } catch(e) {}
+      }
 
-      setAdminMode(!!session);
+      setAdminMode(isAdminByLink || !!session);
       await loadEvents();
     } catch(e) {
       console.error('起動エラー:', e);
