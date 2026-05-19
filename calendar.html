@@ -1461,19 +1461,15 @@
     // イベント情報サブタイトル（月日のみ・アイコン揃え）
     const d = new Date(ev.event_date + 'T00:00:00');
     const dateLabel = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
-    const rows = [];
-    if (ev.event_date) rows.push(['📅', dateLabel]);
-    if (ev.location)   rows.push(['📍', escHtml(ev.location)]);
-    if (ev.event_time) rows.push(['🕐', escHtml(ev.event_time)]);
-    if (ev.transport)  rows.push(['🚗', escHtml(ev.transport)]);
     const subtitleEl = document.getElementById('resp-modal-subtitle');
-    subtitleEl.innerHTML = rows.length
-      ? `<div class="grid gap-y-0.5" style="grid-template-columns:1.25rem 1fr">${
-          rows.map(([icon, text]) =>
-            `<span class="leading-snug">${icon}</span><span class="leading-snug">${text}</span>`
-          ).join('')
-        }</div>`
-      : '';
+    // 2列レイアウト：左=日付、右=場所 / 左=時間、右=移動手段
+    const cell = (icon, text) => text
+      ? `<span class="flex items-start gap-1 min-w-0"><span class="shrink-0">${icon}</span><span class="truncate">${text}</span></span>`
+      : `<span></span>`;
+    subtitleEl.innerHTML = `<div class="grid gap-x-3 gap-y-0.5 text-xs" style="grid-template-columns:1fr 1fr">
+      ${cell('📅', ev.event_date ? dateLabel : '')}${cell('📍', ev.location ? escHtml(ev.location) : '')}
+      ${cell('🕐', ev.event_time ? escHtml(ev.event_time) : '')}${cell('🚗', ev.transport ? escHtml(ev.transport) : '')}
+    </div>`;
     document.getElementById('cal-summary-total').textContent     = '…';
     document.getElementById('cal-summary-attend').textContent    = '…';
     document.getElementById('cal-summary-need-ride').textContent = '…';
