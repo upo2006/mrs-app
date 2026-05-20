@@ -204,7 +204,7 @@
     <div id="form-container"></div>
   </main>
 
-  <footer class="mt-6 pb-4">
+  <footer class="mt-2 pb-4">
     <div class="max-w-[750px] mx-auto px-4">
       <div class="py-6 text-center bg-gradient-to-r from-red-700 to-red-600 text-white rounded-xl shadow-lg">
         <img id="footer-image" src="" alt="footer image" class="hidden mx-auto mb-4 max-h-20 w-auto object-contain">
@@ -214,6 +214,35 @@
   </footer>
 
 </div><!-- /app -->
+
+<!-- ══ イベントカード詳細モーダル ══════════════════════════════════════ -->
+<div id="att-card-detail-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeAttCardDetail()"></div>
+  <div class="relative w-full max-w-xs bg-white rounded-2xl shadow-2xl overflow-auto" style="max-height:85vh">
+    <div class="px-4 pt-4 pb-3 border-b border-gray-100">
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <h2 id="att-card-detail-title" class="text-base font-black text-gray-800 leading-snug flex-1 min-w-0"></h2>
+        <button onclick="closeAttCardDetail()" class="text-gray-400 hover:text-gray-600 text-xl leading-none shrink-0 ml-1">×</button>
+      </div>
+      <div id="att-card-detail-info" class="text-xs text-gray-600"></div>
+      <div id="att-card-detail-memo" class="hidden mt-2 bg-amber-50 rounded-lg px-2.5 py-1.5 text-amber-800 text-xs"></div>
+    </div>
+    <div class="p-3 space-y-2">
+      <div id="att-card-admin-links" class="hidden grid grid-cols-2 gap-2">
+        <button onclick="attCardCopyLink()" class="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">🔗 リンクをコピー</button>
+        <button onclick="attCardViewResponses()" class="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-colors"><span id="att-card-resp-label">📊 回答を確認</span></button>
+      </div>
+      <div id="att-card-admin-btns" class="hidden grid grid-cols-2 gap-2">
+        <button onclick="attCardEdit()" class="flex items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs transition-colors">✏️ 編集</button>
+        <button onclick="attCardDeleteConfirm()" class="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs transition-colors">🗑️ 削除</button>
+      </div>
+      <div id="att-card-parent-btns" class="hidden grid grid-cols-2 gap-2">
+        <button onclick="attCardRespond()" class="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">✏️ 回答する</button>
+        <button onclick="attCardResults()" class="flex items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">📊 結果を見る</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ 選手追加・編集モーダル ══════════════════════════════════════════ -->
 <div id="player-modal" class="fixed inset-0 z-[100] hidden">
@@ -1041,25 +1070,17 @@
     const catTitle = ev.category
       ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
       : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
-    return `<div class="bg-white rounded-2xl shadow overflow-hidden flex${isPast ? ' opacity-70' : ''}" data-event-id="${ev.id}">
+    return `<div class="bg-white rounded-2xl shadow overflow-hidden flex cursor-pointer hover:shadow-md active:opacity-80 transition-shadow${isPast ? ' opacity-70' : ''}" data-event-id="${ev.id}" onclick="openAttCardDetail('${ev.id}')">
       <div class="w-1.5 shrink-0" style="background:${color}"></div>
-      <div class="px-4 py-4 flex-1 min-w-0">
-        <div class="mb-3">
-          <p class="font-black text-gray-800 mb-1.5">${catTitle}${deleteBadge}</p>
-          <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
-            <div>${dateStr       ? `📆 ${escHtml(dateStr)}`        : ''}</div>
-            <div>${ev.location   ? `📍 ${escHtml(ev.location)}`    : ''}</div>
-            <div>${ev.event_time ? `🕐 ${escHtml(ev.event_time)}`  : ''}</div>
-            <div>${ev.transport  ? `🚗 ${escHtml(ev.transport)}`   : ''}</div>
-          </div>
-          ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
+      <div class="px-4 py-3 flex-1 min-w-0">
+        <p class="font-black text-gray-800 mb-1">${catTitle}${deleteBadge}</p>
+        <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
+          <div>${dateStr       ? `📆 ${escHtml(dateStr)}`        : ''}</div>
+          <div>${ev.location   ? `📍 ${escHtml(ev.location)}`    : ''}</div>
+          <div>${ev.event_time ? `🕐 ${escHtml(ev.event_time)}`  : ''}</div>
+          <div>${ev.transport  ? `🚗 ${escHtml(ev.transport)}`   : ''}</div>
         </div>
-        <div class="grid grid-cols-2 gap-2 mt-1">
-          <button onclick="copyEventShareLink('${ev.id}')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">🔗 リンクをコピー</button>
-          <button onclick="openDetail('${ev.id}')"         class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-colors">📊 回答を確認（${count}件）</button>
-          <button onclick="openCreateEventModal('${ev.id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs transition-colors">✏️ 編集</button>
-          <button onclick="deleteEventById('${ev.id}')"    class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs transition-colors">🗑️ 削除</button>
-        </div>
+        ${ev.memo ? `<div class="mt-1.5 bg-amber-50 rounded-xl px-2.5 py-1.5 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
       </div>
     </div>`;
   }
@@ -1070,23 +1091,17 @@
     const catTitle = ev.category
       ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
       : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
-    return `<div class="bg-white rounded-2xl shadow overflow-hidden flex">
+    return `<div class="bg-white rounded-2xl shadow overflow-hidden flex cursor-pointer hover:shadow-md active:opacity-80 transition-shadow" onclick="openAttCardDetail('${ev.id}')">
       <div class="w-1.5 shrink-0" style="background:${color}"></div>
-      <div class="px-4 py-4 flex-1 min-w-0">
-        <div class="mb-3">
-          <p class="font-black text-gray-800 mb-1.5">${catTitle}</p>
-          <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
-            <div>${dateStr       ? `📆 ${escHtml(dateStr)}`        : ''}</div>
-            <div>${ev.location   ? `📍 ${escHtml(ev.location)}`    : ''}</div>
-            <div>${ev.event_time ? `🕐 ${escHtml(ev.event_time)}`  : ''}</div>
-            <div>${ev.transport  ? `🚗 ${escHtml(ev.transport)}`   : ''}</div>
-          </div>
-          ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
+      <div class="px-4 py-3 flex-1 min-w-0">
+        <p class="font-black text-gray-800 mb-1">${catTitle}</p>
+        <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
+          <div>${dateStr       ? `📆 ${escHtml(dateStr)}`        : ''}</div>
+          <div>${ev.location   ? `📍 ${escHtml(ev.location)}`    : ''}</div>
+          <div>${ev.event_time ? `🕐 ${escHtml(ev.event_time)}`  : ''}</div>
+          <div>${ev.transport  ? `🚗 ${escHtml(ev.transport)}`   : ''}</div>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="openParentRespond('${ev.id}')"  class="bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">✏️ 回答する</button>
-          <button onclick="showParentResults('${ev.id}')"  class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">📊 結果を見る</button>
-        </div>
+        ${ev.memo ? `<div class="mt-1.5 bg-amber-50 rounded-xl px-2.5 py-1.5 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
       </div>
     </div>`;
   }
@@ -1111,18 +1126,21 @@
   function buildCategoryTabsHtml(groups, cardFn, prefix = 'admin') {
     const lsKey   = prefix === 'parent' ? 'att_parent_active_tab' : 'att_active_tab';
     let activeTab = prefix === 'parent' ? activeParentCategoryTab : activeCategoryTab;
-    if (!activeTab || !groups.find(g => g.key === activeTab)) {
-      activeTab = (groups.find(g => g.evs.length > 0) || groups[0])?.key || null;
+    const allEvs    = groups.flatMap(g => g.evs);
+    const allGroups = [{ key: '全て', evs: allEvs }, ...groups];
+    if (!activeTab || !allGroups.find(g => g.key === activeTab)) {
+      activeTab = '全て';
       if (prefix === 'parent') activeParentCategoryTab = activeTab;
       else                     activeCategoryTab       = activeTab;
     }
     const tabBar = `
       <div class="bg-white rounded-2xl shadow border border-gray-200 px-3 py-2 mb-3">
         <div class="flex gap-1 overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch">
-          ${groups.map(({ key }) => {
+          ${allGroups.map(({ key }) => {
             const sk = safeKey(key);
             const active = key === activeTab;
-            const color = catColor(key);
+            const isAll  = key === '全て';
+            const color  = isAll ? '#374151' : catColor(key);
             if (active) {
               return `<button id="${prefix}-tab-btn-${sk}" onclick="switchCategoryTab('${sk}','${prefix}')"
                 class="flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white"
@@ -1140,7 +1158,7 @@
           }).join('')}
         </div>
       </div>`;
-    const panels = groups.map(({ key, evs }) => {
+    const panels = allGroups.map(({ key, evs }) => {
       const sk = safeKey(key);
       const active = key === activeTab;
       const inner = evs.length > 0
@@ -1155,23 +1173,26 @@
   }
 
   function switchCategoryTab(sk, prefix = 'admin') {
-    const evList  = prefix === 'parent' ? (window._parentEvents || []) : events;
-    const lsKey   = prefix === 'parent' ? 'att_parent_active_tab' : 'att_active_tab';
-    const groups  = groupByCategory(evList);
-    const found   = groups.find(g => safeKey(g.key) === sk);
+    const evList    = prefix === 'parent' ? (window._parentEvents || []) : events;
+    const lsKey     = prefix === 'parent' ? 'att_parent_active_tab' : 'att_active_tab';
+    const groups    = groupByCategory(evList);
+    const allEvs    = groups.flatMap(g => g.evs);
+    const allGroups = [{ key: '全て', evs: allEvs }, ...groups];
+    const found     = allGroups.find(g => safeKey(g.key) === sk);
     if (found) {
       if (prefix === 'parent') activeParentCategoryTab = found.key;
       else                     activeCategoryTab       = found.key;
       localStorage.setItem(lsKey, found.key);
     }
-    groups.forEach(({ key }) => {
+    allGroups.forEach(({ key }) => {
       const s     = safeKey(key);
       const panel = document.getElementById(`${prefix}-tab-panel-${s}`);
       const btn   = document.getElementById(`${prefix}-tab-btn-${s}`);
-      const active = s === sk;
+      const active  = s === sk;
+      const isAll   = key === '全て';
+      const color   = isAll ? '#374151' : catColor(key);
       if (panel) panel.classList.toggle('hidden', !active);
       if (btn) {
-        const color = catColor(key);
         if (active) {
           btn.className = 'flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white';
           btn.style.background = color;
@@ -1952,6 +1973,61 @@
     document.getElementById('detail-modal').classList.add('hidden');
     currentEventId = null;
   }
+
+  // ─── イベントカード詳細ポップアップ ──────────────────────────────────────
+  let attCurrentCardEvent = null;
+
+  function openAttCardDetail(eventId) {
+    const ev = events.find(e => e.id === eventId) || (window._parentEvents||[]).find(e => e.id === eventId);
+    if (!ev) return;
+    attCurrentCardEvent = ev;
+
+    const color = catColor(ev.category);
+    document.getElementById('att-card-detail-title').innerHTML = ev.category
+      ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
+      : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
+
+    const dateStr = formatDate(ev.event_date);
+    document.getElementById('att-card-detail-info').innerHTML =
+      `<div style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
+        <div>${dateStr        ? `📆 ${escHtml(dateStr)}`        : ''}</div>
+        <div>${ev.location    ? `📍 ${escHtml(ev.location)}`    : ''}</div>
+        <div>${ev.event_time  ? `🕐 ${escHtml(ev.event_time)}`  : ''}</div>
+        <div>${ev.transport   ? `🚗 ${escHtml(ev.transport)}`   : ''}</div>
+      </div>`;
+
+    const memoEl = document.getElementById('att-card-detail-memo');
+    if (ev.memo) { memoEl.textContent = `📝 ${ev.memo}`; memoEl.classList.remove('hidden'); }
+    else { memoEl.classList.add('hidden'); }
+
+    const adminLinks = document.getElementById('att-card-admin-links');
+    const adminBtns  = document.getElementById('att-card-admin-btns');
+    const parentBtns = document.getElementById('att-card-parent-btns');
+    if (isParentMode) {
+      adminLinks.classList.add('hidden');
+      adminBtns.classList.add('hidden');
+      parentBtns.classList.remove('hidden');
+    } else {
+      const count = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
+      document.getElementById('att-card-resp-label').textContent = `📊 回答を確認（${count}件）`;
+      adminLinks.classList.remove('hidden');
+      adminBtns.classList.remove('hidden');
+      parentBtns.classList.add('hidden');
+    }
+
+    document.getElementById('att-card-detail-modal').classList.remove('hidden');
+  }
+
+  function closeAttCardDetail() {
+    document.getElementById('att-card-detail-modal').classList.add('hidden');
+    attCurrentCardEvent = null;
+  }
+  function attCardCopyLink()      { copyEventShareLink(attCurrentCardEvent?.id); }
+  function attCardViewResponses() { const id = attCurrentCardEvent?.id; closeAttCardDetail(); openDetail(id); }
+  function attCardEdit()          { const id = attCurrentCardEvent?.id; closeAttCardDetail(); openCreateEventModal(id); }
+  async function attCardDeleteConfirm() { const id = attCurrentCardEvent?.id; closeAttCardDetail(); await deleteEventById(id); }
+  function attCardRespond()       { const id = attCurrentCardEvent?.id; closeAttCardDetail(); openParentRespond(id); }
+  async function attCardResults() { const id = attCurrentCardEvent?.id; closeAttCardDetail(); await showParentResults(id); }
 
   async function deleteEvent() {
     if (!currentEventId) return;
