@@ -4106,7 +4106,7 @@ ${error?.message || ''}`);
       selectedSeason = String(parseInt(getCurrentFiscalYear().replace('年度', ''), 10));
     }
 
-    // ── 管理者リンク発行 ─────────────────────────────────────────────
+    // ── コーチリンク発行 ─────────────────────────────────────────────
     const STORAGE_APP_URL_KEY = 'mrs_app_public_url_v1';
 
     function openAdminLinkModal() {
@@ -4693,7 +4693,7 @@ ${error?.message || ''}`);
                 return;
               }
             }
-          } catch(e) { console.warn('保護者リンク解析エラー:', e); }
+          } catch(e) { console.warn('ファミリーリンク解析エラー:', e); }
         }
 
         // 管理者モード: URLハッシュから接続設定を自動読み込み
@@ -4717,7 +4717,7 @@ ${error?.message || ''}`);
               await initData();
               return;
             }
-          } catch(e) { console.warn('管理者リンク解析エラー:', e); }
+          } catch(e) { console.warn('コーチリンク解析エラー:', e); }
         }
 
         // 設定読み込み: localStorageを優先、なければconfig.jsonを試みる
@@ -4952,8 +4952,8 @@ ${error?.message || ''}`);
       <button id="backup-json-btn" type="button" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#374151">バックアップJSON</button>
       <button id="open-team-manager-btn" type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#2563eb">🏟️ チーム管理</button>
       <button id="open-setup-btn" type="button" onclick="openSetupModal('edit')" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#a93226">⚙️ 接続設定</button>
-      <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#a93226">🔧 管理者リンクを発行</button>
-      <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#16a34a">🔗 保護者リンクを発行</button>
+      <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#a93226">🔧 コーチリンクを発行</button>
+      <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#16a34a">🔗 ファミリーリンクを発行</button>
     </div>
 
     <!-- ══ 設定リセットボタン（設定メニューに追加） ══ -->
@@ -4988,12 +4988,12 @@ ${error?.message || ''}`);
       </div>
     </div>
 
-    <!-- ══ 管理者リンク発行モーダル ══════════════════════════════════════ -->
+    <!-- ══ コーチリンク発行モーダル ══════════════════════════════════════ -->
     <div id="admin-link-modal" class="fixed inset-0 z-[100] hidden">
       <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeAdminLinkModal()"></div>
       <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
         <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-          <h2 class="text-xl font-black">🔧 管理者リンクを発行</h2>
+          <h2 class="text-xl font-black">🔧 コーチリンクを発行</h2>
           <button onclick="closeAdminLinkModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
         <div class="p-6 space-y-4">
@@ -5022,12 +5022,12 @@ ${error?.message || ''}`);
       </div>
     </div>
 
-    <!-- ══ 保護者リンク発行モーダル ══════════════════════════════════════ -->
+    <!-- ══ ファミリーリンク発行モーダル ══════════════════════════════════════ -->
     <div id="parent-link-modal" class="fixed inset-0 z-[100] hidden">
       <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeParentLinkModal()"></div>
       <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
         <div class="bg-gradient-to-r from-green-700 to-green-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-          <h2 class="text-xl font-black">🔗 保護者リンクを発行</h2>
+          <h2 class="text-xl font-black">🔗 ファミリーリンクを発行</h2>
           <button onclick="closeParentLinkModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
         <div class="p-6 space-y-4">
