@@ -121,8 +121,8 @@
   <!-- メインコンテンツ -->
   <main class="max-w-[750px] mx-auto px-4 pb-3 space-y-3">
 
-    <!-- ビュー切り替え + 追加ボタン -->
-    <div class="bg-white rounded-2xl shadow border border-gray-200 px-3 py-2.5 flex items-center gap-2">
+    <!-- ビュー切り替え + 追加ボタン（セットアップ・コーチモード） -->
+    <div id="tab-nav" class="bg-white rounded-2xl shadow border border-gray-200 px-3 py-2.5 flex items-center gap-2">
       <!-- 均等タブ -->
       <div class="flex flex-1 bg-gray-100 rounded-xl p-1 gap-1 min-w-0">
         <button id="btn-month" onclick="setView('month')"
@@ -139,6 +139,10 @@
         class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors whitespace-nowrap">
         ＋ 新規作成
       </button>
+    </div>
+    <!-- タイトル型（ファミリーモード：カレンダーのみ・リスト非表示） -->
+    <div id="family-nav" class="hidden bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
+      <h2 class="text-base font-black text-gray-800 whitespace-nowrap">📅 カレンダー</h2>
     </div>
 
     <!-- カテゴリーフィルター（一行・均等配置） -->
@@ -1177,6 +1181,12 @@
       document.querySelector('#settings-menu [onclick="openTeamManager()"]')?.classList.add('hidden');
       document.getElementById('open-setup-menu-btn')?.classList.add('hidden');
       document.getElementById('menu-admin-link-btn')?.classList.add('hidden');
+    }
+    // ファミリーモード：タブナビをタイトル型に切り替え、カレンダービュー固定
+    if (isFamilyMode) {
+      document.getElementById('tab-nav')?.classList.add('hidden');
+      document.getElementById('family-nav')?.classList.remove('hidden');
+      setView('month');
     }
   }
 
