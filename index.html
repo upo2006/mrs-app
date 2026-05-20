@@ -237,8 +237,8 @@
 
     <main class="max-w-[750px] mx-auto px-4 py-4 space-y-4">
       
-      <!-- タブナビ -->
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-200 px-3 py-2.5 flex items-center gap-2">
+      <!-- タブナビ（セットアップ・コーチモード） -->
+      <div id="tab-nav" class="bg-white rounded-2xl shadow-lg border border-gray-200 px-3 py-2.5 flex items-center gap-2">
         <!-- 均等タブ（ピルスタイル） -->
         <div class="flex flex-1 bg-gray-100 rounded-xl p-1 gap-1 min-w-0">
           <button id="tab-matches"
@@ -257,6 +257,14 @@
         <button id="add-player-btn"
           class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors whitespace-nowrap">
           ＋ 選手登録
+        </button>
+      </div>
+      <!-- タイトル＋ボタン（ファミリーモード） -->
+      <div id="family-nav" class="hidden bg-white rounded-2xl shadow-lg border border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
+        <h2 class="text-base font-black text-gray-800 whitespace-nowrap">⚽ 試合記録</h2>
+        <button id="family-add-match-btn"
+          class="shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors whitespace-nowrap">
+          ＋ 試合記録
         </button>
       </div>
 
@@ -971,16 +979,17 @@
         document.getElementById('open-setup-btn')?.classList.add('hidden');
         document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
       }
-      // ファミリーモード：設定・管理系をすべて非表示、選手管理タブ・選手登録ボタンも非表示
+      // ファミリーモード：タブナビをタイトル＋ボタン型に切り替え、管理系を非表示
       if (isFamilyMode) {
+        document.getElementById('tab-nav')?.classList.add('hidden');
+        document.getElementById('family-nav')?.classList.remove('hidden');
+        document.getElementById('family-add-match-btn')?.addEventListener('click', () => openMatchModal?.());
         document.getElementById('export-csv-btn')?.classList.add('hidden');
         document.getElementById('backup-json-btn')?.classList.add('hidden');
         document.getElementById('open-team-manager-btn')?.classList.add('hidden');
         document.getElementById('open-setup-btn')?.classList.add('hidden');
         document.getElementById('season-selector-wrap')?.classList.add('hidden');
         document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
-        document.getElementById('tab-players')?.classList.add('hidden');
-        document.getElementById('add-player-btn')?.classList.add('hidden');
       }
     }
 
