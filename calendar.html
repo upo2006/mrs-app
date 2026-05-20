@@ -707,9 +707,11 @@
   let currentDetailEvent = null;
   let isAdmin = false;
   // ─── モード判定（ページロード時に確定） ────────────────────────────────
-  const _urlP       = new URLSearchParams(location.search);
+  const _urlP        = new URLSearchParams(location.search);
   const isFamilyMode = _urlP.get('view') === 'parent';
-  const isCoachMode  = !isFamilyMode && !!location.hash;
+  // コーチモード：URLハッシュ または セッション継続中（リロード対応）
+  const _coachSess   = (() => { try { return sessionStorage.getItem('mrs_cal_coach') === '1'; } catch(e) { return false; } })();
+  const isCoachMode  = !isFamilyMode && (!!location.hash || _coachSess);
   const isSetupMode  = !isFamilyMode && !isCoachMode;
   let selectedCategory = []; // [] = 全カテゴリー表示、複数選択可
 
@@ -2222,8 +2224,7 @@
       const isParentMode = params.get('view') === 'parent';
 
       // ハッシュから接続設定を読み込み（コーチリンク / ファミリーリンク経由）
-      let hadHash = !!location.hash;
-      if (hadHash) {
+      if (location.hash) {
         try {
           const d = parseHashConfig();
           if (d?.u && d?.k) {
@@ -2231,6 +2232,10 @@
             saveConfig({ ...existing, supabase_url: d.u, supabase_anon_key: d.k,
               team_name: d.t || existing.team_name || '',
               primary_color: d.c || existing.primary_color || '#c0392b' });
+            // コーチモードをセッションに記憶してからハッシュを除去
+            if (!isFamilyMode) {
+              try { sessionStorage.setItem('mrs_cal_coach', '1'); } catch(e) {}
+            }
             history.replaceState(null, '', location.pathname + location.search);
           }
         } catch(e) {}
@@ -2262,8 +2267,8 @@
         return;
       }
 
-      // コーチモード（ハッシュあり）：ログイン不要・管理者UIで表示
-      if (hadHash) {
+      // コーチモード（ハッシュあり or セッション継続）：ログイン不要・管理者UIで表示
+      if (isCoachMode) {
         setAdminMode(true);
         applyModeRestrictions();
         await loadEvents();
