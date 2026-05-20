@@ -971,7 +971,7 @@
         document.getElementById('open-setup-btn')?.classList.add('hidden');
         document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
       }
-      // ファミリーモード：設定・管理系をすべて非表示、追加ボタンも非表示（閲覧専用）
+      // ファミリーモード：設定・管理系をすべて非表示、選手管理タブ・選手登録ボタンも非表示
       if (isFamilyMode) {
         document.getElementById('export-csv-btn')?.classList.add('hidden');
         document.getElementById('backup-json-btn')?.classList.add('hidden');
@@ -979,7 +979,7 @@
         document.getElementById('open-setup-btn')?.classList.add('hidden');
         document.getElementById('season-selector-wrap')?.classList.add('hidden');
         document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
-        document.getElementById('add-match-btn')?.classList.add('hidden');
+        document.getElementById('tab-players')?.classList.add('hidden');
         document.getElementById('add-player-btn')?.classList.add('hidden');
       }
     }
