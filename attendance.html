@@ -188,6 +188,10 @@
           ⚽ イベント
         </button>
       </div>
+      <button id="parent-create-event-btn" type="button"
+        class="shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors whitespace-nowrap">
+        ＋ 新規作成
+      </button>
     </div>
     <!-- お知らせパネル（常設） -->
     <div class="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
@@ -2144,6 +2148,7 @@
     }
 
     document.getElementById('parent-list-view').classList.remove('hidden');
+    document.getElementById('parent-create-event-btn')?.addEventListener('click', () => openCreateEventModal());
   }
 
 
