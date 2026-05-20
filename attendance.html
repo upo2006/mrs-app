@@ -94,8 +94,8 @@
           <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
             <button type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-blue-600 font-bold">🏟️ チーム管理</button>
             <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">⚙️ 接続設定</button>
-            <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 管理者リンクを発行</button>
-            <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 保護者リンクを発行</button>
+            <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 コーチリンクを発行</button>
+            <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 ファミリーリンクを発行</button>
           </div>
         </div>
       </div>
@@ -303,12 +303,12 @@
   </div>
 </div>
 
-<!-- ══ 管理者リンク発行モーダル ══════════════════════════════════════ -->
+<!-- ══ コーチリンク発行モーダル ══════════════════════════════════════ -->
 <div id="admin-link-modal" class="fixed inset-0 z-[100] hidden">
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeAdminLinkModal()"></div>
   <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
     <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-      <h2 class="text-xl font-black">🔧 管理者リンクを発行</h2>
+      <h2 class="text-xl font-black">🔧 コーチリンクを発行</h2>
       <button onclick="closeAdminLinkModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
     </div>
     <div class="p-6 space-y-4">
@@ -333,13 +333,13 @@
   </div>
 </div>
 
-<!-- ══ 保護者リンク発行モーダル ════════════════════════════════════════ -->
+<!-- ══ ファミリーリンク発行モーダル ════════════════════════════════════════ -->
 <div id="parent-link-modal" class="fixed inset-0 z-[100] hidden">
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeParentLinkModal()"></div>
   <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
     <div class="bg-gradient-to-r from-green-700 to-green-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-black">🔗 保護者リンクを発行</h2>
+        <h2 class="text-xl font-black">🔗 ファミリーリンクを発行</h2>
         <p class="text-sm text-white/80 mt-1">イベント一覧と出欠回答ができるリンク</p>
       </div>
       <button onclick="closeParentLinkModal()" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
@@ -1250,7 +1250,7 @@
     return null;
   }
 
-  // ─── 管理者リンク発行 ─────────────────────────────────────────────────────
+  // ─── コーチリンク発行 ─────────────────────────────────────────────────────
   function openAdminLinkModal() {
     document.getElementById('settings-menu')?.classList.add('hidden');
     const modal = document.getElementById('admin-link-modal');
@@ -1340,7 +1340,7 @@
     await loadEvents();
   }
 
-  // ─── 保護者リンク発行 ─────────────────────────────────────────────────────
+  // ─── ファミリーリンク発行 ─────────────────────────────────────────────────────
   function openParentLinkModal() {
     document.getElementById('settings-menu')?.classList.add('hidden');
     const modal = document.getElementById('parent-link-modal');
@@ -2820,7 +2820,7 @@
         return;
       }
 
-      // 管理者リンク経由（ハッシュに接続設定あり）はログイン不要
+      // コーチリンク経由（ハッシュに接続設定あり）はログイン不要
       let skipAuth = false;
       if (location.hash) {
         try {
@@ -2887,7 +2887,7 @@
 
       document.getElementById('admin-view').classList.remove('hidden');
 
-      // URLハッシュから接続設定を自動読み込み（管理者リンク経由）
+      // URLハッシュから接続設定を自動読み込み（コーチリンク経由）
       if (location.hash) {
         try {
           const d = parseHashConfig();
@@ -2904,7 +2904,7 @@
             }
             return;
           }
-        } catch(e) { console.warn('管理者リンク解析エラー:', e); }
+        } catch(e) { console.warn('コーチリンク解析エラー:', e); }
       }
 
       const cfg = loadConfig();
