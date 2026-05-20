@@ -1401,8 +1401,7 @@
     if (!supabaseClient) { alert('接続設定が見つかりません'); return; }
 
     // ヘッダー情報（showParentResultsと同じ形式）
-    const _catBadge = ev.category
-      ? `<span class="inline-block text-xs font-bold bg-white/25 text-white px-2 py-0.5 rounded-full mr-2">${escHtml(ev.category)}</span>` : '';
+    const _catTitle = ev.category ? `${escHtml(ev.category)} / ${escHtml(ev.title)}` : escHtml(ev.title);
     const _dateShort = ev.event_date
       ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' }) : '';
     const _col1 = [_dateShort ? `📆 ${_dateShort}` : '', ev.event_time ? `🕐 ${escHtml(ev.event_time)}` : ''];
@@ -1423,7 +1422,7 @@
       <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:calc(100vh - 2rem)">
         <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
           <div class="min-w-0 flex-1">
-            <div class="text-xl font-black leading-tight mb-1">${_catBadge}${escHtml(ev.title)}</div>
+            <div class="text-xl font-black leading-tight mb-1">${_catTitle}</div>
             <div class="text-xs text-white/80"><div style="display:inline-grid;grid-template-columns:auto auto;gap:1px 12px">${_gridItems}</div></div>
           </div>
           <button onclick="document.getElementById('cal-respond-popup-modal').classList.add('hidden')" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
@@ -1594,8 +1593,7 @@
     if (error) { alert('取得に失敗しました'); return; }
 
     // ヘッダー情報
-    const _catBadge = ev.category
-      ? `<span class="inline-block text-xs font-bold bg-white/25 text-white px-2 py-0.5 rounded-full mr-2">${escHtml(ev.category)}</span>` : '';
+    const _catTitle = ev.category ? `${escHtml(ev.category)} / ${escHtml(ev.title)}` : escHtml(ev.title);
     const _dateShort = ev.event_date
       ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' }) : '';
     const _col1 = [_dateShort ? `📆 ${_dateShort}` : '', ev.event_time ? `🕐 ${escHtml(ev.event_time)}` : ''];
@@ -1630,7 +1628,7 @@
       <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:calc(100vh - 2rem)">
         <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
           <div class="min-w-0 flex-1">
-            <div class="text-xl font-black leading-tight mb-1">${_catBadge}${escHtml(ev.title)}</div>
+            <div class="text-xl font-black leading-tight mb-1">${_catTitle}</div>
             <div class="text-xs text-white/80"><div style="display:inline-grid;grid-template-columns:auto auto;gap:1px 12px">${_gridItems}</div></div>
           </div>
           <button onclick="document.getElementById('parent-result-modal').classList.add('hidden')" class="text-white/70 hover:text-white text-2xl leading-none shrink-0 ml-3">×</button>
