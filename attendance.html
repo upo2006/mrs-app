@@ -698,8 +698,11 @@
   const ATTEND_COLOR    = { '出席':'bg-green-100 text-green-700', '欠席':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
   const TRANSPORT_COLOR = { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
   const CARPOOL_COLOR   = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
-  let activeCategoryTab       = localStorage.getItem('att_active_tab')        || null;
-  let activeParentCategoryTab = localStorage.getItem('att_parent_active_tab') || null;
+  function _loadAttCats(key) {
+    try { const r = localStorage.getItem(key); if (!r) return []; const p = JSON.parse(r); return Array.isArray(p) ? p : []; } catch(e) { return []; }
+  }
+  let attSelectedCategories       = _loadAttCats('att_selected_cats');
+  let attParentSelectedCategories = _loadAttCats('att_parent_selected_cats');
 
   // ─── カテゴリー動的計算ヘルパー ────────────────────────────────────────────
   function currentFiscalYear() {
@@ -1122,88 +1125,82 @@
     }).join('');
   }
 
-  // ─── カテゴリータブ描画（管理者・保護者共通、prefix='admin'|'parent'） ────────
+  // ─── カテゴリーフィルター描画（管理者・保護者共通、prefix='admin'|'parent'） ────────
   function buildCategoryTabsHtml(groups, cardFn, prefix = 'admin') {
-    const lsKey   = prefix === 'parent' ? 'att_parent_active_tab' : 'att_active_tab';
-    let activeTab = prefix === 'parent' ? activeParentCategoryTab : activeCategoryTab;
-    const allEvs    = groups.flatMap(g => g.evs);
-    const allGroups = [{ key: '全て', evs: allEvs }, ...groups];
-    if (!activeTab || !allGroups.find(g => g.key === activeTab)) {
-      activeTab = '全て';
-      if (prefix === 'parent') activeParentCategoryTab = activeTab;
-      else                     activeCategoryTab       = activeTab;
-    }
+    const lsKey    = prefix === 'parent' ? 'att_parent_selected_cats' : 'att_selected_cats';
+    const selected = prefix === 'parent' ? attParentSelectedCategories : attSelectedCategories;
+    const allEvs   = groups.flatMap(g => g.evs);
+    const catKeys  = groups.map(g => g.key);
+    const hasFilter = selected.length > 0;
+
+    const allBtn = `<button onclick="toggleAttCategoryFilter(null,'${prefix}')"
+      class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all
+        ${!hasFilter ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-50'}">
+      <span class="text-[11px] font-bold leading-tight">全て</span>
+      <span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${!hasFilter ? '#fff' : '#d1d5db'}"></span>
+    </button>`;
+
+    const catBtns = catKeys.map(cat => {
+      const isSelected = selected.includes(cat);
+      const color = catColor(cat);
+      if (isSelected) {
+        return `<button onclick="toggleAttCategoryFilter('${cat}','${prefix}')"
+          class="flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white"
+          style="background:${color}">
+          <span class="text-[11px] font-black leading-tight whitespace-nowrap">${escHtml(cat)}</span>
+          <span class="h-1 w-4/5 rounded-full mt-0.5 bg-white/50"></span>
+        </button>`;
+      } else {
+        return `<button onclick="toggleAttCategoryFilter('${cat}','${prefix}')"
+          class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all
+            ${hasFilter ? 'text-gray-300 hover:text-gray-500' : 'text-gray-700 hover:bg-gray-50'}">
+          <span class="text-[11px] font-bold leading-tight whitespace-nowrap">${escHtml(cat)}</span>
+          <span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${hasFilter ? '#e5e7eb' : color}"></span>
+        </button>`;
+      }
+    }).join('');
+
     const tabBar = `
       <div class="bg-white rounded-2xl shadow border border-gray-200 px-3 py-2 mb-3">
-        <div class="flex gap-1 overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch">
-          ${allGroups.map(({ key }) => {
-            const sk = safeKey(key);
-            const active = key === activeTab;
-            const isAll  = key === '全て';
-            const color  = isAll ? '#374151' : catColor(key);
-            if (active) {
-              return `<button id="${prefix}-tab-btn-${sk}" onclick="switchCategoryTab('${sk}','${prefix}')"
-                class="flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white"
-                style="background:${color}">
-                <span class="text-[11px] font-black leading-tight whitespace-nowrap">${escHtml(key)}</span>
-                <span class="h-1 w-4/5 rounded-full mt-0.5 bg-white/50"></span>
-              </button>`;
-            } else {
-              return `<button id="${prefix}-tab-btn-${sk}" onclick="switchCategoryTab('${sk}','${prefix}')"
-                class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all text-gray-700 hover:bg-gray-50">
-                <span class="text-[11px] font-bold leading-tight whitespace-nowrap">${escHtml(key)}</span>
-                <span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${color}"></span>
-              </button>`;
-            }
-          }).join('')}
-        </div>
+        <div class="flex gap-1">${allBtn}${catBtns}</div>
       </div>`;
-    const panels = allGroups.map(({ key, evs }) => {
-      const sk = safeKey(key);
-      const active = key === activeTab;
-      const inner = evs.length > 0
-        ? `<div class="space-y-4">${evs.map(cardFn).join('')}</div>`
-        : `<div class="text-center py-10 bg-white rounded-xl shadow border border-gray-100">
-             <p class="text-3xl mb-2">📋</p>
-             <p class="text-sm text-gray-400">このカテゴリーのイベントはありません</p>
-           </div>`;
-      return `<div id="${prefix}-tab-panel-${sk}" class="${active ? '' : 'hidden'}">${inner}</div>`;
-    }).join('');
-    return tabBar + panels;
+
+    const filteredEvs = hasFilter ? allEvs.filter(ev => selected.includes(ev.category)) : allEvs;
+    const evList = filteredEvs.length > 0
+      ? `<div class="space-y-4">${filteredEvs.map(cardFn).join('')}</div>`
+      : `<div class="text-center py-10 bg-white rounded-xl shadow border border-gray-100">
+           <p class="text-3xl mb-2">📋</p>
+           <p class="text-sm text-gray-400">${hasFilter ? selected.join('・') + ' のイベントはありません' : 'イベントはありません'}</p>
+         </div>`;
+
+    return tabBar + evList;
   }
 
-  function switchCategoryTab(sk, prefix = 'admin') {
-    const evList    = prefix === 'parent' ? (window._parentEvents || []) : events;
-    const lsKey     = prefix === 'parent' ? 'att_parent_active_tab' : 'att_active_tab';
-    const groups    = groupByCategory(evList);
-    const allEvs    = groups.flatMap(g => g.evs);
-    const allGroups = [{ key: '全て', evs: allEvs }, ...groups];
-    const found     = allGroups.find(g => safeKey(g.key) === sk);
-    if (found) {
-      if (prefix === 'parent') activeParentCategoryTab = found.key;
-      else                     activeCategoryTab       = found.key;
-      localStorage.setItem(lsKey, found.key);
+  function toggleAttCategoryFilter(cat, prefix = 'admin') {
+    const lsKey = prefix === 'parent' ? 'att_parent_selected_cats' : 'att_selected_cats';
+    let selected = prefix === 'parent' ? attParentSelectedCategories : attSelectedCategories;
+    if (cat === null) {
+      selected = [];
+    } else {
+      const idx = selected.indexOf(cat);
+      if (idx >= 0) selected.splice(idx, 1);
+      else selected.push(cat);
     }
-    allGroups.forEach(({ key }) => {
-      const s     = safeKey(key);
-      const panel = document.getElementById(`${prefix}-tab-panel-${s}`);
-      const btn   = document.getElementById(`${prefix}-tab-btn-${s}`);
-      const active  = s === sk;
-      const isAll   = key === '全て';
-      const color   = isAll ? '#374151' : catColor(key);
-      if (panel) panel.classList.toggle('hidden', !active);
-      if (btn) {
-        if (active) {
-          btn.className = 'flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white';
-          btn.style.background = color;
-          btn.innerHTML = `<span class="text-[11px] font-black leading-tight whitespace-nowrap">${escHtml(key)}</span><span class="h-1 w-4/5 rounded-full mt-0.5 bg-white/50"></span>`;
-        } else {
-          btn.className = 'flex-1 flex flex-col items-center py-1 rounded-lg transition-all text-gray-700 hover:bg-gray-50';
-          btn.style.background = '';
-          btn.innerHTML = `<span class="text-[11px] font-bold leading-tight whitespace-nowrap">${escHtml(key)}</span><span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${color}"></span>`;
-        }
+    if (prefix === 'parent') attParentSelectedCategories = selected;
+    else                     attSelectedCategories       = selected;
+    try {
+      if (selected.length > 0) localStorage.setItem(lsKey, JSON.stringify(selected));
+      else localStorage.removeItem(lsKey);
+    } catch(e) {}
+    if (prefix === 'parent') {
+      const listEl = document.getElementById('parent-event-list');
+      if (listEl) {
+        const groups = groupByCategory(window._parentEvents || []);
+        listEl.innerHTML = buildCategoryTabsHtml(groups, buildParentEventCard, 'parent');
       }
-    });
+    } else {
+      renderEvents();
+    }
   }
 
   function renderEvents() {
