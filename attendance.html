@@ -1364,11 +1364,14 @@
 
   // ─── お知らせ：カテゴリーカラー整形 ──────────────────────────────────────
   function formatNotifMessage(msg) {
-    const m = msg.match(/^【([^】]+)】(.*)$/);
-    if (!m) return escHtml(msg);
-    const cat = m[1], rest = m[2];
-    const color = catColor(cat);
-    return `<span class="font-black" style="color:${color}">${escHtml(cat)}</span><span class="text-gray-300 mx-1">/</span>${escHtml(rest)}`;
+    const m = msg.match(/^【([^】]+)】「([^」]+)」(.*)$/);
+    if (m) {
+      const color = catColor(m[1]);
+      return `<span class="font-black" style="color:${color}">${escHtml(m[1])}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(m[2])}</span>${escHtml(m[3])}`;
+    }
+    const m2 = msg.match(/^「([^」]+)」(.*)$/);
+    if (m2) return `<span class="font-black text-gray-800">${escHtml(m2[1])}</span>${escHtml(m2[2])}`;
+    return escHtml(msg);
   }
 
   // ─── お知らせポップアップ ─────────────────────────────────────────────
