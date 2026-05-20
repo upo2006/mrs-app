@@ -896,7 +896,9 @@
 
     const isParentMode  = new URLSearchParams(location.search).get('view') === 'parent';
     const isFamilyMode  = isParentMode;
-    const isCoachMode   = !isFamilyMode && !!location.hash;
+    // コーチモード：URLハッシュ または セッション継続中（リロード対応）
+    const _coachSessIdx = (() => { try { return sessionStorage.getItem('mrs_idx_coach') === '1'; } catch(e) { return false; } })();
+    const isCoachMode   = !isFamilyMode && (!!location.hash || _coachSessIdx);
     const isSetupMode   = !isFamilyMode && !isCoachMode;
 
     function loadTeams() {
@@ -4728,29 +4730,46 @@ ${error?.message || ''}`);
           } catch(e) { console.warn('ファミリーリンク解析エラー:', e); }
         }
 
-        // コーチモード: URLハッシュから接続設定を自動読み込み
+        // コーチモード: URLハッシュから接続設定を自動読み込み（またはセッション継続）
         if (isCoachMode) {
-          try {
-            const hash = location.hash.slice(1);
-            const d = JSON.parse(decodeURIComponent(escape(atob(hash))));
-            if (d.u && d.k) {
-              const teams = loadTeams();
-              let team = teams.find(t => t.supabase_url === d.u);
-              if (!team) {
-                team = { id: 'team_' + Date.now(), team_name: d.t || 'チーム', supabase_url: d.u, supabase_anon_key: d.k, primary_color: d.c || '#c0392b' };
-                saveTeams([...teams, team]);
+          if (location.hash) {
+            // 初回：ハッシュから設定を読み込んでセッションに記憶
+            try {
+              const hash = location.hash.slice(1);
+              const d = JSON.parse(decodeURIComponent(escape(atob(hash))));
+              if (d.u && d.k) {
+                const teams = loadTeams();
+                let team = teams.find(t => t.supabase_url === d.u);
+                if (!team) {
+                  team = { id: 'team_' + Date.now(), team_name: d.t || 'チーム', supabase_url: d.u, supabase_anon_key: d.k, primary_color: d.c || '#c0392b' };
+                  saveTeams([...teams, team]);
+                }
+                setActiveTeamId(team.id);
+                // コーチモードをセッションに記憶してからハッシュを除去
+                try { sessionStorage.setItem('mrs_idx_coach', '1'); } catch(e) {}
+                history.replaceState(null, '', location.pathname + location.search);
+                const cfg = teamCfgToStorageCfg(team);
+                saveConfig(cfg);
+                applyConfigValues(cfg);
+                applyConfig(defaultConfig);
+                applyModeRestrictions();
+                await initData();
+                return;
               }
-              setActiveTeamId(team.id);
-              history.replaceState(null, '', location.pathname + location.search);
-              const cfg = teamCfgToStorageCfg(team);
-              saveConfig(cfg);
+            } catch(e) { console.warn('コーチリンク解析エラー:', e); }
+          } else {
+            // リロード時：localStorageの設定をそのまま使用
+            let cfg = loadConfigFromStorage();
+            if (cfg) {
               applyConfigValues(cfg);
               applyConfig(defaultConfig);
-              applyModeRestrictions();
-              await initData();
-              return;
+            } else {
+              applyConfig(defaultConfig);
             }
-          } catch(e) { console.warn('コーチリンク解析エラー:', e); }
+            applyModeRestrictions();
+            await initData();
+            return;
+          }
         }
 
         // 設定読み込み: localStorageを優先、なければconfig.jsonを試みる
