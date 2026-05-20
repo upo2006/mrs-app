@@ -87,7 +87,10 @@
         <span class="text-3xl shrink-0">📋</span>
         <div class="flex-1 min-w-0" style="min-width:0;overflow:hidden">
           <h1 id="app-team-name" class="font-black leading-tight" style="font-size:min(1.25rem,4.5vw);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">出欠確認システム</h1>
-          <p class="text-xs text-white/80 mt-0.5" style="letter-spacing:0.12em">ATTENDANCE SYSTEM</p>
+          <div class="flex items-center gap-2 mt-0.5">
+            <p class="text-xs text-white/80" style="letter-spacing:0.12em">ATTENDANCE SYSTEM</p>
+            <span id="mode-badge" class="text-[0.6rem] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider"></span>
+          </div>
         </div>
         <div class="relative shrink-0">
           <button id="settings-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors">⚙️</button>
@@ -1020,6 +1023,25 @@
     if (error) { alert('削除に失敗しました'); return; }
     closeDeletePlayerModal();
     await loadPlayers();
+  }
+
+  // ─── モード制限適用 ──────────────────────────────────────────────────
+  function applyModeRestrictions() {
+    const badge = document.getElementById('mode-badge');
+    if (badge) {
+      if (isSetupMode)  { badge.textContent = 'Setup';  badge.style.cssText = 'background:rgba(255,255,255,0.25);color:#fff'; }
+      if (isCoachMode)  { badge.textContent = 'Coach';  badge.style.cssText = 'background:rgba(59,130,246,0.7);color:#fff'; }
+      if (isFamilyMode) { badge.textContent = 'Family'; badge.style.cssText = 'background:rgba(16,185,129,0.7);color:#fff'; }
+    }
+    // コーチモード：セットアップ専用メニューを非表示
+    if (isCoachMode) {
+      document.querySelector('#settings-menu [onclick="openTeamManager()"]')?.classList.add('hidden');
+      document.getElementById('open-setup-menu-btn')?.classList.add('hidden');
+    }
+    // ファミリーモード：設定ボタンを非表示
+    if (isFamilyMode) {
+      document.getElementById('settings-btn')?.classList.add('hidden');
+    }
   }
 
   // ─── 1年以上前のイベント自動削除（管理者のみ） ──────────────────────
@@ -2808,6 +2830,7 @@
 
       // 保護者：イベント一覧モード
       if (isParentMode) {
+        applyModeRestrictions();
         await initParentMode();
 
         // 「戻る」ボタン
@@ -2823,7 +2846,7 @@
         return;
       }
 
-      // コーチリンク経由（ハッシュに接続設定あり）はログイン不要
+      // コーチモード（ハッシュに接続設定あり）はログイン不要
       let skipAuth = false;
       if (location.hash) {
         try {
@@ -2832,7 +2855,7 @@
         } catch(e) {}
       }
 
-      // 管理者モード：認証チェック（8秒タイムアウト付き）
+      // セットアップモード：認証チェック（タイムアウト付き）
       if (!skipAuth) {
         let session = null;
         try {
@@ -2853,18 +2876,20 @@
           ]);
         } catch(e) { /* タイムアウト → サブスクリプション未確認扱い */ }
         if (!subOk) { showSubscriptionModal(); return; }
+
+        // ログアウトボタンを追加（セットアップモードのみ）
+        const settingsMenuEl2 = document.getElementById('settings-menu');
+        if (settingsMenuEl2 && !document.getElementById('logout-btn')) {
+          const lb = document.createElement('button');
+          lb.id = 'logout-btn'; lb.type = 'button';
+          lb.className = 'w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-gray-500';
+          lb.textContent = '🚪 ログアウト';
+          lb.onclick = handleLogout;
+          settingsMenuEl2.appendChild(lb);
+        }
       }
 
-      // ログアウトボタンを追加
-      const settingsMenuEl2 = document.getElementById('settings-menu');
-      if (settingsMenuEl2 && !document.getElementById('logout-btn')) {
-        const lb = document.createElement('button');
-        lb.id = 'logout-btn'; lb.type = 'button';
-        lb.className = 'w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-gray-500';
-        lb.textContent = '🚪 ログアウト';
-        lb.onclick = handleLogout;
-        settingsMenuEl2.appendChild(lb);
-      }
+      applyModeRestrictions();
 
       // 管理者モード
       const settingsBtnEl = document.getElementById('settings-btn');
