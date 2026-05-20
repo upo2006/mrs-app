@@ -1717,7 +1717,7 @@
   }
   function buildCalDetailTableHtml(responses) {
     const rideLabel = r => r.transport_need === '乗せて欲しい'
-      ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3">乗せて<br>欲しい</span>'
+      ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3;min-width:3.5em;padding:2px 4px">乗せて<br>欲しい</span>'
       : `<span class="badge ${TRANSPORT_COLOR[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need || '—'}</span>`;
     if (responses.length === 0) return '<p class="text-center text-gray-400 text-sm py-8">まだ回答がありません</p>';
     return `<table class="resp-table w-full">
@@ -1756,7 +1756,7 @@
   function showCalResponseDetail(d) {
     const name = calPlayersMap[String(d.jersey_number || '').trim()] || '';
     const rideHtml = d.transport_need === '乗せて欲しい'
-      ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3">乗せて<br>欲しい</span>'
+      ? '<span class="badge bg-red-100 text-red-600" style="white-space:normal;text-align:center;line-height:1.3;min-width:3.5em;padding:2px 4px">乗せて<br>欲しい</span>'
       : `<span class="badge ${TRANSPORT_COLOR[d.transport_need] || 'bg-gray-100 text-gray-500'}">${escHtml(d.transport_need || '—')}</span>`;
     document.getElementById('cal-memo-popup-content').innerHTML = `
       <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl -mx-5 -mt-5 mb-4 flex items-center gap-3">
