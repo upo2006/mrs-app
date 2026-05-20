@@ -933,21 +933,16 @@
       const menu = document.getElementById('settings-menu');
       const bd   = document.getElementById('settings-backdrop');
       if (!btn || !menu) return;
-      // 実際の幅を測定するため一時的に非表示で展開
-      menu.style.visibility = 'hidden';
-      menu.style.left = '0px';
-      menu.style.minWidth = '';
-      menu.classList.remove('hidden');
       const rect  = btn.getBoundingClientRect();
-      const menuW = menu.offsetWidth;
+      const menuW = 208; // w-52 = calendar/attendance と統一
       const vw    = window.innerWidth;
-      // ボタン右端に右揃え、画面端に収まるようクランプ
       let left = rect.right - menuW;
       if (left < 8) left = 8;
       if (left + menuW > vw - 8) left = vw - menuW - 8;
-      menu.style.top        = (rect.bottom + 8) + 'px';
-      menu.style.left       = left + 'px';
-      menu.style.visibility = '';
+      menu.style.top   = (rect.bottom + 8) + 'px';
+      menu.style.left  = left + 'px';
+      menu.style.width = menuW + 'px';
+      menu.classList.remove('hidden');
       if (bd) bd.classList.remove('hidden');
     }
 
@@ -5001,7 +4996,7 @@ ${error?.message || ''}`);
     </div>
     <!-- ══ 設定メニュー（body直下・fixed配置） ══ -->
     <div id="settings-backdrop" class="fixed inset-0 z-[79] hidden" onclick="closeSettingsMenu()"></div>
-    <div id="settings-menu" class="fixed z-[80] hidden bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden" style="min-width:200px">
+    <div id="settings-menu" class="fixed z-[80] hidden bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
       <div id="season-selector-wrap" class="hidden px-4 py-2 border-b border-gray-100">
         <div class="text-xs font-medium mb-1" style="color:#6b7280">📅 年度切替</div>
         <select id="season-selector" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none" style="color:#374151"></select>
