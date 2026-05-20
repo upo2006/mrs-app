@@ -1115,15 +1115,26 @@
       else                     activeCategoryTab       = activeTab;
     }
     const tabBar = `
-      <div class="bg-white rounded-2xl shadow border border-gray-200 p-2 mb-3">
+      <div class="bg-white rounded-2xl shadow border border-gray-200 px-3 py-2 mb-3">
         <div class="flex gap-1 overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch">
           ${groups.map(({ key }) => {
             const sk = safeKey(key);
             const active = key === activeTab;
-            return `<button id="${prefix}-tab-btn-${sk}" onclick="switchCategoryTab('${sk}','${prefix}')"
-              class="shrink-0 flex-1 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors
-                ${active ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
-            >${escHtml(key)}</button>`;
+            const color = catColor(key);
+            if (active) {
+              return `<button id="${prefix}-tab-btn-${sk}" onclick="switchCategoryTab('${sk}','${prefix}')"
+                class="flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white"
+                style="background:${color}">
+                <span class="text-[11px] font-black leading-tight whitespace-nowrap">${escHtml(key)}</span>
+                <span class="h-1 w-4/5 rounded-full mt-0.5 bg-white/50"></span>
+              </button>`;
+            } else {
+              return `<button id="${prefix}-tab-btn-${sk}" onclick="switchCategoryTab('${sk}','${prefix}')"
+                class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all text-gray-700 hover:bg-gray-50">
+                <span class="text-[11px] font-bold leading-tight whitespace-nowrap">${escHtml(key)}</span>
+                <span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${color}"></span>
+              </button>`;
+            }
           }).join('')}
         </div>
       </div>`;
@@ -1158,8 +1169,16 @@
       const active = s === sk;
       if (panel) panel.classList.toggle('hidden', !active);
       if (btn) {
-        btn.className = `shrink-0 flex-1 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors
-          ${active ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+        const color = catColor(key);
+        if (active) {
+          btn.className = 'flex-1 flex flex-col items-center py-1 rounded-lg shadow-sm transition-all text-white';
+          btn.style.background = color;
+          btn.innerHTML = `<span class="text-[11px] font-black leading-tight whitespace-nowrap">${escHtml(key)}</span><span class="h-1 w-4/5 rounded-full mt-0.5 bg-white/50"></span>`;
+        } else {
+          btn.className = 'flex-1 flex flex-col items-center py-1 rounded-lg transition-all text-gray-700 hover:bg-gray-50';
+          btn.style.background = '';
+          btn.innerHTML = `<span class="text-[11px] font-bold leading-tight whitespace-nowrap">${escHtml(key)}</span><span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${color}"></span>`;
+        }
       }
     });
   }
