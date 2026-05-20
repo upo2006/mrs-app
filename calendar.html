@@ -1294,7 +1294,7 @@
       const bgClass = isToday ? 'bg-red-50' : '';
       html += `<div class="cal-day border-r border-b border-gray-100 p-1 ${bgClass}${isLastCol ? ' border-r-0' : ''}">
         <div class="flex items-center justify-between mb-0.5">
-          <span class="${isToday ? 'bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black' : `text-xs font-bold ${textColor}`}">${d}</span>
+          <span class="${isToday ? 'bg-red-500 text-white rounded-full font-black text-[10px]' : `font-bold ${textColor} text-xs`} w-5 h-5 flex items-center justify-center">${d}</span>
         </div>
         ${dayEvs.map(ev =>
           `<span class="event-pill" style="background:${catColor(ev.category)}" onclick="openDetail('${ev.id}')" title="${escHtml(ev.title)}">${ev.category ? escHtml(ev.category) : escHtml(ev.title)}</span>`
