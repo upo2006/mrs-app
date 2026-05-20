@@ -677,6 +677,7 @@
   const TABLE_EVENTS    = 'attendance_events';
   const TABLE_RESPONSES = 'attendance_responses';
   const STORAGE_FILTER_KEY = 'mrs_cal_filter_v1';  // カテゴリーフィルター記憶用
+  const STORAGE_VIEW_KEY   = 'mrs_cal_view_v1';    // ビューモード記憶用
 
   // 色を全カテゴリーで明確に区別（紫→青→緑→シアン→黄→赤）
   const CAT_COLORS = {
@@ -702,7 +703,7 @@
   let viewMode = 'month';
   let currentDetailEvent = null;
   let isAdmin = false;
-  let selectedCategory = null; // null = 全カテゴリー表示
+  let selectedCategory = []; // [] = 全カテゴリー表示、複数選択可
 
   // ─── 設定読み書き ────────────────────────────────────────────────────
   function loadConfig() {
@@ -1169,30 +1170,41 @@
   const CAT_ORDER = ['U7','U8','U9','U10','U11','U12'];
 
   function loadFilter() {
-    try { return localStorage.getItem(STORAGE_FILTER_KEY) || null; } catch(e) { return null; }
-  }
-  function saveFilter(cat) {
     try {
-      if (cat) localStorage.setItem(STORAGE_FILTER_KEY, cat);
+      const raw = localStorage.getItem(STORAGE_FILTER_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
+    } catch(e) { return []; }
+  }
+  function saveFilter(cats) {
+    try {
+      if (cats && cats.length > 0) localStorage.setItem(STORAGE_FILTER_KEY, JSON.stringify(cats));
       else localStorage.removeItem(STORAGE_FILTER_KEY);
     } catch(e) {}
   }
 
   function toggleCategoryFilter(cat) {
-    selectedCategory = (selectedCategory === cat) ? null : cat;
+    if (cat === null) {
+      selectedCategory = [];
+    } else {
+      const idx = selectedCategory.indexOf(cat);
+      if (idx >= 0) selectedCategory.splice(idx, 1);
+      else selectedCategory.push(cat);
+    }
     saveFilter(selectedCategory);
     renderLegend();
     renderCalendar();
   }
 
   function filteredEvents() {
-    if (!selectedCategory) return events;
-    return events.filter(ev => ev.category === selectedCategory);
+    if (!selectedCategory || selectedCategory.length === 0) return events;
+    return events.filter(ev => selectedCategory.includes(ev.category));
   }
 
   function renderLegend() {
     const el = document.getElementById('cat-legend');
-    const hasFilter = selectedCategory !== null;
+    const hasFilter = selectedCategory.length > 0;
     // 「全て」ボタン
     const allBtn = `<button onclick="toggleCategoryFilter(null)"
       class="flex-1 flex flex-col items-center py-1 rounded-lg transition-all
@@ -1200,9 +1212,9 @@
       <span class="text-[11px] font-bold leading-tight">全て</span>
       <span class="h-1 w-4/5 rounded-full mt-0.5" style="background:${!hasFilter ? '#fff' : '#d1d5db'}"></span>
     </button>`;
-    // カテゴリーボタン
+    // カテゴリーボタン（複数選択）
     const catBtns = CAT_ORDER.map(cat => {
-      const isSelected = selectedCategory === cat;
+      const isSelected = selectedCategory.includes(cat);
       const color = catColor(cat);
       if (isSelected) {
         return `<button onclick="toggleCategoryFilter('${cat}')"
@@ -1226,6 +1238,7 @@
   // ─── ビュー切り替え ──────────────────────────────────────────────────
   function setView(mode) {
     viewMode = mode;
+    try { localStorage.setItem(STORAGE_VIEW_KEY, mode); } catch(e) {}
     document.getElementById('view-month').classList.toggle('hidden', mode !== 'month');
     document.getElementById('view-list').classList.toggle('hidden', mode !== 'list');
     document.getElementById('btn-month').className = `flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${mode === 'month' ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-gray-700'}`;
@@ -1298,8 +1311,8 @@
     const monthEvs = filteredEvents().filter(ev => ev.event_date && ev.event_date.startsWith(ym));
 
     if (monthEvs.length === 0) {
-      const msg = selectedCategory
-        ? `<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow border border-gray-200">${selectedCategory} のイベントはありません</div>`
+      const msg = selectedCategory.length > 0
+        ? `<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow border border-gray-200">${selectedCategory.join('・')} のイベントはありません</div>`
         : '<div class="text-center text-gray-400 text-sm py-12 bg-white rounded-2xl shadow border border-gray-200">この月のイベントはありません</div>';
       body.innerHTML = msg;
       return;
@@ -2184,6 +2197,15 @@
 
       // カテゴリーフィルターを復元
       selectedCategory = loadFilter();
+      // ビューモードを復元
+      const _savedView = (() => { try { return localStorage.getItem(STORAGE_VIEW_KEY) || 'month'; } catch(e) { return 'month'; } })();
+      if (_savedView !== 'month') {
+        viewMode = _savedView;
+        document.getElementById('view-month').classList.add('hidden');
+        document.getElementById('view-list').classList.remove('hidden');
+        document.getElementById('btn-month').className = `flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap text-gray-500 hover:text-gray-700`;
+        document.getElementById('btn-list').className  = `flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap bg-red-500 text-white`;
+      }
 
       if (!initSupabase()) {
         document.getElementById('loading-screen').classList.add('hidden');
