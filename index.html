@@ -237,23 +237,27 @@
 
     <main class="max-w-[750px] mx-auto px-4 py-4 space-y-4">
       
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
-        <div>
-          <p class="text-xs font-bold tracking-wide text-gray-500">NAVIGATION</p>
-          <h2 id="current-view-title" class="text-lg sm:text-xl font-black text-gray-800 whitespace-nowrap">試合記録</h2>
-        </div>
-        <div class="flex items-center gap-2 flex-wrap justify-end">
-          <button id="tab-matches" class="hidden touch-target px-4 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">試合記録へ</button>
-          <button id="tab-players" class="touch-target px-4 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">選手管理へ</button>
-          <button id="add-match-btn" class="touch-target px-4 py-3 rounded-lg font-medium bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center justify-center gap-2">
-            <span class="text-lg">➕</span>
-            <span>試合を記録</span>
+      <!-- タブナビ -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-200 px-3 py-2.5 flex items-center gap-2">
+        <!-- 均等タブ（ピルスタイル） -->
+        <div class="flex flex-1 bg-gray-100 rounded-xl p-1 gap-1 min-w-0">
+          <button id="tab-matches"
+            class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-red-500 text-white transition-colors whitespace-nowrap">
+            ⚽ 試合記録
           </button>
-          <button id="add-player-btn" class="touch-target px-4 py-3 rounded-lg font-medium bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center justify-center gap-2 hidden">
-            <span class="text-lg">👕</span>
-            <span>選手を追加</span>
+          <button id="tab-players"
+            class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap">
+            👕 選手管理
           </button>
         </div>
+        <button id="add-match-btn"
+          class="shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors whitespace-nowrap">
+          ＋ 試合を記録
+        </button>
+        <button id="add-player-btn"
+          class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors whitespace-nowrap">
+          ＋ 選手を追加
+        </button>
       </div>
 
       <div class="hidden bg-white rounded-xl shadow-lg overflow-hidden">
@@ -2696,49 +2700,42 @@
       elements.playerList.appendChild(graduateSection);
     }
 
+    const TAB_ACTIVE   = 'flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-red-500 text-white transition-colors whitespace-nowrap';
+    const TAB_INACTIVE = 'flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap';
+
     function updateTopActionTabs(mode = 'matches') {
-      const title = document.getElementById('current-view-title');
-      const tabMatches = document.getElementById('tab-matches');
-      const tabPlayers = document.getElementById('tab-players');
+      const tabMatches  = document.getElementById('tab-matches');
+      const tabPlayers  = document.getElementById('tab-players');
       const addMatchBtn = document.getElementById('add-match-btn');
       const addPlayerBtn = document.getElementById('add-player-btn');
-
-      if (!title || !tabMatches || !tabPlayers) return;
+      if (!tabMatches || !tabPlayers) return;
 
       if (mode === 'matches') {
-        title.textContent = '試合記録';
-        tabMatches.classList.add('hidden');
-        if (!isParentMode) tabPlayers.classList.remove('hidden');
-        tabPlayers.textContent = '選手管理へ';
-        if (addMatchBtn) addMatchBtn.classList.remove('hidden');
+        tabMatches.className  = TAB_ACTIVE;
+        tabPlayers.className  = TAB_INACTIVE;
+        if (addMatchBtn)  addMatchBtn.classList.remove('hidden');
         if (addPlayerBtn) addPlayerBtn.classList.add('hidden');
-      } else if (mode === 'players') {
-        title.textContent = '選手管理';
-        tabMatches.classList.remove('hidden');
-        tabPlayers.classList.add('hidden');
-        tabMatches.textContent = '試合記録へ';
-        if (addMatchBtn) addMatchBtn.classList.add('hidden');
+      } else {
+        tabPlayers.className  = TAB_ACTIVE;
+        tabMatches.className  = TAB_INACTIVE;
+        if (addMatchBtn)  addMatchBtn.classList.add('hidden');
         if (addPlayerBtn) addPlayerBtn.classList.remove('hidden');
       }
     }
 
     function initTabs() {
-      const tabMatches = document.getElementById('tab-matches');
-      const tabPlayers = document.getElementById('tab-players');
+      const tabMatches    = document.getElementById('tab-matches');
+      const tabPlayers    = document.getElementById('tab-players');
       const sectionMatches = document.getElementById('section-matches');
       const sectionPlayers = document.getElementById('section-players');
       tabMatches.addEventListener('click', () => {
         sectionMatches.classList.remove('hidden');
         sectionPlayers.classList.add('hidden');
-        tabMatches.className = 'hidden touch-target px-4 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors';
-        tabPlayers.className = 'touch-target px-4 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors';
         updateTopActionTabs('matches');
       });
       tabPlayers.addEventListener('click', () => {
         sectionPlayers.classList.remove('hidden');
         sectionMatches.classList.add('hidden');
-        tabPlayers.className = 'hidden touch-target px-4 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors';
-        tabMatches.className = 'touch-target px-4 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors';
         updateTopActionTabs('players');
       });
       updateTopActionTabs('matches');
