@@ -662,6 +662,8 @@
   const isParentMode   = params.get('view') === 'parent';
 
   const CATEGORY_ORDER = ['U7','U8','U9','U10','U11','U12'];
+  const CAT_COLORS = { 'U7':'#8B5CF6','U8':'#3B82F6','U9':'#10B981','U10':'#06B6D4','U11':'#F59E0B','U12':'#EF4444' };
+  function catColor(cat) { return CAT_COLORS[cat] || '#6B7280'; }
   const ATTEND_COLOR    = { '出席':'bg-green-100 text-green-700', '欠席':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
   const TRANSPORT_COLOR = { '乗せて欲しい':'bg-red-100 text-red-600', '大丈夫':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
   const CARPOOL_COLOR   = { 'できる':'bg-blue-100 text-blue-700', '難しい':'bg-gray-100 text-gray-500', '未定':'bg-yellow-100 text-yellow-600' };
@@ -1033,44 +1035,56 @@
     const deleteBadge = isPast
       ? `<span class="text-xs font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full ml-1">⏰ ${daysLeft}日後に自動削除</span>`
       : '';
-    return `<div class="bg-white rounded-2xl shadow p-4${isPast ? ' opacity-70' : ''}" data-event-id="${ev.id}">
-      <div class="mb-3">
-        <p class="font-black text-gray-800 mb-1.5">
-          ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1.5">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}${deleteBadge}</p>
-        <div class="text-sm text-gray-500 space-y-0.5">
-          ${dateStr        ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
-          ${ev.event_time  ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
-          ${ev.location    ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-          ${ev.transport   ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
+    const color    = catColor(ev.category);
+    const catTitle = ev.category
+      ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
+      : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
+    return `<div class="bg-white rounded-2xl shadow overflow-hidden flex${isPast ? ' opacity-70' : ''}" data-event-id="${ev.id}">
+      <div class="w-1.5 shrink-0" style="background:${color}"></div>
+      <div class="px-4 py-4 flex-1 min-w-0">
+        <div class="mb-3">
+          <p class="font-black text-gray-800 mb-1.5">${catTitle}${deleteBadge}</p>
+          <div class="text-sm text-gray-500 space-y-0.5">
+            ${dateStr        ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
+            ${ev.event_time  ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
+            ${ev.location    ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
+            ${ev.transport   ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
+          </div>
+          ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
         </div>
-        ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
-      </div>
-      <div class="grid grid-cols-2 gap-2 mt-1">
-        <button onclick="copyEventShareLink('${ev.id}')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">🔗 リンクをコピー</button>
-        <button onclick="openDetail('${ev.id}')"         class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-colors">📊 回答を確認（${count}件）</button>
-        <button onclick="openCreateEventModal('${ev.id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs transition-colors">✏️ 編集</button>
-        <button onclick="deleteEventById('${ev.id}')"    class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs transition-colors">🗑️ 削除</button>
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <button onclick="copyEventShareLink('${ev.id}')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">🔗 リンクをコピー</button>
+          <button onclick="openDetail('${ev.id}')"         class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-colors">📊 回答を確認（${count}件）</button>
+          <button onclick="openCreateEventModal('${ev.id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs transition-colors">✏️ 編集</button>
+          <button onclick="deleteEventById('${ev.id}')"    class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs transition-colors">🗑️ 削除</button>
+        </div>
       </div>
     </div>`;
   }
 
   function buildParentEventCard(ev) {
-    const dateStr = formatDate(ev.event_date);
-    return `<div class="bg-white rounded-2xl shadow p-4">
-      <div class="mb-3">
-        <p class="font-black text-gray-800 mb-1.5">
-          ${ev.category ? `<span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full mr-1.5">${escHtml(ev.category)}</span>` : ''}${escHtml(ev.title)}</p>
-        <div class="text-sm text-gray-500 space-y-0.5">
-          ${dateStr       ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
-          ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
-          ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-          ${ev.transport  ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
+    const dateStr  = formatDate(ev.event_date);
+    const color    = catColor(ev.category);
+    const catTitle = ev.category
+      ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
+      : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
+    return `<div class="bg-white rounded-2xl shadow overflow-hidden flex">
+      <div class="w-1.5 shrink-0" style="background:${color}"></div>
+      <div class="px-4 py-4 flex-1 min-w-0">
+        <div class="mb-3">
+          <p class="font-black text-gray-800 mb-1.5">${catTitle}</p>
+          <div class="text-sm text-gray-500 space-y-0.5">
+            ${dateStr       ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
+            ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
+            ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
+            ${ev.transport  ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
+          </div>
+          ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
         </div>
-        ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="openParentRespond('${ev.id}')"  class="bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">✏️ 回答する</button>
-        <button onclick="showParentResults('${ev.id}')"  class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">📊 結果を見る</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="openParentRespond('${ev.id}')"  class="bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">✏️ 回答する</button>
+          <button onclick="showParentResults('${ev.id}')"  class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">📊 結果を見る</button>
+        </div>
       </div>
     </div>`;
   }
@@ -1591,7 +1605,7 @@
 
     // テーブル表示
     detailResponses = responses;
-    detailSortCol   = null;
+    detailSortCol   = 'jersey_number';
     detailSortAsc   = true;
     detailContext   = 'admin';
     const listEl = document.getElementById('response-list');
@@ -1616,6 +1630,12 @@
   };
   function applySortResponses(arr, col, asc) {
     if (!col) return arr;
+    if (col === 'jersey_number') {
+      return [...arr].sort((a, b) => {
+        const va = Number(a.jersey_number) || 0, vb = Number(b.jersey_number) || 0;
+        return asc ? va - vb : vb - va;
+      });
+    }
     const map = SORT_ORDER[col] || {};
     return [...arr].sort((a, b) => {
       const va = map[a[col]] ?? 99, vb = map[b[col]] ?? 99;
@@ -1649,7 +1669,7 @@
       </colgroup>
       <thead style="position:sticky;top:0;z-index:10;background:#f9fafb">
         <tr>
-          <th class="text-left">#名前</th>
+          <th class="text-left cursor-pointer select-none" onclick="sortDetailTable('jersey_number')">#名前${sortIcon('jersey_number')}</th>
           <th class="cursor-pointer select-none" onclick="sortDetailTable('attendance')">出欠${sortIcon('attendance')}</th>
           <th class="cursor-pointer select-none" onclick="sortDetailTable('transport_need')">送迎${sortIcon('transport_need')}</th>
           <th class="cursor-pointer select-none" onclick="sortDetailTable('carpool')">配車${sortIcon('carpool')}</th>
@@ -2034,7 +2054,7 @@
 
     // ソート状態リセット
     detailResponses = responses;
-    detailSortCol   = null;
+    detailSortCol   = 'jersey_number';
     detailSortAsc   = true;
     detailContext   = 'parent';
 
