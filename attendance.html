@@ -1362,6 +1362,15 @@
     document.getElementById('create-event-modal').classList.add('hidden');
   }
 
+  // ─── お知らせ：カテゴリーカラー整形 ──────────────────────────────────────
+  function formatNotifMessage(msg) {
+    const m = msg.match(/^【([^】]+)】(.*)$/);
+    if (!m) return escHtml(msg);
+    const cat = m[1], rest = m[2];
+    const color = catColor(cat);
+    return `<span class="font-black" style="color:${color}">${escHtml(cat)}</span><span class="text-gray-300 mx-1">/</span>${escHtml(rest)}`;
+  }
+
   // ─── お知らせポップアップ ─────────────────────────────────────────────
   async function checkAndShowNotifications() {
     if (!supabaseClient) return;
@@ -1381,7 +1390,7 @@
         return `<li class="flex items-start gap-2 py-2 border-b border-gray-100 last:border-0">
           <span class="text-lg leading-none mt-0.5">📢</span>
           <div>
-            <p class="text-sm text-gray-800">${escHtml(n.message)}</p>
+            <p class="text-sm text-gray-800">${formatNotifMessage(n.message)}</p>
             <p class="text-xs text-gray-400 mt-0.5">${dt}</p>
           </div>
         </li>`;
@@ -1451,7 +1460,7 @@
         : visible.map(n =>
             `<div class="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-0" id="notif-row-${n.id}">
               <div class="flex-1 min-w-0">
-                <p class="text-sm text-gray-800 leading-snug">${escHtml(n.message)}</p>
+                <p class="text-sm text-gray-800 leading-snug">${formatNotifMessage(n.message)}</p>
               </div>
               <button type="button" onclick="dismissNotification('${n.id}')"
                 class="shrink-0 text-gray-300 hover:text-gray-500 text-base leading-none px-1 transition-colors"
