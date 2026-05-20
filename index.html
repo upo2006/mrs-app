@@ -491,7 +491,7 @@
         <div class="modal-backdrop absolute inset-0" id="category-detail-backdrop"></div>
         <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-full flex flex-col">
           <!-- ヘッダー -->
-          <div id="category-detail-header" class="flex justify-between items-center px-6 py-4 flex-shrink-0" style="background:#c0392b">
+          <div class="flex justify-between items-center px-6 py-4 flex-shrink-0 bg-gradient-to-r from-red-700 to-red-600">
             <h2 id="category-detail-title" class="text-lg font-black text-white tracking-wide">カテゴリー詳細</h2>
             <button id="close-category-detail" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
           </div>
@@ -1496,8 +1496,6 @@
       document.getElementById('detail-goals-against').textContent = String(goalsAgainst);
       document.getElementById('detail-goal-diff').textContent = String(goalsFor - goalsAgainst);
       document.getElementById('detail-win-rate').textContent = total ? `${Math.round((wins / total) * 100)}%` : '0%';
-      const _cdh1 = document.getElementById('category-detail-header');
-      if (_cdh1) _cdh1.style.background = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#c0392b';
       document.getElementById('category-detail-modal').classList.remove('hidden');
     }
 
@@ -1523,8 +1521,6 @@
       document.getElementById('detail-goals-against').textContent = String(goalsAgainst);
       document.getElementById('detail-goal-diff').textContent = String(goalsFor - goalsAgainst);
       document.getElementById('detail-win-rate').textContent = total ? `${Math.round((wins / total) * 100)}%` : '0%';
-      const _cdh2 = document.getElementById('category-detail-header');
-      if (_cdh2) _cdh2.style.background = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#c0392b';
       document.getElementById('category-detail-modal').classList.remove('hidden');
     }
 
