@@ -1317,7 +1317,7 @@
       body.innerHTML = msg;
       return;
     }
-    body.innerHTML = monthEvs.map(ev => {
+    body.innerHTML = `<div class="space-y-2">${monthEvs.map(ev => {
       const d = new Date(ev.event_date + 'T00:00:00');
       const dateLabel = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
       const isPast = ev.event_date < today;
@@ -1337,7 +1337,7 @@
           </div>
         </div>
       </div>`;
-    }).join('');
+    }).join('')}</div>`;
   }
 
   // ─── イベント詳細 ────────────────────────────────────────────────────
