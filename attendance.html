@@ -695,7 +695,9 @@
   const isRespondMode  = !!respondEventId;
   const isParentMode   = params.get('view') === 'parent';
   const isFamilyMode   = isParentMode;
-  const isCoachMode    = !isFamilyMode && !!location.hash;
+  // コーチモード：URLハッシュ または セッション継続中（リロード対応）
+  const _coachSessAtt  = (() => { try { return sessionStorage.getItem('mrs_att_coach') === '1'; } catch(e) { return false; } })();
+  const isCoachMode    = !isFamilyMode && (!!location.hash || _coachSessAtt);
   const isSetupMode    = !isFamilyMode && !isCoachMode;
 
   const CATEGORY_ORDER = ['U7','U8','U9','U10','U11','U12'];
@@ -2846,14 +2848,8 @@
         return;
       }
 
-      // コーチモード（ハッシュに接続設定あり）はログイン不要
-      let skipAuth = false;
-      if (location.hash) {
-        try {
-          const d = parseHashConfig();
-          if (d?.u && d?.k) skipAuth = true;
-        } catch(e) {}
-      }
+      // コーチモード（ハッシュあり or セッション継続）はログイン不要
+      const skipAuth = isCoachMode;
 
       // セットアップモード：認証チェック（タイムアウト付き）
       if (!skipAuth) {
@@ -2922,6 +2918,8 @@
           if (d?.u && d?.k) {
             const newCfg = { supabase_url: d.u, supabase_anon_key: d.k, team_name: d.t || '', primary_color: d.c || '#c0392b' };
             saveConfig(newCfg);
+            // コーチモードをセッションに記憶してからハッシュを除去
+            try { sessionStorage.setItem('mrs_att_coach', '1'); } catch(e) {}
             history.replaceState(null, '', location.pathname + location.search);
             applyConfig(newCfg);
             if (initSupabase()) {
