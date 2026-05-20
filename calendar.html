@@ -119,19 +119,22 @@
   <main class="max-w-[750px] mx-auto px-4 pb-3 space-y-3">
 
     <!-- ビュー切り替え + 追加ボタン -->
-    <div class="bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center gap-2">
-      <button id="btn-month" onclick="setView('month')"
-        class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold bg-red-500 text-white transition-colors whitespace-nowrap">
-        📅 <span>月表示</span>
-      </button>
-      <button id="btn-list" onclick="setView('list')"
-        class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors whitespace-nowrap">
-        📋 <span>リスト</span>
-      </button>
-      <div class="flex-1"></div>
+    <div class="bg-white rounded-2xl shadow border border-gray-200 px-3 py-2.5 flex items-center gap-2">
+      <!-- 均等タブ -->
+      <div class="flex flex-1 bg-gray-100 rounded-xl p-1 gap-1">
+        <button id="btn-month" onclick="setView('month')"
+          class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold bg-red-500 text-white transition-colors">
+          📅 カレンダー
+        </button>
+        <button id="btn-list" onclick="setView('list')"
+          class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">
+          📋 リスト
+        </button>
+      </div>
+      <!-- 新規追加 -->
       <button id="add-event-btn" onclick="openEventModal()"
-        class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2.5 rounded-xl text-sm transition-colors whitespace-nowrap">
-        ＋ 新規追加
+        class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-sm transition-colors whitespace-nowrap">
+        ＋
       </button>
     </div>
 
@@ -1222,8 +1225,8 @@
     viewMode = mode;
     document.getElementById('view-month').classList.toggle('hidden', mode !== 'month');
     document.getElementById('view-list').classList.toggle('hidden', mode !== 'list');
-    document.getElementById('btn-month').className = `flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap ${mode === 'month' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-    document.getElementById('btn-list').className  = `flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap ${mode === 'list'  ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+    document.getElementById('btn-month').className = `flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold transition-colors ${mode === 'month' ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-gray-700'}`;
+    document.getElementById('btn-list').className  = `flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold transition-colors ${mode === 'list'  ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-gray-700'}`;
     renderCalendar();
   }
 
