@@ -4650,8 +4650,8 @@ ${error?.message || ''}`);
           if (event === 'PASSWORD_RECOVERY') { showResetPasswordModal(); }
         });
 
-        // 保護者モード以外は認証チェック（8秒タイムアウト付き）
-        if (!isParentMode) {
+        // セットアップモードのみ認証チェック（コーチ・ファミリーはログイン不要）
+        if (isSetupMode) {
           let session = null;
           try {
             const result = await Promise.race([
