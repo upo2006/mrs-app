@@ -435,18 +435,18 @@
 <!-- ══ イベント作成／編集モーダル ══════════════════════════════════════ -->
 <div id="create-event-modal" class="fixed inset-0 z-[100] hidden">
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCreateEventModal()"></div>
-  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
-    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-      <h2 id="create-modal-title" class="text-xl font-black">⚽ イベントを作成</h2>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:calc(100vh - 2rem)">
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-3 rounded-t-2xl flex items-center justify-between shrink-0">
+      <h2 id="create-modal-title" class="text-lg font-black">⚽ イベントを作成</h2>
       <button onclick="closeCreateEventModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
     </div>
-    <div class="p-6 space-y-4">
+    <div class="overflow-y-auto flex-1 px-4 py-3 space-y-2.5">
       <input type="hidden" id="edit-event-id">
       <!-- カテゴリー -->
       <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">カテゴリ</label>
+        <label class="block text-gray-700 text-xs font-bold mb-1">カテゴリ</label>
         <select id="ev-category"
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
           <option value="">未設定</option>
           <option value="U7">U7</option>
           <option value="U8">U8</option>
@@ -458,47 +458,49 @@
       </div>
       <!-- タイトル -->
       <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">タイトル <span class="text-red-500">*</span></label>
+        <label class="block text-gray-700 text-xs font-bold mb-1">タイトル <span class="text-red-500">*</span></label>
         <input type="text" id="ev-title" placeholder="例：5.10 試合"
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
       </div>
       <!-- 日付 -->
       <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">日付 <span class="text-red-500">*</span></label>
+        <label class="block text-gray-700 text-xs font-bold mb-1">日付 <span class="text-red-500">*</span></label>
         <input type="date" id="ev-date"
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
       </div>
       <!-- 時間 -->
       <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">時間</label>
+        <label class="block text-gray-700 text-xs font-bold mb-1">時間</label>
         <div class="relative">
           <input type="text" id="ev-time" placeholder="タップして時間を設定" readonly
-            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 pr-10 text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
+            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 pr-10 text-sm text-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
             onclick="openTimePicker()">
-          <button type="button" onclick="openTimePicker()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 text-lg leading-none">🕐</button>
+          <button type="button" onclick="openTimePicker()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 text-base leading-none">🕐</button>
         </div>
       </div>
       <!-- 場所 -->
       <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">場所</label>
+        <label class="block text-gray-700 text-xs font-bold mb-1">場所</label>
         <input type="text" id="ev-location" placeholder="例：伊丹市立桜台小学校"
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
       </div>
       <!-- 移動手段 -->
       <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">移動手段</label>
+        <label class="block text-gray-700 text-xs font-bold mb-1">移動手段</label>
         <input type="text" id="ev-transport" placeholder="例：車"
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
       </div>
       <!-- メモ -->
       <div>
-        <label class="block text-gray-700 text-sm font-bold mb-1">メモ（保護者へのお知らせ）</label>
-        <textarea id="ev-memo" rows="2" placeholder="任意"
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"></textarea>
+        <label class="block text-gray-700 text-xs font-bold mb-1">メモ（保護者へのお知らせ）</label>
+        <textarea id="ev-memo" rows="1" placeholder="任意"
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"></textarea>
       </div>
-      <div id="create-event-status" class="hidden text-sm rounded-lg px-4 py-3 font-medium"></div>
+      <div id="create-event-status" class="hidden text-sm rounded-lg px-3 py-2 font-medium"></div>
+    </div>
+    <div class="px-4 pb-4 pt-2 shrink-0">
       <button id="save-event-btn" type="button"
-        class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-xl transition-colors">
+        class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl transition-colors">
         <span id="save-event-text">保存する</span>
         <span id="save-event-loading" class="hidden">保存中...</span>
       </button>
