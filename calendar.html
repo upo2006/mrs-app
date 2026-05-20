@@ -1154,9 +1154,27 @@
     renderCalendar();
   }
 
+  // ─── 1年以上前のイベント自動削除（管理者のみ） ──────────────────────
+  async function cleanupOldEvents() {
+    if (!supabaseClient || !isAdmin) return;
+    try {
+      const cutoff = new Date();
+      cutoff.setFullYear(cutoff.getFullYear() - 1);
+      const cutoffStr = cutoff.toISOString().slice(0, 10);
+      const { data: oldEvs } = await supabaseClient
+        .from(TABLE_EVENTS).select('id').lt('event_date', cutoffStr);
+      if (oldEvs && oldEvs.length > 0) {
+        const ids = oldEvs.map(e => e.id);
+        await supabaseClient.from(TABLE_RESPONSES).delete().in('event_id', ids);
+        await supabaseClient.from(TABLE_EVENTS).delete().lt('event_date', cutoffStr);
+      }
+    } catch(e) { console.error('cleanup error:', e); }
+  }
+
   // ─── データ取得 ──────────────────────────────────────────────────────
   async function loadEvents() {
     if (!supabaseClient) return;
+    if (isAdmin) await cleanupOldEvents();
     try {
       const { data, error } = await supabaseClient
         .from(TABLE_EVENTS).select('*').order('event_date', { ascending: true });
