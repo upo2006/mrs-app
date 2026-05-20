@@ -1746,9 +1746,7 @@
     return detailSortAsc ? '<span class="text-red-400 ml-0.5">▲</span>' : '<span class="text-red-400 ml-0.5">▼</span>';
   }
   function buildDetailTableHtml(responses) {
-    const rideLabel = r => r.transport_need === '乗せて欲しい'
-      ? '<span style="display:block;text-align:center;background:#fee2e2;color:#dc2626;font-size:0.7rem;font-weight:700;border-radius:0.5rem;line-height:1.4;padding:2px 0">乗せて<br>欲しい</span>'
-      : `<span class="badge ${TRANSPORT_COLOR[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span>`;
+    const rideLabel = r => `<span class="badge ${TRANSPORT_COLOR[r.transport_need] || 'bg-gray-100 text-gray-500'}">${r.transport_need}</span>`;
     if (responses.length === 0) return '<p class="text-center text-gray-400 text-sm py-8">まだ回答がありません</p>';
     return `<table class="resp-table w-full">
       <colgroup>
@@ -1785,9 +1783,7 @@
 
   function showResponseDetail(d) {
     const name = getPlayerName(d.jersey_number);
-    const rideHtml = d.transport_need === '乗せて欲しい'
-      ? '<span style="display:block;text-align:center;background:#fee2e2;color:#dc2626;font-size:0.7rem;font-weight:700;border-radius:0.5rem;line-height:1.4;padding:2px 0">乗せて<br>欲しい</span>'
-      : `<span class="badge ${TRANSPORT_COLOR[d.transport_need] || 'bg-gray-100 text-gray-500'}">${escHtml(d.transport_need || '—')}</span>`;
+    const rideHtml = `<span class="badge ${TRANSPORT_COLOR[d.transport_need] || 'bg-gray-100 text-gray-500'}">${escHtml(d.transport_need || '—')}</span>`;
     document.getElementById('memo-popup-content').innerHTML = `
       <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl -mx-5 -mt-5 mb-4 flex items-center gap-3">
         <span class="text-3xl font-black text-white/30">${escHtml(String(d.jersey_number))}</span>
