@@ -105,23 +105,24 @@
   <!-- 管理者ビュー -->
   <main id="admin-view" class="hidden max-w-[750px] mx-auto px-4 pb-8 space-y-3">
     <!-- タブナビ -->
-    <div class="bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center gap-2">
-      <div class="flex gap-2 flex-1 min-w-0">
+    <div class="bg-white rounded-2xl shadow border border-gray-200 px-3 py-2.5 flex items-center gap-2">
+      <!-- 均等タブ（ピルスタイル） -->
+      <div class="flex flex-1 bg-gray-100 rounded-xl p-1 gap-1 min-w-0">
         <button id="tab-events-btn" onclick="showAdminTab('events')"
-          class="flex-1 px-3 py-2.5 rounded-xl text-sm font-bold bg-red-500 text-white transition-colors whitespace-nowrap">
+          class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-red-500 text-white transition-colors whitespace-nowrap">
           ⚽ イベント
         </button>
         <button id="tab-players-btn" onclick="showAdminTab('players')"
-          class="flex-1 px-3 py-2.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors whitespace-nowrap">
+          class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap">
           👕 選手管理
         </button>
       </div>
       <button id="create-event-btn" type="button"
-        class="shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2.5 rounded-xl text-sm transition-colors whitespace-nowrap">
+        class="shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors whitespace-nowrap">
         ＋ 新規作成
       </button>
       <button id="add-player-btn" type="button" onclick="openPlayerModal()"
-        class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2.5 rounded-xl text-sm transition-colors whitespace-nowrap">
+        class="hidden shrink-0 bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors whitespace-nowrap">
         ＋ 選手追加
       </button>
     </div>
@@ -806,8 +807,8 @@
     document.getElementById('admin-players-section').classList.toggle('hidden', isEvents);
     document.getElementById('create-event-btn').classList.toggle('hidden', !isEvents);
     document.getElementById('add-player-btn').classList.toggle('hidden', isEvents);
-    document.getElementById('tab-events-btn').className  = `flex-1 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap ${isEvents  ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-    document.getElementById('tab-players-btn').className = `flex-1 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap ${!isEvents ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+    document.getElementById('tab-events-btn').className  = `flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${isEvents  ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-gray-700'}`;
+    document.getElementById('tab-players-btn').className = `flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${!isEvents ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-gray-700'}`;
     if (!isEvents) loadPlayers();
   }
 
