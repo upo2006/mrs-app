@@ -1350,11 +1350,13 @@
     // 情報
     const d = new Date(ev.event_date + 'T00:00:00');
     const dateLabel = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
-    let infoHtml = `<p>📅 ${dateLabel}</p>`;
-    if (ev.event_time) infoHtml += `<p>🕐 ${escHtml(ev.event_time)}</p>`;
-    if (ev.location)   infoHtml += `<p>📍 ${escHtml(ev.location)}</p>`;
-    if (ev.transport)  infoHtml += `<p>🚗 ${escHtml(ev.transport)}</p>`;
-    document.getElementById('detail-info').innerHTML = infoHtml;
+    const _gi = [
+      `📅 ${dateLabel}`,
+      ev.location   ? `📍 ${escHtml(ev.location)}`   : '',
+      ev.event_time ? `🕐 ${escHtml(ev.event_time)}` : '',
+      ev.transport  ? `🚗 ${escHtml(ev.transport)}`  : '',
+    ].map(s => `<div>${s}</div>`).join('');
+    document.getElementById('detail-info').innerHTML = `<div style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">${_gi}</div>`;
 
     const memoEl = document.getElementById('detail-memo');
     if (ev.memo) { memoEl.textContent = '📝 ' + ev.memo; memoEl.classList.remove('hidden'); }
