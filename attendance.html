@@ -1040,7 +1040,7 @@
           ${dateStr        ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
           ${ev.event_time  ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
           ${ev.location    ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-          ${ev.transport   ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
+          ${ev.transport   ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
         </div>
         ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
       </div>
@@ -1063,7 +1063,7 @@
           ${dateStr       ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
           ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
           ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-          ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
+          ${ev.transport  ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
         </div>
         ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
       </div>
@@ -1567,7 +1567,7 @@
     ];
     const col2 = [
       ev.location  ? `📍 ${escHtml(ev.location)}`         : '',
-      ev.transport ? `🚗 移動：${escHtml(ev.transport)}` : '',
+      ev.transport ? `🚗 ${escHtml(ev.transport)}` : '',
     ];
     const gridItems = [col1[0], col2[0], col1[1], col2[1]]
       .map(s => `<div>${s}</div>`).join('');
@@ -1977,7 +1977,7 @@
     const _dateShort = ev?.event_date
       ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' }) : '';
     const _col1 = [_dateShort ? `📆 ${_dateShort}` : '', ev?.event_time ? `🕐 ${escHtml(ev.event_time)}` : ''];
-    const _col2 = [ev?.location ? `📍 ${escHtml(ev.location)}` : '', ev?.transport ? `🚗 移動：${escHtml(ev.transport)}` : ''];
+    const _col2 = [ev?.location ? `📍 ${escHtml(ev.location)}` : '', ev?.transport ? `🚗 ${escHtml(ev.transport)}` : ''];
     const _gridItems = [_col1[0], _col2[0], _col1[1], _col2[1]].map(s => `<div>${s}</div>`).join('');
 
     const cId = 'att-respond-popup-container';
@@ -2029,7 +2029,7 @@
     const _dateShort = ev.event_date
       ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' }) : '';
     const _col1 = [_dateShort ? `📆 ${escHtml(_dateShort)}` : '', ev.event_time ? `🕐 ${escHtml(ev.event_time)}` : ''];
-    const _col2 = [ev.location ? `📍 ${escHtml(ev.location)}` : '', ev.transport ? `🚗 移動：${escHtml(ev.transport)}` : ''];
+    const _col2 = [ev.location ? `📍 ${escHtml(ev.location)}` : '', ev.transport ? `🚗 ${escHtml(ev.transport)}` : ''];
     const _gridItems = [_col1[0], _col2[0], _col1[1], _col2[1]].map(s => `<div>${s}</div>`).join('');
 
     // ソート状態リセット
@@ -2077,7 +2077,7 @@
         ${ev.event_date ? `<p>📆 ${formatDate(ev.event_date)}</p>` : ''}
         ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
         ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>`   : ''}
-        ${ev.transport  ? `<p>🚗 移動：${escHtml(ev.transport)}</p>` : ''}
+        ${ev.transport  ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
         ${ev.memo       ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
       </div>`;
   }
