@@ -1701,7 +1701,7 @@
       listEl.innerHTML = ''; noEl.classList.remove('hidden');
     } else {
       noEl.classList.add('hidden');
-      listEl.innerHTML = buildDetailTableHtml(responses);
+      listEl.innerHTML = buildDetailTableHtml(applySortResponses(responses, 'jersey_number', true));
       listEl.querySelectorAll('tbody tr[data-resp]').forEach(tr => {
         tr.addEventListener('click', () => showResponseDetail(JSON.parse(tr.dataset.resp)));
       });
@@ -2218,7 +2218,7 @@
           </div>
         </div>
         <div class="overflow-y-auto flex-1" id="parent-detail-list">
-          ${buildDetailTableHtml(responses)}
+          ${buildDetailTableHtml(applySortResponses(responses, 'jersey_number', true))}
         </div>
       </div>`;
 
