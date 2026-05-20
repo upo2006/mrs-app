@@ -921,11 +921,11 @@
       b.style.outlineOffset = '2px';
     });
   }
-  function calSetPresetColor(hex) { calUpdateColorPanelUI(hex); }
+  function calSetPresetColor(hex) { applyColor(hex); calUpdateColorPanelUI(hex); }
 
   document.addEventListener('DOMContentLoaded', () => {
     const colorInput = document.getElementById('setup-primary-color');
-    if (colorInput) colorInput.addEventListener('input', e => calUpdateColorPanelUI(e.target.value));
+    if (colorInput) colorInput.addEventListener('input', e => { applyColor(e.target.value); calUpdateColorPanelUI(e.target.value); });
   });
 
   async function handleSetupSave() {
