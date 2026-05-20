@@ -933,14 +933,21 @@
       const menu = document.getElementById('settings-menu');
       const bd   = document.getElementById('settings-backdrop');
       if (!btn || !menu) return;
+      // 実際の幅を測定するため一時的に非表示で展開
+      menu.style.visibility = 'hidden';
+      menu.style.left = '0px';
+      menu.style.minWidth = '';
+      menu.classList.remove('hidden');
       const rect  = btn.getBoundingClientRect();
-      const menuW = 220;
+      const menuW = menu.offsetWidth;
+      const vw    = window.innerWidth;
+      // ボタン右端に右揃え、画面端に収まるようクランプ
       let left = rect.right - menuW;
       if (left < 8) left = 8;
-      menu.style.top      = (rect.bottom + 8) + 'px';
-      menu.style.left     = left + 'px';
-      menu.style.minWidth = menuW + 'px';
-      menu.classList.remove('hidden');
+      if (left + menuW > vw - 8) left = vw - menuW - 8;
+      menu.style.top        = (rect.bottom + 8) + 'px';
+      menu.style.left       = left + 'px';
+      menu.style.visibility = '';
       if (bd) bd.classList.remove('hidden');
     }
 
