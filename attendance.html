@@ -1660,7 +1660,6 @@
         ${responses.map(r => {
           const name  = getPlayerName(r.jersey_number);
           const notes = r.notes || '';
-          const trunc = notes.length > 10 ? notes.slice(0, 10) + '…' : notes;
           const rowData = escHtml(JSON.stringify({ jersey_number: r.jersey_number, attendance: r.attendance, transport_need: r.transport_need, carpool: r.carpool, notes }));
           return `<tr class="cursor-pointer hover:bg-blue-50 active:bg-blue-100" data-resp="${rowData}">
             <td class="text-left">
@@ -1670,7 +1669,7 @@
             <td><span class="badge ${ATTEND_COLOR[r.attendance] || 'bg-gray-100 text-gray-500'}">${r.attendance}</span></td>
             <td>${rideLabel(r)}</td>
             <td><span class="badge ${CARPOOL_COLOR[r.carpool] || 'bg-gray-100 text-gray-500'}">${r.carpool}</span></td>
-            <td class="text-left text-gray-500 text-xs">${escHtml(trunc)}</td>
+            <td class="text-left text-gray-500 text-xs"><div style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-all">${escHtml(notes)}</div></td>
           </tr>`;
         }).join('')}
       </tbody>
