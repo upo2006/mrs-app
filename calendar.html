@@ -1694,6 +1694,12 @@
   };
   function calApplySort(arr, col, asc) {
     if (!col) return arr;
+    if (col === 'jersey_number') {
+      return [...arr].sort((a, b) => {
+        const va = Number(a.jersey_number) || 0, vb = Number(b.jersey_number) || 0;
+        return asc ? va - vb : vb - va;
+      });
+    }
     const map = CAL_SORT_ORDER[col] || {};
     return [...arr].sort((a, b) => {
       const va = map[a[col]] ?? 99, vb = map[b[col]] ?? 99;
@@ -1726,7 +1732,7 @@
       </colgroup>
       <thead style="position:sticky;top:0;z-index:10;background:#f9fafb">
         <tr>
-          <th class="text-left">#名前</th>
+          <th class="text-left cursor-pointer select-none" onclick="sortCalDetailTable('jersey_number')">#名前${calSortIcon('jersey_number')}</th>
           <th class="cursor-pointer select-none" onclick="sortCalDetailTable('attendance')">出欠${calSortIcon('attendance')}</th>
           <th class="cursor-pointer select-none" onclick="sortCalDetailTable('transport_need')">送迎${calSortIcon('transport_need')}</th>
           <th class="cursor-pointer select-none" onclick="sortCalDetailTable('carpool')">配車${calSortIcon('carpool')}</th>
@@ -1842,6 +1848,8 @@
       if (error) throw error;
 
       calDetailResponses = responses || [];
+      calDetailSortCol   = 'jersey_number';
+      calDetailSortAsc   = true;
 
       // サマリー更新
       document.getElementById('cal-summary-total').textContent     = responses.length;
