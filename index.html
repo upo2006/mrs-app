@@ -971,7 +971,7 @@
         document.getElementById('open-setup-btn')?.classList.add('hidden');
         document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
       }
-      // ファミリーモード：設定・管理系をすべて非表示
+      // ファミリーモード：設定・管理系をすべて非表示、追加ボタンも非表示（閲覧専用）
       if (isFamilyMode) {
         document.getElementById('export-csv-btn')?.classList.add('hidden');
         document.getElementById('backup-json-btn')?.classList.add('hidden');
@@ -979,6 +979,8 @@
         document.getElementById('open-setup-btn')?.classList.add('hidden');
         document.getElementById('season-selector-wrap')?.classList.add('hidden');
         document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
+        document.getElementById('add-match-btn')?.classList.add('hidden');
+        document.getElementById('add-player-btn')?.classList.add('hidden');
       }
     }
 
@@ -4134,7 +4136,7 @@ ${error?.message || ''}`);
 
     // ── 保護者モード ─────────────────────────────────────────────────
     function applyParentModeUI() {
-      document.getElementById('tab-players')?.classList.add('hidden');
+      // タブは全モード共通で表示（tab-playersは非表示にしない）
       document.getElementById('settings-toggle-btn')?.classList.add('hidden');
       document.getElementById('season-selector-wrap')?.classList.add('hidden');
       selectedSeason = String(parseInt(getCurrentFiscalYear().replace('年度', ''), 10));
