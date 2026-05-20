@@ -2092,6 +2092,8 @@
       if (d.k) SUPABASE_CONFIG.anonKey = d.k;
       if (d.t) document.getElementById('app-team-name').textContent = d.t;
       if (d.c) applyColor(d.c);
+      const _latestCfg = loadConfig();
+      if (_latestCfg?.primary_color) applyColor(_latestCfg.primary_color);
       parentHashConfig = d;
     }
 
