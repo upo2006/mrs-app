@@ -691,6 +691,9 @@
   const respondEventId = params.get('respond');
   const isRespondMode  = !!respondEventId;
   const isParentMode   = params.get('view') === 'parent';
+  const isFamilyMode   = isParentMode;
+  const isCoachMode    = !isFamilyMode && !!location.hash;
+  const isSetupMode    = !isFamilyMode && !isCoachMode;
 
   const CATEGORY_ORDER = ['U7','U8','U9','U10','U11','U12'];
   const CAT_COLORS = { 'U7':'#8B5CF6','U8':'#3B82F6','U9':'#10B981','U10':'#06B6D4','U11':'#F59E0B','U12':'#EF4444' };
