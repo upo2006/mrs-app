@@ -1317,7 +1317,7 @@
             <div>📅 ${dateLabel}</div>
             <div>${ev.location   ? `📍 ${escHtml(ev.location)}`   : ''}</div>
             <div>${ev.event_time ? `🕐 ${escHtml(ev.event_time)}` : ''}</div>
-            <div></div>
+            <div>${ev.transport  ? `🚗 ${escHtml(ev.transport)}`  : ''}</div>
           </div>
         </div>
       </div>`;
