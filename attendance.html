@@ -1320,16 +1320,21 @@
     const hash = buildHashString(cfg);
     const fullUrl = `${getBaseUrl()}?respond=${eventId}#${hash}`;
 
-    showCardMsg(eventId, '🔄 短縮URL生成中...');
+    const btn = document.querySelector('[onclick="attCardCopyLink()"]');
+    const setBtn = t => { if (btn) btn.innerHTML = t; };
+
+    setBtn('🔄 短縮URL生成中...');
     const short = await shortenUrl(fullUrl);
     const finalUrl = short || fullUrl;
 
     try {
       await navigator.clipboard.writeText(finalUrl);
+      setBtn(short ? '✅ 短縮URLをコピー' : '✅ コピーしました');
+      setTimeout(() => setBtn('🔗 リンクをコピー'), 2500);
     } catch(e) {
-      prompt('以下のリンクをコピーしてください', finalUrl); return;
+      prompt('以下のリンクをコピーしてください', finalUrl);
+      setBtn('🔗 リンクをコピー');
     }
-    showCardMsg(eventId, short ? `✅ 短縮URLをコピー: ${short}` : '✅ URLをコピーしました');
   }
 
   function showCardMsg(eventId, msg) {
