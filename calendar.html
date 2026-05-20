@@ -1789,18 +1789,11 @@
     if (!ev || !supabaseClient) return;
 
     // モーダルを先に開いてローディング
-    // カテゴリーバッジ
-    const respBadge = document.getElementById('resp-modal-cat-badge');
-    if (ev.category) {
-      const badgeColor = catColor(ev.category);
-      respBadge.textContent = ev.category;
-      respBadge.style.background = 'rgba(255,255,255,0.25)';
-      respBadge.style.border = '1.5px solid rgba(255,255,255,0.5)';
-      respBadge.classList.remove('hidden');
-    } else {
-      respBadge.classList.add('hidden');
-    }
-    document.getElementById('resp-modal-title').textContent = ev.title;
+    // カテゴリー / タイトル
+    document.getElementById('resp-modal-cat-badge').classList.add('hidden');
+    document.getElementById('resp-modal-title').innerHTML = ev.category
+      ? `${escHtml(ev.category)} / ${escHtml(ev.title)}`
+      : escHtml(ev.title);
     // イベント情報サブタイトル（attendance.html の openDetail と同形式）
     const d = new Date(ev.event_date + 'T00:00:00');
     const dateShort = ev.event_date
