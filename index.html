@@ -957,20 +957,21 @@
         if (isCoachMode)  { badge.textContent = 'Coach';  badge.style.cssText = 'background:rgba(59,130,246,0.7);color:#fff'; }
         if (isFamilyMode) { badge.textContent = 'Family'; badge.style.cssText = 'background:rgba(16,185,129,0.7);color:#fff'; }
       }
+      const _mh = el => { if (el) el.style.display = 'none'; };
       // コーチモード：セットアップ専用メニューを非表示
       if (isCoachMode) {
-        document.getElementById('open-team-manager-btn')?.classList.add('hidden');
-        document.getElementById('open-setup-btn')?.classList.add('hidden');
-        document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
+        _mh(document.getElementById('open-team-manager-btn'));
+        _mh(document.getElementById('open-setup-btn'));
+        _mh(document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]'));
       }
       // ファミリーモード：設定・管理系をすべて非表示
       if (isFamilyMode) {
-        document.getElementById('export-csv-btn')?.classList.add('hidden');
-        document.getElementById('backup-json-btn')?.classList.add('hidden');
-        document.getElementById('open-team-manager-btn')?.classList.add('hidden');
-        document.getElementById('open-setup-btn')?.classList.add('hidden');
-        document.getElementById('season-selector-wrap')?.classList.add('hidden');
-        document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
+        _mh(document.getElementById('export-csv-btn'));
+        _mh(document.getElementById('backup-json-btn'));
+        _mh(document.getElementById('open-team-manager-btn'));
+        _mh(document.getElementById('open-setup-btn'));
+        _mh(document.getElementById('season-selector-wrap'));
+        _mh(document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]'));
       }
     }
 
@@ -4601,16 +4602,17 @@ ${error?.message || ''}`);
     // アプリ起動（認証後に呼ばれる）
     async function startApp() {
       try {
-        // ログアウトボタンを設定メニューに追加
-        const settingsMenu = document.getElementById('settings-menu');
-        if (settingsMenu && !document.getElementById('logout-btn')) {
+        // ログアウトボタンを設定メニューに追加（セットアップモードのみ）
+        const settingsInnerRow = document.querySelector('#settings-menu .flex');
+        if (settingsInnerRow && !document.getElementById('logout-btn')) {
           const logoutBtn = document.createElement('button');
           logoutBtn.id = 'logout-btn';
           logoutBtn.type = 'button';
-          logoutBtn.className = 'w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-gray-500';
-          logoutBtn.textContent = '🚪 ログアウト';
+          logoutBtn.style.display = 'flex';
+          logoutBtn.className = 'flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors gap-0.5 text-gray-500';
+          logoutBtn.innerHTML = '<span class="text-base leading-none">🚪</span><span class="text-[0.6rem] font-bold whitespace-nowrap">ログアウト</span>';
           logoutBtn.onclick = handleLogout;
-          settingsMenu.appendChild(logoutBtn);
+          settingsInnerRow.appendChild(logoutBtn);
         }
       } catch(e) {}
       // ── 以下は元の起動処理 ──────────────────────────────────────────
@@ -4994,19 +4996,37 @@ ${error?.message || ''}`);
     </div>
     <!-- ══ 設定メニュー（body直下・fixed配置） ══ -->
     <div id="settings-backdrop" class="fixed inset-0 z-[79] hidden" onclick="closeSettingsMenu()"></div>
-    <div id="settings-menu" class="fixed z-[80] hidden bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden" style="min-width:200px">
+    <div id="settings-menu" class="fixed z-[80] hidden bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
       <div id="season-selector-wrap" class="hidden px-4 py-2 border-b border-gray-100">
         <div class="text-xs font-medium mb-1" style="color:#6b7280">📅 年度切替</div>
         <select id="season-selector" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none" style="color:#374151"></select>
       </div>
-      <button id="import-csv-btn" type="button" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 whitespace-nowrap" style="color:#374151">CSV取込</button>
-      <button id="preview-csv-btn" type="button" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#374151">CSV確認</button>
-      <button id="export-csv-btn" type="button" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#374151">CSV出力</button>
-      <button id="backup-json-btn" type="button" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#374151">バックアップJSON</button>
-      <button id="open-team-manager-btn" type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#2563eb">🏟️ チーム管理</button>
-      <button id="open-setup-btn" type="button" onclick="openSetupModal('edit')" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#a93226">⚙️ 接続設定</button>
-      <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#a93226">🔧 コーチリンクを発行</button>
-      <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 border-t border-gray-100 whitespace-nowrap" style="color:#16a34a">🔗 ファミリーリンクを発行</button>
+      <div class="flex">
+        <button id="export-csv-btn" type="button" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors gap-0.5" style="color:#374151">
+          <span class="text-base leading-none">📄</span>
+          <span class="text-[0.6rem] font-bold whitespace-nowrap">CSV出力</span>
+        </button>
+        <button id="backup-json-btn" type="button" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors gap-0.5" style="color:#374151">
+          <span class="text-base leading-none">💾</span>
+          <span class="text-[0.6rem] font-bold whitespace-nowrap">バックアップ</span>
+        </button>
+        <button id="open-team-manager-btn" type="button" onclick="openTeamManager()" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors gap-0.5" style="color:#2563eb">
+          <span class="text-base leading-none">🏟️</span>
+          <span class="text-[0.6rem] font-bold whitespace-nowrap">チーム管理</span>
+        </button>
+        <button id="open-setup-btn" type="button" onclick="openSetupModal('edit')" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors gap-0.5" style="color:#a93226">
+          <span class="text-base leading-none">⚙️</span>
+          <span class="text-[0.6rem] font-bold whitespace-nowrap">接続設定</span>
+        </button>
+        <button type="button" onclick="openAdminLinkModal()" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors gap-0.5" style="color:#a93226">
+          <span class="text-base leading-none">🔧</span>
+          <span class="text-[0.6rem] font-bold whitespace-nowrap">コーチリンク</span>
+        </button>
+        <button type="button" onclick="openParentLinkModal()" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors gap-0.5" style="color:#16a34a">
+          <span class="text-base leading-none">🔗</span>
+          <span class="text-[0.6rem] font-bold whitespace-nowrap">ファミリーリンク</span>
+        </button>
+      </div>
     </div>
 
     <!-- ══ 設定リセットボタン（設定メニューに追加） ══ -->
