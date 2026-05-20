@@ -1041,9 +1041,11 @@
       document.getElementById('open-setup-menu-btn')?.classList.add('hidden');
       document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
     }
-    // ファミリーモード：設定ボタンを非表示
+    // ファミリーモード：設定ボタン・選手管理タブ・選手登録ボタンを非表示
     if (isFamilyMode) {
       document.getElementById('settings-btn')?.classList.add('hidden');
+      document.getElementById('tab-players-btn')?.classList.add('hidden');
+      document.getElementById('add-player-btn')?.classList.add('hidden');
     }
   }
 
