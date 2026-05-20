@@ -4733,6 +4733,8 @@ ${error?.message || ''}`);
                 SUPABASE_CONFIG.anonKey = d.k;
                 if (d.t) defaultConfig.team_name = d.t;
                 if (d.c) applyPrimaryColor(d.c);
+                const _latestCfg = loadConfig();
+                if (_latestCfg?.primary_color) applyPrimaryColor(_latestCfg.primary_color);
                 applyConfig(defaultConfig);
                 applyModeRestrictions();
                 await initData();
