@@ -2086,10 +2086,12 @@
     if (!cfg?.supabase_url) { alert('設定が見つかりません'); return; }
     const hash = buildHashString(cfg);
     const url  = `${getBaseUrl()}?respond=${currentEventId}#${hash}`;
+    const short = await shortenUrl(url);
+    const finalUrl = short || url;
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(finalUrl);
     } catch(e) {
-      prompt('以下のリンクをコピーしてください', url); return;
+      prompt('以下のリンクをコピーしてください', finalUrl);
     }
   }
 
