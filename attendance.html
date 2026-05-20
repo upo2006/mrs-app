@@ -94,11 +94,25 @@
         </div>
         <div class="relative shrink-0">
           <button id="settings-btn" type="button" class="bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors">⚙️</button>
-          <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
-            <button type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-blue-600 font-bold">🏟️ チーム管理</button>
-            <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">⚙️ 接続設定</button>
-            <button type="button" onclick="openAdminLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 コーチリンクを発行</button>
-            <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 ファミリーリンクを発行</button>
+          <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
+            <div class="flex">
+              <button type="button" onclick="openTeamManager()" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors text-blue-600 gap-0.5">
+                <span class="text-base leading-none">🏟️</span>
+                <span class="text-[0.6rem] font-bold whitespace-nowrap">チーム管理</span>
+              </button>
+              <button type="button" id="open-setup-menu-btn" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors text-red-600 gap-0.5">
+                <span class="text-base leading-none">⚙️</span>
+                <span class="text-[0.6rem] font-bold whitespace-nowrap">接続設定</span>
+              </button>
+              <button type="button" onclick="openAdminLinkModal()" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors text-red-600 gap-0.5">
+                <span class="text-base leading-none">🔧</span>
+                <span class="text-[0.6rem] font-bold whitespace-nowrap">コーチリンク</span>
+              </button>
+              <button type="button" onclick="openParentLinkModal()" class="flex flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors text-green-600 gap-0.5">
+                <span class="text-base leading-none">🔗</span>
+                <span class="text-[0.6rem] font-bold whitespace-nowrap">ファミリーリンク</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1037,9 +1051,10 @@
     }
     // コーチモード：セットアップ専用メニューを非表示
     if (isCoachMode) {
-      document.querySelector('#settings-menu [onclick="openTeamManager()"]')?.classList.add('hidden');
-      document.getElementById('open-setup-menu-btn')?.classList.add('hidden');
-      document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
+      const _mh = el => { if (el) el.style.display = 'none'; };
+      _mh(document.querySelector('#settings-menu [onclick="openTeamManager()"]'));
+      _mh(document.getElementById('open-setup-menu-btn'));
+      _mh(document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]'));
     }
     // ファミリーモード：設定ボタンを非表示
     if (isFamilyMode) {
@@ -2878,13 +2893,15 @@
 
         // ログアウトボタンを追加（セットアップモードのみ）
         const settingsMenuEl2 = document.getElementById('settings-menu');
-        if (settingsMenuEl2 && !document.getElementById('logout-btn')) {
+        const settingsInnerRow = settingsMenuEl2?.querySelector('.flex');
+        if (settingsInnerRow && !document.getElementById('logout-btn')) {
           const lb = document.createElement('button');
           lb.id = 'logout-btn'; lb.type = 'button';
-          lb.className = 'w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-gray-500';
-          lb.textContent = '🚪 ログアウト';
+          lb.style.display = 'flex';
+          lb.className = 'flex-col items-center justify-center px-3 py-2.5 hover:bg-gray-50 transition-colors text-gray-500 gap-0.5';
+          lb.innerHTML = '<span class="text-base leading-none">🚪</span><span class="text-[0.6rem] font-bold whitespace-nowrap">ログアウト</span>';
           lb.onclick = handleLogout;
-          settingsMenuEl2.appendChild(lb);
+          settingsInnerRow.appendChild(lb);
         }
       }
 
