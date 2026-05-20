@@ -4647,10 +4647,8 @@ ${error?.message || ''}`);
     }
 
     // アプリ起動
-    (async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       try {
-        // スクリプトタグ後のHTML（設定メニュー等）が確実にDOMに追加されるまで待つ
-        await new Promise(r => setTimeout(r, 0));
         // パスワードリセット検出
         getAuthClient().auth.onAuthStateChange((event) => {
           if (event === 'PASSWORD_RECOVERY') { showResetPasswordModal(); }
@@ -4803,7 +4801,7 @@ ${error?.message || ''}`);
       } catch (e) {
         console.error('起動エラー:', e);
       }
-    })();
+    });
 
     window.addEventListener('resize', () => fitTeamName && fitTeamName());
   </script>
