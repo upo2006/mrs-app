@@ -703,6 +703,11 @@
   let viewMode = 'month';
   let currentDetailEvent = null;
   let isAdmin = false;
+  // ─── モード判定（ページロード時に確定） ────────────────────────────────
+  const _urlP       = new URLSearchParams(location.search);
+  const isFamilyMode = _urlP.get('view') === 'parent';
+  const isCoachMode  = !isFamilyMode && !!location.hash;
+  const isSetupMode  = !isFamilyMode && !isCoachMode;
   let selectedCategory = []; // [] = 全カテゴリー表示、複数選択可
 
   // ─── 設定読み書き ────────────────────────────────────────────────────
@@ -1144,7 +1149,7 @@
     document.getElementById('add-event-btn')?.classList.toggle('hidden', !admin);
     // 設定メニュー内ボタン
     document.getElementById('menu-login-btn')?.classList.toggle('hidden', admin);
-    document.getElementById('menu-logout-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('menu-logout-btn')?.classList.toggle('hidden', !admin || !isSetupMode);
     document.getElementById('menu-admin-link-btn')?.classList.toggle('hidden', !admin);
     // 詳細ポップアップ：管理者ボタン群
     document.getElementById('detail-admin-links')?.classList.toggle('hidden', !admin);
