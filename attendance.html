@@ -1044,11 +1044,11 @@
       <div class="px-4 py-4 flex-1 min-w-0">
         <div class="mb-3">
           <p class="font-black text-gray-800 mb-1.5">${catTitle}${deleteBadge}</p>
-          <div class="text-sm text-gray-500 space-y-0.5">
-            ${dateStr        ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
-            ${ev.event_time  ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
-            ${ev.location    ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-            ${ev.transport   ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
+          <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
+            <div>${dateStr       ? `📆 ${escHtml(dateStr)}`        : ''}</div>
+            <div>${ev.location   ? `📍 ${escHtml(ev.location)}`    : ''}</div>
+            <div>${ev.event_time ? `🕐 ${escHtml(ev.event_time)}`  : ''}</div>
+            <div>${ev.transport  ? `🚗 ${escHtml(ev.transport)}`   : ''}</div>
           </div>
           ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
         </div>
@@ -1073,11 +1073,11 @@
       <div class="px-4 py-4 flex-1 min-w-0">
         <div class="mb-3">
           <p class="font-black text-gray-800 mb-1.5">${catTitle}</p>
-          <div class="text-sm text-gray-500 space-y-0.5">
-            ${dateStr       ? `<p>📆 ${escHtml(dateStr)}</p>` : ''}
-            ${ev.event_time ? `<p>🕐 ${escHtml(ev.event_time)}</p>` : ''}
-            ${ev.location   ? `<p>📍 ${escHtml(ev.location)}</p>` : ''}
-            ${ev.transport  ? `<p>🚗 ${escHtml(ev.transport)}</p>` : ''}
+          <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
+            <div>${dateStr       ? `📆 ${escHtml(dateStr)}`        : ''}</div>
+            <div>${ev.location   ? `📍 ${escHtml(ev.location)}`    : ''}</div>
+            <div>${ev.event_time ? `🕐 ${escHtml(ev.event_time)}`  : ''}</div>
+            <div>${ev.transport  ? `🚗 ${escHtml(ev.transport)}`   : ''}</div>
           </div>
           ${ev.memo ? `<div class="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-amber-700 text-xs">📝 ${escHtml(ev.memo)}</div>` : ''}
         </div>
