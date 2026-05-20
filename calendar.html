@@ -1718,7 +1718,7 @@
     const base = getBaseUrl();
     return base ? base.replace(/calendar\.html$/i, 'attendance.html') : '';
   }
-  function copyEventLink() {
+  async function copyEventLink() {
     const ev = currentDetailEvent;
     if (!ev) return;
     const cfg = loadConfig();
@@ -1727,14 +1727,22 @@
     const attUrl = getAttendanceBaseUrl();
     const link = attUrl ? `${attUrl}?respond=${ev.id}#${hash}` : '';
     if (!link) { alert('公開URLが取得できません。接続設定のURLを確認してください。'); return; }
-    navigator.clipboard.writeText(link).then(() => {
-      const btn = document.querySelector('[onclick="copyEventLink()"]');
-      if (btn) {
-        const orig = btn.innerHTML;
-        btn.innerHTML = '✅ コピーしました';
-        setTimeout(() => { btn.innerHTML = orig; }, 2000);
-      }
-    }).catch(() => alert('コピーに失敗しました'));
+
+    const btn = document.querySelector('[onclick="copyEventLink()"]');
+    const setBtn = t => { if (btn) btn.innerHTML = t; };
+
+    setBtn('🔄 短縮URL生成中...');
+    const short = await shortenUrl(link);
+    const finalUrl = short || link;
+
+    try {
+      await navigator.clipboard.writeText(finalUrl);
+      setBtn(short ? `✅ 短縮URLをコピー` : '✅ コピーしました');
+      setTimeout(() => setBtn('🔗 リンクをコピー'), 2500);
+    } catch(e) {
+      prompt('以下のリンクをコピーしてください', finalUrl);
+      setBtn('🔗 リンクをコピー');
+    }
   }
   // ─── 回答確認モーダル（attendance.html と同等） ──────────────────────
   let calDetailResponses = [];
