@@ -2881,7 +2881,13 @@
         throw new Error('Supabaseライブラリを読み込めませんでした');
       }
       if (!supabaseClient) {
-        supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        // 認証クライアントが既に同じURLで初期化済みならそれを再利用（重複インスタンス防止）
+        if (authClient && SUPABASE_CONFIG.url === AUTH_URL) {
+          supabaseClient = authClient;
+        } else {
+          supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+          if (SUPABASE_CONFIG.url === AUTH_URL) authClient = supabaseClient;
+        }
       }
       return supabaseClient;
     }
@@ -4489,7 +4495,14 @@ ${error?.message || ''}`);
     let authClient = null;
 
     function getAuthClient() {
-      if (!authClient) authClient = window.supabase.createClient(AUTH_URL, AUTH_ANON_KEY);
+      if (!authClient) {
+        // データクライアントが既に同じURLで初期化済みならそれを再利用（重複インスタンス防止）
+        if (supabaseClient && SUPABASE_CONFIG.url === AUTH_URL) {
+          authClient = supabaseClient;
+        } else {
+          authClient = window.supabase.createClient(AUTH_URL, AUTH_ANON_KEY);
+        }
+      }
       return authClient;
     }
 
