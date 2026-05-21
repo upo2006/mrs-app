@@ -4824,9 +4824,8 @@ ${error?.message || ''}`);
 
         applyModeRestrictions();
         if (isFromSetupGuide) {
-          // セットアップガイドから来た場合は設定の有無にかかわらず接続設定を開く
-          if (cfg) { applyConfigValues(cfg); applyConfig(defaultConfig); }
-          else { applyConfig(defaultConfig); }
+          // セットアップガイドから来た場合：既存データを表示せず接続設定を開く
+          applyConfig(defaultConfig);
           setTimeout(() => openSetupModal(), 200);
         } else if (cfg) {
           applyConfigValues(cfg);
