@@ -1233,6 +1233,10 @@
     document.getElementById('add-event-btn')?.classList.toggle('hidden', !admin);
     // 設定メニュー内ボタン
     document.getElementById('menu-login-btn')?.classList.toggle('hidden', admin);
+    // セットアップ未ログイン時はログイン以外を非表示
+    document.getElementById('open-setup-menu-btn')?.classList.toggle('hidden', !admin && isSetupMode);
+    document.getElementById('menu-team-btn')?.classList.toggle('hidden', !admin && isSetupMode);
+    document.getElementById('menu-parent-link-btn')?.classList.toggle('hidden', !admin && isSetupMode);
     document.getElementById('menu-player-btn')?.classList.toggle('hidden', !admin);
     document.getElementById('menu-admin-link-btn')?.classList.toggle('hidden', !admin);
     document.getElementById('menu-logout-btn')?.classList.toggle('hidden', !admin || !isSetupMode);
