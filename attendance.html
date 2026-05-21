@@ -225,7 +225,7 @@
       </div>
       <div id="att-card-parent-btns" class="hidden grid grid-cols-2 gap-2">
         <button onclick="attCardRespond()" class="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white font-black py-2.5 rounded-xl text-sm transition-colors">✏️ 回答する</button>
-        <button onclick="attCardResults()" class="flex items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">📊 結果を見る</button>
+        <button onclick="attCardResults()" class="flex items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors"><span id="att-card-parent-resp-label">📊 結果を見る</span></button>
       </div>
     </div>
   </div>
@@ -2041,6 +2041,13 @@
       adminLinks.classList.add('hidden');
       adminBtns.classList.add('hidden');
       parentBtns.classList.remove('hidden');
+      document.getElementById('att-card-parent-resp-label').textContent = '📊 結果を見る';
+      if (supabaseClient) {
+        supabaseClient.from(TABLE_RESPONSES).select('id').eq('event_id', ev.id).then(({ data }) => {
+          const count = data?.length ?? 0;
+          document.getElementById('att-card-parent-resp-label').textContent = `📊 結果を見る（${count}件）`;
+        }).catch(() => {});
+      }
     } else {
       const count = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
       document.getElementById('att-card-resp-label').textContent = `📊 回答を確認（${count}件）`;
