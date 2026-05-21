@@ -1231,8 +1231,8 @@
 
   function setAdminMode(admin) {
     isAdmin = admin;
-    // 設定ボタン：管理者のみ表示
-    document.getElementById('settings-btn')?.classList.toggle('hidden', !admin);
+    // 設定ボタン：管理者 or セットアップモードは表示（ログインボタンにアクセスするため）
+    document.getElementById('settings-btn')?.classList.toggle('hidden', !admin && !isSetupMode);
     // 新規追加ボタン：管理者のみ
     document.getElementById('add-event-btn')?.classList.toggle('hidden', !admin);
     // 設定メニュー内ボタン
