@@ -1810,6 +1810,7 @@
 
   function openCalPlayerListModal() {
     document.getElementById('settings-menu')?.classList.add('hidden');
+    calPlayerAccordionState = {};
     document.getElementById('cal-player-list-modal').classList.remove('hidden');
     loadCalPlayers();
   }
@@ -1839,7 +1840,7 @@
       if (list.length === 0) return;
       const section = document.createElement('div');
       section.className = 'space-y-2';
-      const isOpen = calPlayerAccordionState[label] !== false;
+      const isOpen = calPlayerAccordionState[label] === true;
       const body = document.createElement('div');
       body.className = `pl-2 space-y-2${isOpen ? '' : ' hidden'}`;
       const header = document.createElement('button');
