@@ -4681,7 +4681,7 @@ ${error?.message || ''}`);
         const isFromSetupGuide = new URLSearchParams(window.location.search).get('setup') === '1';
 
         // セットアップモードのみ認証チェック（コーチ・ファミリーはログイン不要）
-        if (isSetupMode && !isFromSetupGuide) {
+        if (isSetupMode) {
           let session = null;
           try {
             const result = await Promise.race([
@@ -4704,11 +4704,6 @@ ${error?.message || ''}`);
           } catch(e) { /* タイムアウト → サブスクリプション未確認扱い */ }
           if (!ok) { showSubscriptionModal(); return; }
           await startApp();
-        }
-
-        // セットアップガイドからの場合：スプラッシュを消して接続設定を開く
-        if (isFromSetupGuide) {
-          document.getElementById('loading-splash')?.remove();
         }
 
         // 旧設定を新マルチチーム形式へ移行
