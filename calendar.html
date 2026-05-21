@@ -1503,7 +1503,7 @@
 
     // 回答件数（イベントデータに含まれているので即時表示）
     const respCount = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
-    document.getElementById('detail-resp-label').textContent = respCount > 0 ? `📋 回答を確認（${respCount}件）` : '📋 回答を確認';
+    document.getElementById('detail-resp-label').textContent = `📋 回答を確認（${respCount}件）`;
     document.getElementById('parent-resp-label').textContent = `📊 結果を見る（${respCount}件）`;
     document.getElementById('detail-modal').classList.remove('hidden');
   }
