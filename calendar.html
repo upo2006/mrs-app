@@ -553,9 +553,13 @@
       <div class="space-y-4">
         <input type="hidden" id="cal-player-edit-id">
         <div>
-          <label class="block text-gray-700 text-sm font-medium mb-1">カテゴリー</label>
-          <select id="cal-player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
-            <option value="">未設定</option>
+          <label class="block text-gray-700 text-sm font-medium mb-1">入会年度</label>
+          <select id="cal-player-entry-year" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+          </select>
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-1">入会時カテゴリー</label>
+          <select id="cal-player-base-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
             <option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option>
             <option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option>
           </select>
@@ -1794,6 +1798,36 @@
   let calPlayerAccordionState = {};
   const CAL_PLAYER_CATEGORIES = ['U7','U8','U9','U10','U11','U12'];
 
+  function getCurrentFiscalYearNum() {
+    const now = new Date();
+    const year = now.getFullYear();
+    return (now.getMonth() + 1) >= 4 ? year : year - 1;
+  }
+  function getCalPlayerCurrentCategory(p) {
+    const base = p.payload?.base_category || p.payload?.category || 'U7';
+    const baseIndex = CAL_PLAYER_CATEGORIES.indexOf(base);
+    if (baseIndex === -1) return '未設定';
+    const entryYear = p.payload?.entry_fiscal_year
+      ? Number(p.payload.entry_fiscal_year)
+      : getCurrentFiscalYearNum();
+    const displayIndex = baseIndex + (getCurrentFiscalYearNum() - entryYear);
+    if (displayIndex < 0) return '未入会';
+    if (displayIndex >= CAL_PLAYER_CATEGORIES.length) return '卒業生';
+    return CAL_PLAYER_CATEGORIES[displayIndex];
+  }
+  function populateCalPlayerYearSelect() {
+    const sel = document.getElementById('cal-player-entry-year');
+    if (!sel) return;
+    const currentYear = getCurrentFiscalYearNum();
+    sel.innerHTML = '';
+    for (let y = currentYear + 1; y >= currentYear - 10; y--) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y + '年度';
+      sel.appendChild(opt);
+    }
+  }
+
   async function loadCalPlayers() {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient
@@ -1828,12 +1862,12 @@
       return;
     }
     emptyEl?.classList.add('hidden');
-    const grouped = Object.fromEntries(CAL_PLAYER_CATEGORIES.map(cat => [cat, []]));
-    const uncategorized = [];
+    const grouped = {};
+    [...CAL_PLAYER_CATEGORIES, '卒業生', '未入会', '未設定'].forEach(cat => { grouped[cat] = []; });
     calPlayerRecords.forEach(p => {
-      const cat = p.payload?.category || '';
-      if (cat && grouped[cat] !== undefined) grouped[cat].push(p);
-      else uncategorized.push(p);
+      const cat = getCalPlayerCurrentCategory(p);
+      if (grouped[cat] !== undefined) grouped[cat].push(p);
+      else grouped['未設定'].push(p);
     });
     listEl.innerHTML = '';
     const renderSection = (label, list) => {
@@ -1872,12 +1906,15 @@
       listEl.appendChild(section);
     };
     CAL_PLAYER_CATEGORIES.forEach(cat => renderSection(cat, grouped[cat]));
-    if (uncategorized.length > 0) renderSection('未設定', uncategorized);
+    renderSection('卒業生', grouped['卒業生']);
+    renderSection('未入会', grouped['未入会']);
+    renderSection('未設定', grouped['未設定']);
   }
 
   function openCalPlayerModal(id) {
     const errEl = document.getElementById('cal-player-modal-error');
     errEl.classList.add('hidden');
+    populateCalPlayerYearSelect();
     if (id) {
       const rec = calPlayerRecords.find(p => p.id === id);
       if (!rec) return;
@@ -1886,14 +1923,16 @@
       document.getElementById('cal-player-edit-id').value    = id;
       document.getElementById('cal-player-number').value     = rec.payload?.number || '';
       document.getElementById('cal-player-name').value       = rec.payload?.name || '';
-      document.getElementById('cal-player-category').value   = rec.payload?.category || '';
+      document.getElementById('cal-player-entry-year').value    = rec.payload?.entry_fiscal_year || getCurrentFiscalYearNum();
+      document.getElementById('cal-player-base-category').value = rec.payload?.base_category || rec.payload?.category || 'U7';
     } else {
       document.getElementById('cal-player-modal-title').textContent = '選手登録';
       document.getElementById('cal-player-save-label').textContent  = '選手を登録';
-      document.getElementById('cal-player-edit-id').value  = '';
-      document.getElementById('cal-player-number').value   = '';
-      document.getElementById('cal-player-name').value     = '';
-      document.getElementById('cal-player-category').value = '';
+      document.getElementById('cal-player-edit-id').value       = '';
+      document.getElementById('cal-player-number').value        = '';
+      document.getElementById('cal-player-name').value          = '';
+      document.getElementById('cal-player-entry-year').value    = getCurrentFiscalYearNum();
+      document.getElementById('cal-player-base-category').value = 'U7';
     }
     document.getElementById('cal-player-modal').classList.remove('hidden');
   }
@@ -1902,16 +1941,17 @@
   }
 
   async function saveCalPlayer() {
-    const id       = document.getElementById('cal-player-edit-id').value;
-    const number   = document.getElementById('cal-player-number').value.trim();
-    const name     = document.getElementById('cal-player-name').value.trim();
-    const category = document.getElementById('cal-player-category').value;
+    const id            = document.getElementById('cal-player-edit-id').value;
+    const number        = document.getElementById('cal-player-number').value.trim();
+    const name          = document.getElementById('cal-player-name').value.trim();
+    const base_category = document.getElementById('cal-player-base-category').value;
+    const entry_fiscal_year = Number(document.getElementById('cal-player-entry-year').value);
     const errEl    = document.getElementById('cal-player-modal-error');
     const saveLabel = document.getElementById('cal-player-save-label');
     errEl.classList.add('hidden');
     if (!number) { errEl.textContent = '背番号を入力してください'; errEl.classList.remove('hidden'); return; }
     if (!name)   { errEl.textContent = '選手名を入力してください'; errEl.classList.remove('hidden'); return; }
-    const payload = { number, name, category };
+    const payload = { number, name, base_category, entry_fiscal_year };
     saveLabel.textContent = '保存中...';
     try {
       if (id) {
