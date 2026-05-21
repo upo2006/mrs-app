@@ -1101,6 +1101,9 @@
     const deleteBadge = isPast
       ? `<span class="text-xs font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full ml-1">⏰ ${daysLeft}日後に自動削除</span>`
       : '';
+    const countBadge = count > 0
+      ? `<span class="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-1">📊 ${count}件</span>`
+      : '';
     const color    = catColor(ev.category);
     const catTitle = ev.category
       ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
@@ -1108,7 +1111,7 @@
     return `<div class="bg-white rounded-2xl shadow overflow-hidden flex cursor-pointer hover:shadow-md active:opacity-80 transition-shadow${isPast ? ' opacity-70' : ''}" data-event-id="${ev.id}" onclick="openAttCardDetail('${ev.id}')">
       <div class="w-1.5 shrink-0" style="background:${color}"></div>
       <div class="px-4 py-3 flex-1 min-w-0">
-        <p class="font-black text-gray-800 mb-1">${catTitle}${deleteBadge}</p>
+        <p class="font-black text-gray-800 mb-1">${catTitle}${deleteBadge}${countBadge}</p>
         <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
           <div>${dateStr       ? `📆 ${escHtml(dateStr)}`        : ''}</div>
           <div>${ev.location   ? `📍 ${escHtml(ev.location)}`    : ''}</div>
@@ -1121,15 +1124,19 @@
   }
 
   function buildParentEventCard(ev) {
+    const count    = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
     const dateStr  = formatDate(ev.event_date);
     const color    = catColor(ev.category);
+    const countBadge = count > 0
+      ? `<span class="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-1">📊 ${count}件</span>`
+      : '';
     const catTitle = ev.category
       ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
       : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
     return `<div class="bg-white rounded-2xl shadow overflow-hidden flex cursor-pointer hover:shadow-md active:opacity-80 transition-shadow" onclick="openAttCardDetail('${ev.id}')">
       <div class="w-1.5 shrink-0" style="background:${color}"></div>
       <div class="px-4 py-3 flex-1 min-w-0">
-        <p class="font-black text-gray-800 mb-1">${catTitle}</p>
+        <p class="font-black text-gray-800 mb-1">${catTitle}${countBadge}</p>
         <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
           <div>${dateStr       ? `📆 ${escHtml(dateStr)}`        : ''}</div>
           <div>${ev.location   ? `📍 ${escHtml(ev.location)}`    : ''}</div>
