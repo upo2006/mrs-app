@@ -1379,8 +1379,10 @@
     const _ina = 'flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap text-gray-500 hover:text-gray-700';
     document.getElementById('btn-month').className     = mode === 'month' ? _act : _ina;
     document.getElementById('btn-list').className      = mode === 'list'  ? _act : _ina;
-    document.getElementById('fam-btn-month')?.className = mode === 'month' ? _act : _ina;
-    document.getElementById('fam-btn-list')?.className  = mode === 'list'  ? _act : _ina;
+    const _fbm = document.getElementById('fam-btn-month');
+    const _fbl = document.getElementById('fam-btn-list');
+    if (_fbm) _fbm.className = mode === 'month' ? _act : _ina;
+    if (_fbl) _fbl.className = mode === 'list'  ? _act : _ina;
     renderCalendar();
   }
 
