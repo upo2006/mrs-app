@@ -1297,6 +1297,8 @@
   // ─── データ取得 ──────────────────────────────────────────────────────
   async function loadEvents() {
     if (!supabaseClient) return;
+    // セットアップモードで未ログインの場合はイベントを取得しない
+    if (isSetupMode && !isAdmin) { renderCalendar(); renderLegend(); return; }
     if (isAdmin) await cleanupOldEvents();
     try {
       const { data, error } = await supabaseClient
