@@ -110,6 +110,7 @@
             <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">⚙️ 接続設定</button>
             <button type="button" id="menu-login-btn" onclick="openLoginModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-blue-600 font-bold">🔑 ログイン</button>
             <button type="button" id="menu-admin-link-btn" onclick="openAdminLinkModal()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 コーチリンク</button>
+            <button type="button" id="menu-player-btn" onclick="openCalPlayerListModal()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-gray-700 font-bold">👤 選手管理</button>
             <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 ファミリーリンク</button>
             <button type="button" id="menu-logout-btn" onclick="handleLogout()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-gray-500 font-bold">🚪 ログアウト</button>
           </div>
@@ -523,6 +524,75 @@
   </div>
 </div>
 
+
+<!-- ══ 選手一覧モーダル ══════════════════════════════════════════════ -->
+<div id="cal-player-list-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCalPlayerListModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:calc(100vh - 2rem)">
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-5 py-4 rounded-t-2xl flex items-center justify-between shrink-0">
+      <h2 class="text-lg font-black">👤 選手管理</h2>
+      <button onclick="closeCalPlayerListModal()" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="px-4 py-3 border-b border-gray-100 shrink-0">
+      <button onclick="openCalPlayerModal()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">＋ 選手を追加</button>
+    </div>
+    <div id="cal-player-list" class="overflow-y-auto flex-1 px-4 py-3 space-y-2"></div>
+    <div id="cal-player-empty" class="hidden px-4 py-12 text-center text-gray-400 text-sm">選手が登録されていません</div>
+  </div>
+</div>
+
+<!-- ══ 選手追加・編集モーダル ══════════════════════════════════════════ -->
+<div id="cal-player-modal" class="fixed inset-0 z-[110] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCalPlayerModal()"></div>
+  <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-5">
+        <h2 id="cal-player-modal-title" class="text-xl font-bold text-gray-800">選手を追加</h2>
+        <button onclick="closeCalPlayerModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      <div class="space-y-4">
+        <input type="hidden" id="cal-player-edit-id">
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-1">カテゴリー</label>
+          <select id="cal-player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <option value="">未設定</option>
+            <option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option>
+            <option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-1">背番号</label>
+          <input type="number" id="cal-player-number" min="0" max="99" placeholder="背番号を入力" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-1">選手名</label>
+          <input type="text" id="cal-player-name" placeholder="選手の名前" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <p id="cal-player-modal-error" class="hidden text-sm text-red-600 font-medium"></p>
+        <button onclick="saveCalPlayer()" class="w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-3.5 rounded-xl transition-colors">
+          <span id="cal-player-save-label">選手を登録</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 選手削除確認モーダル ════════════════════════════════════════════ -->
+<div id="cal-player-delete-modal" class="fixed inset-0 z-[120] hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCalDeletePlayerModal()"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-sm bg-white rounded-2xl shadow-2xl p-6 text-center">
+    <span class="text-5xl mb-4 block">🗑️</span>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">この選手を削除しますか？</h3>
+    <p class="text-gray-600 text-sm mb-6">この操作は取り消せません</p>
+    <div class="flex gap-3">
+      <button onclick="closeCalDeletePlayerModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition-colors">キャンセル</button>
+      <button onclick="handleCalDeletePlayer()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-colors">
+        <span id="cal-player-delete-text">削除する</span>
+        <span id="cal-player-delete-loading" class="hidden">削除中...</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ 時間ピッカー ══════════════════════════════════════════════════ -->
 <div id="time-picker-modal" class="hidden fixed inset-0 z-[210] flex items-end sm:items-center justify-center">
@@ -1160,6 +1230,7 @@
     document.getElementById('menu-login-btn')?.classList.toggle('hidden', admin);
     document.getElementById('menu-logout-btn')?.classList.toggle('hidden', !admin || !isSetupMode);
     document.getElementById('menu-admin-link-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('menu-player-btn')?.classList.toggle('hidden', !admin);
     // 詳細ポップアップ：管理者ボタン群
     document.getElementById('detail-admin-links')?.classList.toggle('hidden', !admin);
     document.getElementById('detail-admin-btns')?.classList.toggle('hidden', !admin);
@@ -1722,19 +1793,180 @@
     modal.classList.remove('hidden');
   }
 
-  // ─── リンクをコピー・回答を確認 ──────────────────────────────────────
-  function getAttendanceBaseUrl() {
-    const base = getBaseUrl();
-    return base ? base.replace(/calendar\.html$/i, 'attendance.html') : '';
+  // ─── 選手管理 ────────────────────────────────────────────────────────
+  const TABLE_PLAYERS = 'app_records';
+  let calPlayerRecords = [];
+  let calPlayerToDelete = null;
+  let calPlayerAccordionState = {};
+  const CAL_PLAYER_CATEGORIES = ['U7','U8','U9','U10','U11','U12'];
+
+  async function loadCalPlayers() {
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from(TABLE_PLAYERS).select('id, payload, created_at').eq('type', 'player');
+    if (error) { console.error('loadCalPlayers:', error); return; }
+    calPlayerRecords = data || [];
+    // calPlayersMap も更新
+    calPlayersMap = {};
+    calPlayerRecords.forEach(p => {
+      if (p.payload?.number) calPlayersMap[String(p.payload.number).trim()] = p.payload.name || '';
+    });
+    renderCalPlayerList();
   }
+
+  function openCalPlayerListModal() {
+    document.getElementById('settings-menu')?.classList.add('hidden');
+    document.getElementById('cal-player-list-modal').classList.remove('hidden');
+    loadCalPlayers();
+  }
+  function closeCalPlayerListModal() {
+    document.getElementById('cal-player-list-modal').classList.add('hidden');
+  }
+
+  function renderCalPlayerList() {
+    const listEl  = document.getElementById('cal-player-list');
+    const emptyEl = document.getElementById('cal-player-empty');
+    if (!listEl) return;
+    if (calPlayerRecords.length === 0) {
+      listEl.innerHTML = '';
+      emptyEl?.classList.remove('hidden');
+      return;
+    }
+    emptyEl?.classList.add('hidden');
+    const grouped = Object.fromEntries(CAL_PLAYER_CATEGORIES.map(cat => [cat, []]));
+    const uncategorized = [];
+    calPlayerRecords.forEach(p => {
+      const cat = p.payload?.category || '';
+      if (cat && grouped[cat] !== undefined) grouped[cat].push(p);
+      else uncategorized.push(p);
+    });
+    listEl.innerHTML = '';
+    const renderSection = (label, list) => {
+      if (list.length === 0) return;
+      const section = document.createElement('div');
+      section.className = 'space-y-2';
+      const isOpen = calPlayerAccordionState[label] !== false;
+      const body = document.createElement('div');
+      body.className = `pl-2 space-y-2${isOpen ? '' : ' hidden'}`;
+      const header = document.createElement('button');
+      header.className = 'w-full text-left bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center justify-between';
+      header.innerHTML = `<span>${escHtml(label)}（${list.length}人）</span><span>${isOpen ? '▼' : '▶'}</span>`;
+      header.addEventListener('click', () => {
+        calPlayerAccordionState[label] = body.classList.contains('hidden');
+        renderCalPlayerList();
+      });
+      list.sort((a, b) => Number(a.payload?.number || 0) - Number(b.payload?.number || 0))
+        .forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'bg-white rounded-xl shadow p-3 flex items-center justify-between gap-3';
+          card.innerHTML = `
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-1 rounded-lg bg-red-600 text-white text-sm font-black">#${escHtml(p.payload?.number || '')}</span>
+              <span class="font-bold text-gray-800">${escHtml(p.payload?.name || '')}</span>
+            </div>
+            <div class="flex gap-2">
+              <button class="edit-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">編集</button>
+              <button class="del-btn bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">削除</button>
+            </div>`;
+          card.querySelector('.edit-btn').addEventListener('click', e => { e.stopPropagation(); openCalPlayerModal(p.id); });
+          card.querySelector('.del-btn').addEventListener('click',  e => { e.stopPropagation(); openCalDeletePlayerModal(p); });
+          body.appendChild(card);
+        });
+      section.appendChild(header);
+      section.appendChild(body);
+      listEl.appendChild(section);
+    };
+    CAL_PLAYER_CATEGORIES.forEach(cat => renderSection(cat, grouped[cat]));
+    if (uncategorized.length > 0) renderSection('未設定', uncategorized);
+  }
+
+  function openCalPlayerModal(id) {
+    const errEl = document.getElementById('cal-player-modal-error');
+    errEl.classList.add('hidden');
+    if (id) {
+      const rec = calPlayerRecords.find(p => p.id === id);
+      if (!rec) return;
+      document.getElementById('cal-player-modal-title').textContent = '選手を編集';
+      document.getElementById('cal-player-save-label').textContent  = '保存する';
+      document.getElementById('cal-player-edit-id').value    = id;
+      document.getElementById('cal-player-number').value     = rec.payload?.number || '';
+      document.getElementById('cal-player-name').value       = rec.payload?.name || '';
+      document.getElementById('cal-player-category').value   = rec.payload?.category || '';
+    } else {
+      document.getElementById('cal-player-modal-title').textContent = '選手を追加';
+      document.getElementById('cal-player-save-label').textContent  = '選手を登録';
+      document.getElementById('cal-player-edit-id').value  = '';
+      document.getElementById('cal-player-number').value   = '';
+      document.getElementById('cal-player-name').value     = '';
+      document.getElementById('cal-player-category').value = '';
+    }
+    document.getElementById('cal-player-modal').classList.remove('hidden');
+  }
+  function closeCalPlayerModal() {
+    document.getElementById('cal-player-modal').classList.add('hidden');
+  }
+
+  async function saveCalPlayer() {
+    const id       = document.getElementById('cal-player-edit-id').value;
+    const number   = document.getElementById('cal-player-number').value.trim();
+    const name     = document.getElementById('cal-player-name').value.trim();
+    const category = document.getElementById('cal-player-category').value;
+    const errEl    = document.getElementById('cal-player-modal-error');
+    const saveLabel = document.getElementById('cal-player-save-label');
+    errEl.classList.add('hidden');
+    if (!number) { errEl.textContent = '背番号を入力してください'; errEl.classList.remove('hidden'); return; }
+    if (!name)   { errEl.textContent = '選手名を入力してください'; errEl.classList.remove('hidden'); return; }
+    const payload = { number, name, category };
+    saveLabel.textContent = '保存中...';
+    try {
+      if (id) {
+        const { error } = await supabaseClient.from(TABLE_PLAYERS).update({ payload }).eq('id', id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient.from(TABLE_PLAYERS).insert({ type: 'player', payload });
+        if (error) throw error;
+      }
+      closeCalPlayerModal();
+      await loadCalPlayers();
+    } catch(e) {
+      errEl.textContent = '保存に失敗しました: ' + (e.message || e);
+      errEl.classList.remove('hidden');
+    } finally {
+      saveLabel.textContent = id ? '保存する' : '選手を登録';
+    }
+  }
+
+  function openCalDeletePlayerModal(p) {
+    calPlayerToDelete = p;
+    document.getElementById('cal-player-delete-modal').classList.remove('hidden');
+  }
+  function closeCalDeletePlayerModal() {
+    calPlayerToDelete = null;
+    document.getElementById('cal-player-delete-modal').classList.add('hidden');
+  }
+  async function handleCalDeletePlayer() {
+    if (!calPlayerToDelete) return;
+    const textEl    = document.getElementById('cal-player-delete-text');
+    const loadingEl = document.getElementById('cal-player-delete-loading');
+    textEl.classList.add('hidden');
+    loadingEl.classList.remove('hidden');
+    const { error } = await supabaseClient.from(TABLE_PLAYERS).delete().eq('id', calPlayerToDelete.id);
+    textEl.classList.remove('hidden');
+    loadingEl.classList.add('hidden');
+    if (error) { alert('削除に失敗しました'); return; }
+    closeCalDeletePlayerModal();
+    await loadCalPlayers();
+  }
+
+  // ─── リンクをコピー・回答を確認 ──────────────────────────────────────
   async function copyEventLink() {
     const ev = currentDetailEvent;
     if (!ev) return;
     const cfg = loadConfig();
     if (!cfg?.supabase_url) return;
     const hash = buildHashString(cfg);
-    const attUrl = getAttendanceBaseUrl();
-    const link = attUrl ? `${attUrl}?respond=${ev.id}#${hash}` : '';
+    const base = getBaseUrl();
+    const link = base ? `${base}?respond=${ev.id}#${hash}` : '';
     if (!link) { alert('公開URLが取得できません。接続設定のURLを確認してください。'); return; }
 
     const btn = document.querySelector('[onclick="copyEventLink()"]');
@@ -2274,6 +2506,21 @@
       if (!initSupabase()) {
         document.getElementById('loading-screen').classList.add('hidden');
         openSetupModal();
+        return;
+      }
+
+      // 個別回答リンク（?respond=eventId）：ファミリーモードと同じ権限で回答フォームを直接表示
+      const respondEventId = params.get('respond');
+      if (respondEventId) {
+        setAdminMode(false);
+        applyModeRestrictions();
+        await loadEvents();
+        document.getElementById('loading-screen').classList.add('hidden');
+        const targetEv = events.find(e => String(e.id) === String(respondEventId));
+        if (targetEv) {
+          currentDetailEvent = targetEv;
+          openParentRespond();
+        }
         return;
       }
 
