@@ -1376,13 +1376,17 @@
       const dateLabel = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
       const isPast = ev.event_date < today;
       const color = catColor(ev.category);
+      const count = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
+      const countBadge = count > 0
+        ? `<span class="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-1">📊 ${count}件</span>`
+        : '';
       const catTitle = ev.category
         ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
         : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
       return `<div class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden flex${isPast ? ' opacity-60' : ''}" onclick="openDetail('${ev.id}')" style="cursor:pointer">
         <div class="w-1.5 shrink-0" style="background:${color}"></div>
         <div class="px-4 py-3 flex-1 min-w-0">
-          <p class="text-sm leading-snug mb-1">${catTitle}</p>
+          <p class="text-sm leading-snug mb-1">${catTitle}${countBadge}</p>
           <div class="text-xs text-gray-500" style="display:inline-grid;grid-template-columns:auto auto;gap:2px 12px">
             <div>📅 ${dateLabel}</div>
             <div>${ev.location   ? `📍 ${escHtml(ev.location)}`   : ''}</div>
