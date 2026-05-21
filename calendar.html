@@ -511,7 +511,7 @@
         </button>
         <button onclick="showParentResults()"
           class="flex items-center justify-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">
-          📊 結果を見る
+          <span id="parent-resp-label">📊 結果を見る</span>
         </button>
       </div>
       <!-- カレンダーに追加 -->
@@ -1434,6 +1434,7 @@
 
     // 回答件数を非同期取得
     document.getElementById('detail-resp-label').textContent = '📋 回答を確認';
+    document.getElementById('parent-resp-label').textContent = '📊 結果を見る';
     document.getElementById('detail-modal').classList.remove('hidden');
     if (supabaseClient) {
       try {
@@ -1441,6 +1442,7 @@
           .from(TABLE_RESPONSES).select('id').eq('event_id', ev.id);
         const count = data?.length ?? 0;
         document.getElementById('detail-resp-label').textContent = `📋 回答を確認（${count}件）`;
+        document.getElementById('parent-resp-label').textContent = `📊 結果を見る（${count}件）`;
       } catch(e) {}
     }
   }
