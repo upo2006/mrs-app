@@ -1237,10 +1237,11 @@
     document.getElementById('open-setup-menu-btn')?.classList.toggle('hidden', !admin && isSetupMode);
     document.getElementById('menu-team-btn')?.classList.toggle('hidden', !admin && isSetupMode);
     document.getElementById('menu-parent-link-btn')?.classList.toggle('hidden', !admin && isSetupMode);
-    // セットアップ未ログイン時はチーム名を非表示（「カレンダー」に戻す）
+    // セットアップ未ログイン時はチーム名・イベントデータを非表示
     if (!admin && isSetupMode) {
       document.getElementById('app-team-name').textContent = 'カレンダー';
       document.title = 'カレンダー';
+      events = [];
     } else if (admin) {
       const cfg = loadConfig();
       if (cfg && cfg.team_name) {
