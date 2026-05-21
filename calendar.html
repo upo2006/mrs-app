@@ -1444,9 +1444,7 @@
       const isPast = ev.event_date < today;
       const color = catColor(ev.category);
       const count = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
-      const countBadge = count > 0
-        ? `<span class="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-1">📊 ${count}件</span>`
-        : '';
+      const countBadge = `<span class="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-1">📊 ${count}件</span>`;
       const catTitle = ev.category
         ? `<span class="font-black" style="color:${color}">${escHtml(ev.category)}</span><span class="text-gray-300 mx-1">/</span><span class="font-black text-gray-800">${escHtml(ev.title)}</span>`
         : `<span class="font-black text-gray-800">${escHtml(ev.title)}</span>`;
