@@ -108,10 +108,10 @@
           <div id="settings-menu" class="hidden absolute right-0 top-full mt-2 w-52 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 overflow-hidden z-40">
             <button type="button" id="menu-login-btn" onclick="openLoginModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors font-bold">🔑 ログイン</button>
             <button type="button" id="open-setup-menu-btn" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold">⚙️ 接続設定</button>
-            <button type="button" onclick="openTeamManager()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold">🏟️ チーム管理</button>
+            <button type="button" id="menu-team-btn" onclick="openTeamManager()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold">🏟️ チーム管理</button>
             <button type="button" id="menu-player-btn" onclick="openCalPlayerListModal()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold">👤 選手管理</button>
             <button type="button" id="menu-admin-link-btn" onclick="openAdminLinkModal()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-red-600 font-bold">🔧 コーチリンク</button>
-            <button type="button" onclick="openParentLinkModal()" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 ファミリーリンク</button>
+            <button type="button" id="menu-parent-link-btn" onclick="openParentLinkModal()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 text-green-600 font-bold">🔗 ファミリーリンク</button>
             <button type="button" id="menu-logout-btn" onclick="handleLogout()" class="hidden w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 font-bold">🚪 ログアウト</button>
           </div>
         </div>
@@ -1216,6 +1216,7 @@
       if (error) { setStatus(status, 'メールアドレスまたはパスワードが違います', 'error'); return; }
       closeLoginModal();
       setAdminMode(true);
+      await loadEvents();
     } catch(e) {
       setStatus(status, e.message === 'timeout' ? 'タイムアウトしました' : 'ログインに失敗しました', 'error');
     } finally {
@@ -1237,9 +1238,12 @@
     document.getElementById('add-event-btn')?.classList.toggle('hidden', !admin);
     // 設定メニュー内ボタン
     document.getElementById('menu-login-btn')?.classList.toggle('hidden', admin);
-    document.getElementById('menu-logout-btn')?.classList.toggle('hidden', !admin || !isSetupMode);
-    document.getElementById('menu-admin-link-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('open-setup-menu-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('menu-team-btn')?.classList.toggle('hidden', !admin);
     document.getElementById('menu-player-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('menu-admin-link-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('menu-parent-link-btn')?.classList.toggle('hidden', !admin);
+    document.getElementById('menu-logout-btn')?.classList.toggle('hidden', !admin || !isSetupMode);
     // 詳細ポップアップ：管理者ボタン群
     document.getElementById('detail-admin-links')?.classList.toggle('hidden', !admin);
     document.getElementById('detail-admin-btns')?.classList.toggle('hidden', !admin);
@@ -1258,9 +1262,10 @@
     }
     // コーチモード：セットアップ専用メニューを非表示
     if (isCoachMode) {
-      document.querySelector('#settings-menu [onclick="openTeamManager()"]')?.classList.add('hidden');
+      document.getElementById('menu-team-btn')?.classList.add('hidden');
       document.getElementById('open-setup-menu-btn')?.classList.add('hidden');
       document.getElementById('menu-admin-link-btn')?.classList.add('hidden');
+      document.getElementById('menu-parent-link-btn')?.classList.remove('hidden');
     }
     // ファミリーモード：タブナビをタイトル型に切り替え、カレンダービュー固定
     if (isFamilyMode) {
