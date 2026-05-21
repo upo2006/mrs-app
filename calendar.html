@@ -1213,7 +1213,7 @@
     if (isAdmin) await cleanupOldEvents();
     try {
       const { data, error } = await supabaseClient
-        .from(TABLE_EVENTS).select('*').order('event_date', { ascending: true });
+        .from(TABLE_EVENTS).select(`*, ${TABLE_RESPONSES}(count)`).order('event_date', { ascending: true });
       if (!error && data) events = data;
     } catch(e) {}
     renderCalendar();
@@ -1432,19 +1432,11 @@
     // 管理者ボタン表示
     document.getElementById('detail-admin-btns').classList.toggle('hidden', !isAdmin);
 
-    // 回答件数を非同期取得
-    document.getElementById('detail-resp-label').textContent = '📋 回答を確認';
-    document.getElementById('parent-resp-label').textContent = '📊 結果を見る';
+    // 回答件数（イベントデータに含まれているので即時表示）
+    const respCount = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
+    document.getElementById('detail-resp-label').textContent = respCount > 0 ? `📋 回答を確認（${respCount}件）` : '📋 回答を確認';
+    document.getElementById('parent-resp-label').textContent = respCount > 0 ? `📊 結果を見る（${respCount}件）` : '📊 結果を見る';
     document.getElementById('detail-modal').classList.remove('hidden');
-    if (supabaseClient) {
-      try {
-        const { data } = await supabaseClient
-          .from(TABLE_RESPONSES).select('id').eq('event_id', ev.id);
-        const count = data?.length ?? 0;
-        document.getElementById('detail-resp-label').textContent = `📋 回答を確認（${count}件）`;
-        document.getElementById('parent-resp-label').textContent = `📊 結果を見る（${count}件）`;
-      } catch(e) {}
-    }
   }
 
   function closeDetailModal() {
