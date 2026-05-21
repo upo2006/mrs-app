@@ -1254,12 +1254,7 @@
       document.getElementById('open-setup-menu-btn')?.classList.add('hidden');
       document.getElementById('menu-admin-link-btn')?.classList.add('hidden');
     }
-    // ファミリーモード：タブナビをタイトル型に切り替え、カレンダービュー固定
-    if (isFamilyMode) {
-      document.getElementById('tab-nav')?.classList.add('hidden');
-      document.getElementById('family-nav')?.classList.remove('hidden');
-      setView('month');
-    }
+    // ファミリーモード：コーチモードと同レイアウト（設定・新規作成は setAdminMode(false) で非表示済み）
   }
 
   // ─── 1年以上前のイベント自動削除（管理者のみ） ──────────────────────
