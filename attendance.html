@@ -2041,13 +2041,8 @@
       adminLinks.classList.add('hidden');
       adminBtns.classList.add('hidden');
       parentBtns.classList.remove('hidden');
-      document.getElementById('att-card-parent-resp-label').textContent = '📊 結果を見る';
-      if (supabaseClient) {
-        supabaseClient.from(TABLE_RESPONSES).select('id').eq('event_id', ev.id).then(({ data }) => {
-          const count = data?.length ?? 0;
-          document.getElementById('att-card-parent-resp-label').textContent = `📊 結果を見る（${count}件）`;
-        }).catch(() => {});
-      }
+      const count = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
+      document.getElementById('att-card-parent-resp-label').textContent = count > 0 ? `📊 結果を見る（${count}件）` : '📊 結果を見る';
     } else {
       const count = ev[TABLE_RESPONSES]?.[0]?.count ?? 0;
       document.getElementById('att-card-resp-label').textContent = `📊 回答を確認（${count}件）`;
