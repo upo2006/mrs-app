@@ -4677,8 +4677,11 @@ ${error?.message || ''}`);
           if (event === 'PASSWORD_RECOVERY') { showResetPasswordModal(); }
         });
 
+        // セットアップガイドからのリンク（?setup=1）
+        const isFromSetupGuide = new URLSearchParams(window.location.search).get('setup') === '1';
+
         // セットアップモードのみ認証チェック（コーチ・ファミリーはログイン不要）
-        if (isSetupMode) {
+        if (isSetupMode && !isFromSetupGuide) {
           let session = null;
           try {
             const result = await Promise.race([
@@ -4701,6 +4704,11 @@ ${error?.message || ''}`);
           } catch(e) { /* タイムアウト → サブスクリプション未確認扱い */ }
           if (!ok) { showSubscriptionModal(); return; }
           await startApp();
+        }
+
+        // セットアップガイドからの場合：スプラッシュを消して接続設定を開く
+        if (isFromSetupGuide) {
+          document.getElementById('loading-splash')?.remove();
         }
 
         // 旧設定を新マルチチーム形式へ移行
@@ -4815,7 +4823,12 @@ ${error?.message || ''}`);
         }
 
         applyModeRestrictions();
-        if (cfg) {
+        if (isFromSetupGuide) {
+          // セットアップガイドから来た場合は設定の有無にかかわらず接続設定を開く
+          if (cfg) { applyConfigValues(cfg); applyConfig(defaultConfig); }
+          else { applyConfig(defaultConfig); }
+          setTimeout(() => openSetupModal(), 200);
+        } else if (cfg) {
           applyConfigValues(cfg);
           applyConfig(defaultConfig);
           await initData();
