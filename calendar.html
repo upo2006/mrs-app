@@ -1867,6 +1867,7 @@
   async function viewResponses() {
     const ev = currentDetailEvent;
     if (!ev || !supabaseClient) return;
+    closeDetailModal();
 
     // モーダルを先に開いてローディング
     // カテゴリー / タイトル
