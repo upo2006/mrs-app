@@ -1961,7 +1961,7 @@
     const val = document.getElementById('ev-time').value || '';
     const btn = document.getElementById('ev-time-display');
     if (btn) {
-      btn.textContent = val ? `🕐 ${val}` : '🕐 タップして時間を設定';
+      btn.textContent = val ? val : 'タップして時間を設定';
       btn.parentElement.classList.toggle('text-gray-800', !!val);
       btn.parentElement.classList.toggle('text-gray-400', !val);
     }
