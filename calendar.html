@@ -141,9 +141,18 @@
         ＋ 新規作成
       </button>
     </div>
-    <!-- タイトル型（ファミリーモード：カレンダーのみ・リスト非表示） -->
-    <div id="family-nav" class="hidden bg-white rounded-2xl shadow border border-gray-200 px-4 py-3 flex items-center justify-between gap-3" style="margin-top:0">
-      <h2 class="text-base font-black text-gray-800 whitespace-nowrap">📅 カレンダー</h2>
+    <!-- タブ型（ファミリーモード） -->
+    <div id="family-nav" class="hidden bg-white rounded-2xl shadow border border-gray-200 px-3 py-2.5 flex items-center gap-2" style="margin-top:0">
+      <div class="flex flex-1 bg-gray-100 rounded-xl p-1 gap-1 min-w-0">
+        <button id="fam-btn-month" onclick="setView('month')"
+          class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-red-500 text-white transition-colors whitespace-nowrap">
+          📅 カレンダー
+        </button>
+        <button id="fam-btn-list" onclick="setView('list')"
+          class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap">
+          📋 リスト
+        </button>
+      </div>
     </div>
 
     <!-- カテゴリーフィルター（一行・均等配置） -->
@@ -1366,8 +1375,12 @@
     try { localStorage.setItem(STORAGE_VIEW_KEY, mode); } catch(e) {}
     document.getElementById('view-month').classList.toggle('hidden', mode !== 'month');
     document.getElementById('view-list').classList.toggle('hidden', mode !== 'list');
-    document.getElementById('btn-month').className = `flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${mode === 'month' ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-gray-700'}`;
-    document.getElementById('btn-list').className  = `flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${mode === 'list'  ? 'bg-red-500 text-white' : 'text-gray-500 hover:text-gray-700'}`;
+    const _act = 'flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap bg-red-500 text-white';
+    const _ina = 'flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap text-gray-500 hover:text-gray-700';
+    document.getElementById('btn-month').className     = mode === 'month' ? _act : _ina;
+    document.getElementById('btn-list').className      = mode === 'list'  ? _act : _ina;
+    document.getElementById('fam-btn-month')?.className = mode === 'month' ? _act : _ina;
+    document.getElementById('fam-btn-list')?.className  = mode === 'list'  ? _act : _ina;
     renderCalendar();
   }
 
