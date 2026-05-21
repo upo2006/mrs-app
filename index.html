@@ -975,6 +975,7 @@
       }
       // コーチモード：セットアップ専用メニューを非表示
       if (isCoachMode) {
+        document.getElementById('menu-login-btn')?.classList.add('hidden');
         document.getElementById('open-team-manager-btn')?.classList.add('hidden');
         document.getElementById('open-setup-btn')?.classList.add('hidden');
         document.querySelector('#settings-menu [onclick="openAdminLinkModal()"]')?.classList.add('hidden');
