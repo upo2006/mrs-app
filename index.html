@@ -739,55 +739,55 @@
     <div id="match-modal" class="fixed inset-0 z-50 hidden">
       <div class="modal-backdrop absolute inset-0" id="modal-backdrop"></div>
       <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-full">
-        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 rounded-t-2xl flex items-center justify-between shrink-0">
+        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-2 rounded-t-2xl flex items-center justify-between shrink-0">
           <h2 id="modal-title" class="text-xl font-black">試合を記録</h2>
           <button id="close-modal" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
-        <div class="overflow-y-auto overscroll-y-contain flex-1 px-4 pt-4 pb-2">
-          <form id="match-form" class="space-y-2">
+        <div class="overflow-y-auto overscroll-y-contain flex-1 px-3 pt-3 pb-1">
+          <form id="match-form" class="space-y-1">
             <input type="hidden" id="match-id">
-            <div><label class="block text-gray-700 text-xs font-bold mb-1">日付</label><input type="date" id="match-date" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
-            <div><label class="block text-gray-700 text-xs font-bold mb-1">カテゴリー</label><select id="match-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"><option value="">未設定</option><option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option><option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option></select></div>
-            <div><label class="block text-gray-700 text-xs font-bold mb-1">大会名</label><input type="text" id="tournament" placeholder="大会名を入力" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
-            <div><label class="block text-gray-700 text-xs font-bold mb-1">ラウンド</label><input type="text" id="round" placeholder="予選、1本目、決勝など" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
-            <div><label class="block text-gray-700 text-xs font-bold mb-1">対戦相手</label><input type="text" id="opponent" placeholder="相手チーム名" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-0.5">日付</label><input type="date" id="match-date" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-0.5">カテゴリー</label><select id="match-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"><option value="">未設定</option><option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option><option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option></select></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-0.5">大会名</label><input type="text" id="tournament" placeholder="大会名を入力" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-0.5">ラウンド</label><input type="text" id="round" placeholder="予選、1本目、決勝など" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-0.5">対戦相手</label><input type="text" id="opponent" placeholder="相手チーム名" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="block text-gray-700 text-xs font-bold mb-1">甲子園SS</label>
+                <label class="block text-gray-700 text-xs font-bold mb-0.5">甲子園SS</label>
                 <div class="flex items-center gap-1">
-                  <button type="button" onclick="adjustScore('our-score',-1)" class="w-10 h-10 shrink-0 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-800 text-xl font-bold rounded-lg flex items-center justify-center select-none touch-manipulation">－</button>
-                  <input type="number" id="our-score" required min="0" max="99" value="0" inputmode="numeric" class="score-input flex-1 min-w-0 bg-gray-50 border border-gray-300 rounded-lg py-1.5 text-gray-800 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-red-500">
-                  <button type="button" onclick="adjustScore('our-score',1)" class="w-10 h-10 shrink-0 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xl font-bold rounded-lg flex items-center justify-center select-none touch-manipulation">＋</button>
+                  <button type="button" onclick="adjustScore('our-score',-1)" class="w-9 h-9 shrink-0 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-800 text-xl font-bold rounded-lg flex items-center justify-center select-none touch-manipulation">－</button>
+                  <input type="number" id="our-score" required min="0" max="99" value="0" inputmode="numeric" class="score-input flex-1 min-w-0 bg-gray-50 border border-gray-300 rounded-lg py-1 text-gray-800 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-red-500">
+                  <button type="button" onclick="adjustScore('our-score',1)" class="w-9 h-9 shrink-0 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xl font-bold rounded-lg flex items-center justify-center select-none touch-manipulation">＋</button>
                 </div>
               </div>
               <div>
-                <label class="block text-gray-700 text-xs font-bold mb-1" id="opponent-label">対戦相手</label>
+                <label class="block text-gray-700 text-xs font-bold mb-0.5" id="opponent-label">対戦相手</label>
                 <div class="flex items-center gap-1">
-                  <button type="button" onclick="adjustScore('opponent-score',-1)" class="w-10 h-10 shrink-0 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-800 text-xl font-bold rounded-lg flex items-center justify-center select-none touch-manipulation">－</button>
-                  <input type="number" id="opponent-score" required min="0" max="99" value="0" inputmode="numeric" class="score-input flex-1 min-w-0 bg-gray-50 border border-gray-300 rounded-lg py-1.5 text-gray-800 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-red-500">
-                  <button type="button" onclick="adjustScore('opponent-score',1)" class="w-10 h-10 shrink-0 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xl font-bold rounded-lg flex items-center justify-center select-none touch-manipulation">＋</button>
+                  <button type="button" onclick="adjustScore('opponent-score',-1)" class="w-9 h-9 shrink-0 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-800 text-xl font-bold rounded-lg flex items-center justify-center select-none touch-manipulation">－</button>
+                  <input type="number" id="opponent-score" required min="0" max="99" value="0" inputmode="numeric" class="score-input flex-1 min-w-0 bg-gray-50 border border-gray-300 rounded-lg py-1 text-gray-800 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-red-500">
+                  <button type="button" onclick="adjustScore('opponent-score',1)" class="w-9 h-9 shrink-0 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xl font-bold rounded-lg flex items-center justify-center select-none touch-manipulation">＋</button>
                 </div>
               </div>
             </div>
             <div>
-              <label class="block text-gray-700 text-xs font-bold mb-1">得点者<span id="scorer-limit-message" class="text-red-600 ml-2"></span></label>
-              <div id="scorers-container" class="space-y-2">
-                <input type="text" id="scorer-input" readonly placeholder="背番号をタップ" onclick="showNumpad('scorer')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 text-center text-base font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500">
-                <div id="scorers-list" class="flex flex-wrap gap-2"></div>
+              <label class="block text-gray-700 text-xs font-bold mb-0.5">得点者<span id="scorer-limit-message" class="text-red-600 ml-2"></span></label>
+              <div id="scorers-container" class="space-y-1">
+                <input type="text" id="scorer-input" readonly placeholder="背番号をタップ" onclick="showNumpad('scorer')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-gray-800 placeholder-gray-400 text-center text-sm font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500">
+                <div id="scorers-list" class="flex flex-wrap gap-1.5"></div>
               </div>
             </div>
             <div>
-              <label class="block text-gray-700 text-xs font-bold mb-1">出場選手</label>
-              <div class="space-y-2">
-                <input type="text" id="attendee-input" readonly placeholder="背番号をタップ" onclick="showNumpad('attendee')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 text-center text-base font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500">
-                <div id="attendees-list" class="flex flex-wrap gap-2"></div>
+              <label class="block text-gray-700 text-xs font-bold mb-0.5">出場選手</label>
+              <div class="space-y-1">
+                <input type="text" id="attendee-input" readonly placeholder="背番号をタップ" onclick="showNumpad('attendee')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-gray-800 placeholder-gray-400 text-center text-sm font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <div id="attendees-list" class="flex flex-wrap gap-1.5"></div>
                 <p id="attendee-duplicate-msg" class="hidden text-xs text-red-500 font-medium">この選手はすでに追加されています</p>
               </div>
             </div>
           </form>
         </div>
-        <div class="px-4 pb-4 pt-2 shrink-0">
-          <button type="submit" form="match-form" id="submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-3 rounded-xl shadow-lg">
+        <div class="px-3 pb-3 pt-1 shrink-0">
+          <button type="submit" form="match-form" id="submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-2.5 rounded-xl shadow-lg">
             <span id="submit-text">記録を保存</span>
             <span id="submit-loading" class="hidden">保存中...</span>
           </button>
@@ -798,20 +798,20 @@
     <div id="player-modal" class="fixed inset-0 z-50 hidden">
       <div class="modal-backdrop absolute inset-0" id="player-modal-backdrop"></div>
       <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-full">
-        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between shrink-0">
+        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-2.5 rounded-t-2xl flex items-center justify-between shrink-0">
           <h2 id="player-modal-title" class="text-xl font-black">選手を登録</h2>
           <button id="close-player-modal" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
-        <div class="overflow-y-auto overscroll-y-contain flex-1 px-6 pt-6 pb-2">
-          <form id="player-form" class="space-y-4">
+        <div class="overflow-y-auto overscroll-y-contain flex-1 px-4 pt-4 pb-1">
+          <form id="player-form" class="space-y-2">
             <input type="hidden" id="player-id">
-            <div><label class="block text-gray-700 text-sm font-medium mb-1">カテゴリー</label><select id="player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"><option value="">未設定</option><option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option><option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option></select></div>
-            <div><label class="block text-gray-700 text-sm font-medium mb-1">背番号</label><input type="text" id="player-number" required readonly placeholder="背番号をタップ" onclick="showNumpad('player')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 placeholder-gray-400 text-center text-xl font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"></div>
-            <div><label class="block text-gray-700 text-sm font-medium mb-1">選手名</label><input type="text" id="player-name" required placeholder="選手の名前" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-0.5">カテゴリー</label><select id="player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"><option value="">未設定</option><option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option><option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option></select></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-0.5">背番号</label><input type="text" id="player-number" required readonly placeholder="背番号をタップ" onclick="showNumpad('player')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 text-center text-lg font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-0.5">選手名</label><input type="text" id="player-name" required placeholder="選手の名前" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
           </form>
         </div>
-        <div class="px-6 pb-6 pt-3 shrink-0">
-          <button type="submit" form="player-form" id="player-submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-4 rounded-xl shadow-lg">
+        <div class="px-4 pb-4 pt-2 shrink-0">
+          <button type="submit" form="player-form" id="player-submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-3 rounded-xl shadow-lg">
             <span id="player-submit-text">選手を登録</span>
             <span id="player-submit-loading" class="hidden">保存中...</span>
           </button>
