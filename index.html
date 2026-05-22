@@ -4812,6 +4812,7 @@ ${error?.message || ''}`);
                 applyConfig(defaultConfig);
                 applyModeRestrictions();
                 await initData();
+                setTimeout(() => { fitTeamName(); fitSubtitle(); }, 50);
                 return;
               }
             }
