@@ -4473,6 +4473,11 @@ ${error?.message || ''}`);
             btn.disabled = false;
             if (txt)  txt.classList.remove('hidden');
             if (load) load.classList.add('hidden');
+            // ?setup=1 が残っていたら URL を正規化（リロード時の再ログイン防止）
+            if (window.location.search.includes('setup=1')) {
+              history.replaceState(null, '', location.pathname);
+              isFromSetupGuide = false;
+            }
             await initData();
           } catch (e2) {
             console.error('initData error:', e2);
