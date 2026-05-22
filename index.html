@@ -1273,7 +1273,7 @@
     function fitSubtitle() {
       const el = document.getElementById('mrs-subtitle');
       if (!el) return;
-      if (window.innerWidth < 640) { el.style.fontSize = '0.7rem'; return; }
+      if (window.innerWidth < 640) { el.style.fontSize = '1rem'; return; }
       const container = el.parentElement;
       if (!container) return;
       requestAnimationFrame(() => {
