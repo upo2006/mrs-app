@@ -4493,6 +4493,7 @@ ${error?.message || ''}`);
     const AUTH_URL      = 'https://ggmtlfhctezozcdohzcm.supabase.co';
     const AUTH_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnbXRsZmhjdGV6b3pjZG9oemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMTIxMDQsImV4cCI6MjA4ODY4ODEwNH0.vpU78D4jYRdGPUTbYvG-vI_KMRwLofUJou_TmZ0FXBo';
     let authClient = null;
+    let isFromSetupGuide = false; // セットアップガイドからのリンク（?setup=1）
 
     function getAuthClient() {
       if (!authClient) {
@@ -4583,6 +4584,10 @@ ${error?.message || ''}`);
           ]);
         } catch(e) { ok = false; }
         if (!ok) { hideLoginModal(); showSubscriptionModal(); return; }
+        // セットアップガイドからのリンクの場合：ログイン完了フラグをセットしてリロード
+        if (isFromSetupGuide) {
+          try { sessionStorage.setItem('mrs_setup_auth', '1'); } catch(e) {}
+        }
         // セッションが保存されたのでリロードしてアプリを初期化
         location.reload();
       } catch(e) {
@@ -4678,7 +4683,18 @@ ${error?.message || ''}`);
         });
 
         // セットアップガイドからのリンク（?setup=1）
-        const isFromSetupGuide = new URLSearchParams(window.location.search).get('setup') === '1';
+        isFromSetupGuide = new URLSearchParams(window.location.search).get('setup') === '1';
+        if (isFromSetupGuide) {
+          // ログイン済みフラグがなければ先にログイン画面を表示
+          const alreadyAuthed = (() => { try { return sessionStorage.getItem('mrs_setup_auth') === '1'; } catch(e) { return false; } })();
+          if (!alreadyAuthed) {
+            document.getElementById('loading-splash')?.remove();
+            showLoginModal();
+            return;
+          }
+          // リロード後（ログイン済み）→ フラグをクリアして通常フローへ
+          try { sessionStorage.removeItem('mrs_setup_auth'); } catch(e) {}
+        }
 
         // セットアップモードのみ認証チェック（コーチ・ファミリーはログイン不要）
         if (isSetupMode) {
