@@ -1306,7 +1306,7 @@
         const w100 = tmp.getBoundingClientRect().width;
         document.body.removeChild(tmp);
         if (!w100) return;
-        const fs = Math.min(100, Math.max(14, Math.floor(maxW / w100 * 100 * 0.7)));
+        const fs = Math.min(100, Math.max(14, Math.floor(maxW / w100 * 100 * 1)));
         el.style.fontSize = fs + 'px';
       });
     }
