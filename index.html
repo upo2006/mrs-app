@@ -1273,18 +1273,20 @@
     function fitTeamName() {
       const el = elements.teamName;
       if (!el) return;
-      el.style.fontSize = '100px';
-      el.style.overflow = 'visible';
-      const container = el.closest('.flex-1') || el.parentElement;
+      const container = el.parentElement;
       if (!container) return;
       requestAnimationFrame(() => {
-        let fs = parseFloat(window.getComputedStyle(el).fontSize);
-        const minFs = 14;
-        while (el.scrollWidth > container.clientWidth + 2 && fs > minFs) {
-          fs -= 0.5;
-          el.style.fontSize = fs + 'px';
-        }
-        el.style.overflow = 'hidden';
+        const maxW = container.getBoundingClientRect().width;
+        if (!maxW) return;
+        const tmp = document.createElement('span');
+        tmp.style.cssText = 'position:fixed;top:-9999px;white-space:nowrap;font-weight:900;font-size:100px;font-family:inherit;visibility:hidden;';
+        tmp.textContent = el.textContent;
+        document.body.appendChild(tmp);
+        const w100 = tmp.getBoundingClientRect().width;
+        document.body.removeChild(tmp);
+        if (!w100) return;
+        const fs = Math.min(100, Math.max(14, Math.floor(maxW / w100 * 100)));
+        el.style.fontSize = fs + 'px';
       });
     }
 
