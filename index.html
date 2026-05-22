@@ -226,15 +226,17 @@
     <header class="p-4">
       <div class="max-w-[750px] mx-auto bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 shadow-lg rounded-2xl">
         <div class="flex items-center gap-3">
-          <span class="text-3xl shrink-0">⚽</span>
+          <div class="flex flex-col items-center shrink-0 gap-0.5">
+            <span class="text-2xl">📊</span>
+            <span id="mode-badge" class="text-[0.6rem] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider"></span>
+          </div>
           <div class="flex-1 min-w-0">
             <h1 id="team-name" class="font-black leading-tight" style="font-size:min(1.4rem,5vw);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">MATCH RECORD SYSTEM</h1>
-            <div class="flex items-start justify-between gap-2 mt-0.5">
+            <div class="flex items-start mt-0.5">
               <p class="text-[0.7rem] font-semibold text-white/80 uppercase flex-1 min-w-0" style="letter-spacing:0.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">MATCH RECORD SYSTEM</p>
-              <span id="mode-badge" class="text-[0.6rem] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0"></span>
             </div>
           </div>
-          <button id="settings-toggle-btn" type="button" class="shrink-0 bg-white/15 hover:bg-white/25 text-white text-lg rounded-lg px-3 py-2 transition-colors" aria-label="設定">⚙️</button>
+          <button id="settings-toggle-btn" type="button" class="shrink-0 bg-white/15 hover:bg-white/25 text-white text-sm rounded-lg px-2 py-1.5 transition-colors" aria-label="設定">⚙️</button>
         </div>
       </div>
     </header>
