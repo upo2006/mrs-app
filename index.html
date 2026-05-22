@@ -743,7 +743,7 @@
           <h2 id="modal-title" class="text-xl font-black">試合を記録</h2>
           <button id="close-modal" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
-        <div class="overflow-y-auto flex-1 p-4">
+        <div class="overflow-y-auto overscroll-y-contain flex-1 p-4">
           <form id="match-form" class="space-y-2">
             <input type="hidden" id="match-id">
             <div><label class="block text-gray-700 text-xs font-bold mb-1">日付</label><input type="date" id="match-date" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
@@ -800,7 +800,7 @@
           <h2 id="player-modal-title" class="text-xl font-black">選手を登録</h2>
           <button id="close-player-modal" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
-        <div class="overflow-y-auto flex-1 p-6">
+        <div class="overflow-y-auto overscroll-y-contain flex-1 p-6">
           <form id="player-form" class="space-y-4">
             <input type="hidden" id="player-id">
             <div><label class="block text-gray-700 text-sm font-medium mb-1">カテゴリー</label><select id="player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"><option value="">未設定</option><option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option><option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option></select></div>
