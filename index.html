@@ -1294,7 +1294,6 @@
     function fitTeamName() {
       const el = elements.teamName;
       if (!el) return;
-      if (window.innerWidth < 640) { el.style.fontSize = 'min(4rem,5.5vw)'; return; }
       const container = el.parentElement;
       if (!container) return;
       requestAnimationFrame(() => {
@@ -1307,7 +1306,8 @@
         const w100 = tmp.getBoundingClientRect().width;
         document.body.removeChild(tmp);
         if (!w100) return;
-        const fs = Math.min(100, Math.max(14, Math.floor(maxW / w100 * 100 * 0.7)));
+        const ratio = window.innerWidth < 640 ? 0.95 : 0.7;
+        const fs = Math.min(100, Math.max(14, Math.floor(maxW / w100 * 100 * ratio)));
         el.style.fontSize = fs + 'px';
       });
     }
