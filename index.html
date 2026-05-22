@@ -40,11 +40,11 @@
     .ranking-goals.rank-1 { color: var(--primary-mid) !important; }
 
     .numpad-key {
-      height: 60px;
-      border-radius: 12px;
+      height: 46px;
+      border-radius: 10px;
       background-color: #f9fafb;
       border: 1px solid #e5e7eb;
-      font-size: 1.6rem;
+      font-size: 1.25rem;
       font-weight: 900;
       color: #111827;
       transition: background-color 0.1s;
@@ -2080,8 +2080,8 @@
     function positionNumpad(inputEl) {
       const panel = document.getElementById('numpad-panel');
       const rect = inputEl.getBoundingClientRect();
-      const pw = 260, margin = 8;
-      const ph = panel.offsetHeight || 310;
+      const pw = 220, margin = 8;
+      const ph = panel.offsetHeight || 250;
       let left = rect.left + rect.width / 2 - pw / 2;
       let top = rect.bottom + margin;
       if (top + ph > window.innerHeight - margin) top = rect.top - ph - margin;
@@ -5115,17 +5115,17 @@ ${error?.message || ''}`);
 
     <div id="numpad-backdrop" class="fixed inset-0 z-[59] hidden" onclick="numpadClose()"></div>
     <div id="numpad-panel" class="fixed z-[60] hidden bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-      <div class="p-3 space-y-2">
+      <div class="p-2 space-y-1.5">
         <div id="numpad-drag-handle" class="flex items-center justify-between px-1 cursor-grab active:cursor-grabbing select-none" style="touch-action:none;">
-          <div class="flex items-center gap-2">
-            <span class="text-gray-300 text-base leading-none">⠿</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-gray-300 text-sm leading-none">⠿</span>
             <span id="numpad-label" class="text-xs font-bold text-gray-500 tracking-wide"></span>
           </div>
-          <button type="button" onclick="numpadClose()" class="text-gray-400 hover:text-gray-600 text-xl leading-none px-1">×</button>
+          <button type="button" onclick="numpadClose()" class="text-gray-400 hover:text-gray-600 text-lg leading-none px-1">×</button>
         </div>
-        <div id="numpad-display" class="bg-gray-100 rounded-xl text-center text-4xl font-black text-gray-800 py-2 min-h-[56px] flex items-center justify-center tracking-widest">—</div>
-        <div id="numpad-player-name" class="text-center text-sm min-h-[20px] -mt-1 text-gray-400"></div>
-        <div class="grid grid-cols-3 gap-2">
+        <div id="numpad-display" class="bg-gray-100 rounded-lg text-center text-3xl font-black text-gray-800 py-1 min-h-[40px] flex items-center justify-center tracking-widest">—</div>
+        <div id="numpad-player-name" class="text-center text-xs min-h-[14px] -mt-0.5 text-gray-400"></div>
+        <div class="grid grid-cols-3 gap-1.5">
           <button type="button" onclick="numpadPress('1')" class="numpad-key">1</button>
           <button type="button" onclick="numpadPress('2')" class="numpad-key">2</button>
           <button type="button" onclick="numpadPress('3')" class="numpad-key">3</button>
@@ -5135,11 +5135,11 @@ ${error?.message || ''}`);
           <button type="button" onclick="numpadPress('7')" class="numpad-key">7</button>
           <button type="button" onclick="numpadPress('8')" class="numpad-key">8</button>
           <button type="button" onclick="numpadPress('9')" class="numpad-key">9</button>
-          <button type="button" onclick="numpadClear()" class="numpad-key bg-gray-200 text-gray-600 text-sm font-bold">C</button>
+          <button type="button" onclick="numpadClear()" class="numpad-key bg-gray-200 text-gray-600 text-xs font-bold">C</button>
           <button type="button" onclick="numpadPress('0')" class="numpad-key">0</button>
-          <button type="button" onclick="numpadBackspace()" class="numpad-key bg-gray-200 text-gray-600 text-xl">⌫</button>
+          <button type="button" onclick="numpadBackspace()" class="numpad-key bg-gray-200 text-gray-600 text-lg">⌫</button>
         </div>
-        <button type="button" id="numpad-confirm-btn" onclick="numpadConfirm()" class="w-full h-12 rounded-xl text-white font-bold text-base transition-colors">追加</button>
+        <button type="button" id="numpad-confirm-btn" onclick="numpadConfirm()" class="w-full h-9 rounded-xl text-white font-bold text-sm transition-colors">追加</button>
       </div>
     </div>
 
