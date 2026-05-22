@@ -4184,7 +4184,8 @@ ${error?.message || ''}`);
     // ── 保護者モード ─────────────────────────────────────────────────
     function applyParentModeUI() {
       // タブは全モード共通で表示（tab-playersは非表示にしない）
-      document.getElementById('settings-toggle-btn')?.classList.add('hidden');
+      const stBtn = document.getElementById('settings-toggle-btn');
+      if (stBtn) { stBtn.classList.remove('hidden'); stBtn.classList.add('invisible', 'pointer-events-none'); }
       document.getElementById('season-selector-wrap')?.classList.add('hidden');
       selectedSeason = String(parseInt(getCurrentFiscalYear().replace('年度', ''), 10));
     }
