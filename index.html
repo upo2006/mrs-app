@@ -743,7 +743,7 @@
           <h2 id="modal-title" class="text-xl font-black">試合を記録</h2>
           <button id="close-modal" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
-        <div class="overflow-y-auto overscroll-y-contain flex-1 p-4">
+        <div class="overflow-y-auto overscroll-y-contain flex-1 px-4 pt-4 pb-2">
           <form id="match-form" class="space-y-2">
             <input type="hidden" id="match-id">
             <div><label class="block text-gray-700 text-xs font-bold mb-1">日付</label><input type="date" id="match-date" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
@@ -784,11 +784,13 @@
                 <p id="attendee-duplicate-msg" class="hidden text-xs text-red-500 font-medium">この選手はすでに追加されています</p>
               </div>
             </div>
-            <button type="submit" id="submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-3 rounded-xl shadow-lg mt-1">
-              <span id="submit-text">記録を保存</span>
-              <span id="submit-loading" class="hidden">保存中...</span>
-            </button>
           </form>
+        </div>
+        <div class="px-4 pb-4 pt-2 shrink-0">
+          <button type="submit" form="match-form" id="submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-3 rounded-xl shadow-lg">
+            <span id="submit-text">記録を保存</span>
+            <span id="submit-loading" class="hidden">保存中...</span>
+          </button>
         </div>
       </div>
     </div>
@@ -800,17 +802,19 @@
           <h2 id="player-modal-title" class="text-xl font-black">選手を登録</h2>
           <button id="close-player-modal" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
-        <div class="overflow-y-auto overscroll-y-contain flex-1 p-6">
+        <div class="overflow-y-auto overscroll-y-contain flex-1 px-6 pt-6 pb-2">
           <form id="player-form" class="space-y-4">
             <input type="hidden" id="player-id">
             <div><label class="block text-gray-700 text-sm font-medium mb-1">カテゴリー</label><select id="player-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"><option value="">未設定</option><option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option><option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option></select></div>
             <div><label class="block text-gray-700 text-sm font-medium mb-1">背番号</label><input type="text" id="player-number" required readonly placeholder="背番号をタップ" onclick="showNumpad('player')" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 placeholder-gray-400 text-center text-xl font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"></div>
             <div><label class="block text-gray-700 text-sm font-medium mb-1">選手名</label><input type="text" id="player-name" required placeholder="選手の名前" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
-            <button type="submit" id="player-submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-4 rounded-xl shadow-lg">
-              <span id="player-submit-text">選手を登録</span>
-              <span id="player-submit-loading" class="hidden">保存中...</span>
-            </button>
           </form>
+        </div>
+        <div class="px-6 pb-6 pt-3 shrink-0">
+          <button type="submit" form="player-form" id="player-submit-btn" class="btn-primary w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold py-4 rounded-xl shadow-lg">
+            <span id="player-submit-text">選手を登録</span>
+            <span id="player-submit-loading" class="hidden">保存中...</span>
+          </button>
         </div>
       </div>
     </div>
