@@ -738,23 +738,19 @@
 
     <div id="match-modal" class="fixed inset-0 z-50 hidden">
       <div class="modal-backdrop absolute inset-0" id="modal-backdrop"></div>
-      <div class="absolute inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white md:rounded-2xl shadow-2xl flex flex-col overflow-hidden md:max-h-[calc(100vh-2rem)]">
-        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 md:rounded-t-2xl flex items-center justify-between shrink-0">
+      <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-full">
+        <div class="bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-3 rounded-t-2xl flex items-center justify-between">
           <h2 id="modal-title" class="text-xl font-black">試合を記録</h2>
           <button id="close-modal" class="text-white/70 hover:text-white text-2xl leading-none">×</button>
         </div>
-        <div class="overflow-y-auto flex-1 px-3 py-2">
+        <div class="p-4">
           <form id="match-form" class="space-y-2">
             <input type="hidden" id="match-id">
-            <div class="grid grid-cols-2 gap-2">
-              <div><label class="block text-gray-700 text-xs font-bold mb-1">日付</label><input type="date" id="match-date" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
-              <div><label class="block text-gray-700 text-xs font-bold mb-1">カテゴリー</label><select id="match-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"><option value="">未設定</option><option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option><option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option></select></div>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div><label class="block text-gray-700 text-xs font-bold mb-1">大会名</label><input type="text" id="tournament" placeholder="大会名" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
-              <div><label class="block text-gray-700 text-xs font-bold mb-1">ラウンド</label><input type="text" id="round" placeholder="予選・1本目" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
-            </div>
-            <div><label class="block text-gray-700 text-xs font-bold mb-1">対戦相手</label><input type="text" id="opponent" placeholder="相手チーム名" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-1">日付</label><input type="date" id="match-date" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-1">カテゴリー</label><select id="match-category" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"><option value="">未設定</option><option value="U7">U7</option><option value="U8">U8</option><option value="U9">U9</option><option value="U10">U10</option><option value="U11">U11</option><option value="U12">U12</option></select></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-1">大会名</label><input type="text" id="tournament" placeholder="大会名を入力" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-1">ラウンド</label><input type="text" id="round" placeholder="予選、1本目、決勝など" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
+            <div><label class="block text-gray-700 text-xs font-bold mb-1">対戦相手</label><input type="text" id="opponent" placeholder="相手チーム名" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"></div>
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block text-gray-700 text-xs font-bold mb-1">甲子園SS</label>
