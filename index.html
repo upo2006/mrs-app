@@ -1273,7 +1273,7 @@
     function fitTeamName() {
       const el = elements.teamName;
       if (!el) return;
-      el.style.fontSize = '';
+      el.style.fontSize = '100px';
       const container = el.closest('.flex-1') || el.parentElement;
       if (!container) return;
       requestAnimationFrame(() => {
