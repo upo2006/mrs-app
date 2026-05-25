@@ -1484,7 +1484,7 @@
       document.getElementById('wins').textContent = String(wins);
       document.getElementById('draws').textContent = String(draws);
       document.getElementById('losses').textContent = String(losses);
-      document.getElementById('win-rate').textContent = list.length ? `${Math.round((wins / list.length) * 100)}%` : '0%';
+      document.getElementById('win-rate').textContent = (wins + losses) ? `${Math.round((wins / (wins + losses)) * 100)}%` : '0%';
       updateTeamStatsModeButtons();
       updateMatchViewModeButtons();
     }
@@ -1553,7 +1553,7 @@
       });
       tbody.innerHTML = CATEGORY_ORDER.map(cat => {
         const row = rows[cat];
-        const rate = row.matches ? `${Math.round((row.wins / row.matches) * 100)}%` : '0%';
+        const rate = (row.wins + row.losses) ? `${Math.round((row.wins / (row.wins + row.losses)) * 100)}%` : '0%';
         return `<tr class="border-b border-gray-200 text-center hover:bg-gray-50 cursor-pointer" data-category-row="${cat}"><td class="px-0 py-3 font-bold text-gray-800">${cat}</td><td class="px-0 py-3">${row.matches}</td><td class="px-0 py-3 text-green-600 font-bold">${row.wins}</td><td class="px-0 py-3 text-yellow-600 font-bold">${row.draws}</td><td class="px-0 py-3 text-red-600 font-bold">${row.losses}</td><td class="px-0 py-3 font-bold text-gray-800">${rate}</td></tr>`;
       }).join('');
       tbody.querySelectorAll('tr[data-category-row]').forEach(row => {
@@ -1583,7 +1583,7 @@
       document.getElementById('detail-goals-for').textContent = String(goalsFor);
       document.getElementById('detail-goals-against').textContent = String(goalsAgainst);
       document.getElementById('detail-goal-diff').textContent = String(goalsFor - goalsAgainst);
-      document.getElementById('detail-win-rate').textContent = total ? `${Math.round((wins / total) * 100)}%` : '0%';
+      document.getElementById('detail-win-rate').textContent = (wins + losses) ? `${Math.round((wins / (wins + losses)) * 100)}%` : '0%';
       _pushM('category-detail-modal');
       document.getElementById('category-detail-modal').classList.remove('hidden');
     }
@@ -1609,7 +1609,7 @@
       document.getElementById('detail-goals-for').textContent = String(goalsFor);
       document.getElementById('detail-goals-against').textContent = String(goalsAgainst);
       document.getElementById('detail-goal-diff').textContent = String(goalsFor - goalsAgainst);
-      document.getElementById('detail-win-rate').textContent = total ? `${Math.round((wins / total) * 100)}%` : '0%';
+      document.getElementById('detail-win-rate').textContent = (wins + losses) ? `${Math.round((wins / (wins + losses)) * 100)}%` : '0%';
       _pushM('category-detail-modal');
       document.getElementById('category-detail-modal').classList.remove('hidden');
     }
