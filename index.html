@@ -1006,10 +1006,12 @@
     function openTeamManager() {
       closeSettingsMenu();
       renderTeamList();
+      _pushM('team-manager-modal');
       document.getElementById('team-manager-modal').classList.remove('hidden');
     }
     function closeTeamManager() {
       document.getElementById('team-manager-modal').classList.add('hidden');
+      _notifyClose('team-manager-modal');
     }
     function renderTeamList() {
       const teams = loadTeams();
@@ -1050,7 +1052,8 @@
       await initData();
     }
     function editTeam(teamId) {
-      closeTeamManager();
+      document.getElementById('team-manager-modal').classList.add('hidden');
+      _removeFromStack('team-manager-modal');
       openSetupModal('edit', teamId);
     }
     function deleteTeam(teamId) {
@@ -1140,6 +1143,40 @@
     let supabaseClient = null;
     const SAMPLE_MATCH_IDS_KEY = 'mrs_sample_match_backend_ids_v1';
     const SAMPLE_MATCH_ID_PREFIX = 'sample_match_';
+
+    // ─── 戻るボタン対応 ─────────────────────────────────────────────
+    const _mStack = [];
+    let _mPopping = false;
+    function _pushM(id) {
+      _mStack.push(id);
+      history.pushState({ _mid: id }, '');
+    }
+    function _notifyClose(id) {
+      const i = _mStack.lastIndexOf(id);
+      if (i >= 0) _mStack.splice(i, 1);
+      if (!_mPopping && history.state?._mid === id) history.back();
+    }
+    function _removeFromStack(id) {
+      const i = _mStack.lastIndexOf(id);
+      if (i >= 0) _mStack.splice(i, 1);
+      if (history.state?._mid === id) history.replaceState(null, '');
+    }
+    const _mCleanup = {
+      'player-stats-panel': () => { currentStatsPlayerId = null; },
+      'delete-modal':        () => { matchToDelete = null; },
+      'player-delete-modal': () => { playerToDelete = null; },
+      'player-select-modal': () => { pendingPlayerSelect = null; },
+      'confirm-modal':       () => { if (confirmResolver) { confirmResolver(false); confirmResolver = null; } }
+    };
+    window.addEventListener('popstate', () => {
+      const id = _mStack.pop();
+      if (!id) return;
+      _mPopping = true;
+      document.getElementById(id)?.classList.add('hidden');
+      _mCleanup[id]?.();
+      _mPopping = false;
+    });
+    // ────────────────────────────────────────────────────────────────
 
     let matches = [];
     let players = [];
@@ -1547,6 +1584,7 @@
       document.getElementById('detail-goals-against').textContent = String(goalsAgainst);
       document.getElementById('detail-goal-diff').textContent = String(goalsFor - goalsAgainst);
       document.getElementById('detail-win-rate').textContent = total ? `${Math.round((wins / total) * 100)}%` : '0%';
+      _pushM('category-detail-modal');
       document.getElementById('category-detail-modal').classList.remove('hidden');
     }
 
@@ -1572,11 +1610,13 @@
       document.getElementById('detail-goals-against').textContent = String(goalsAgainst);
       document.getElementById('detail-goal-diff').textContent = String(goalsFor - goalsAgainst);
       document.getElementById('detail-win-rate').textContent = total ? `${Math.round((wins / total) * 100)}%` : '0%';
+      _pushM('category-detail-modal');
       document.getElementById('category-detail-modal').classList.remove('hidden');
     }
 
     function closeCategoryDetailModal() {
       document.getElementById('category-detail-modal').classList.add('hidden');
+      _notifyClose('category-detail-modal');
     }
 
     function updatePlayerCategoryStats() {
@@ -1976,12 +2016,14 @@
           closePlayerSelectModal();
         });
       });
+      _pushM('player-select-modal');
       document.getElementById('player-select-modal').classList.remove('hidden');
     }
 
     function closePlayerSelectModal() {
       pendingPlayerSelect = null;
       document.getElementById('player-select-modal').classList.add('hidden');
+      _notifyClose('player-select-modal');
     }
 
     function openBulkDeletePlayersModal() {
@@ -1997,11 +2039,13 @@
           </div>
         </label>
       `).join('');
+      _pushM('player-bulk-delete-modal');
       modal.classList.remove('hidden');
     }
 
     function closeBulkDeletePlayersModal() {
       document.getElementById('player-bulk-delete-modal')?.classList.add('hidden');
+      _notifyClose('player-bulk-delete-modal');
     }
 
     async function handleBulkDeletePlayers() {
@@ -2034,11 +2078,6 @@
       await applyFooterImage('');
     initData();
       setDevStatus(`${checked.length}人の選手を削除しました`, 'success');
-    }
-
-    function closePlayerSelectModal() {
-      pendingPlayerSelect = null;
-      document.getElementById('player-select-modal').classList.add('hidden');
     }
 
     function choosePlayerNumber(number, onSelect) {
@@ -2255,11 +2294,13 @@
       document.getElementById('match-detail-attendees').innerHTML = attendees.length
         ? attendees.map(name => `<div class="bg-white rounded-lg px-3 py-2 border border-sky-100">${name}</div>`).join('')
         : '<div class="bg-white rounded-lg px-3 py-2 border border-sky-100 text-gray-500">出場データなし</div>';
+      _pushM('match-detail-modal');
       document.getElementById('match-detail-modal').classList.remove('hidden');
     }
 
     function closeMatchDetailModal() {
       document.getElementById('match-detail-modal').classList.add('hidden');
+      _notifyClose('match-detail-modal');
     }
 
     function createMatchCard(match) {
@@ -2576,6 +2617,7 @@
           }).join('');
       }
 
+      _pushM('player-stats-panel');
       panel.classList.remove('hidden');
       updatePlayerStatsModeButtons(player);
       const categoryToggleBtn = document.getElementById('toggle-category-goals');
@@ -2620,6 +2662,7 @@
     function closePlayerStats() {
       currentStatsPlayerId = null;
       document.getElementById('player-stats-panel').classList.add('hidden');
+      _notifyClose('player-stats-panel');
     }
 
     function renderPlayers() {
@@ -2832,11 +2875,13 @@
       renderScorersList();
       renderAttendeesList();
       updateScorerLimitMessage();
+      _pushM('match-modal');
       document.getElementById('match-modal').classList.remove('hidden');
     }
 
     function closeMatchModal() {
       document.getElementById('match-modal').classList.add('hidden');
+      _notifyClose('match-modal');
     }
 
     function openPlayerModal() {
@@ -2844,11 +2889,13 @@
       document.getElementById('player-modal-title').textContent = '選手を登録';
       document.getElementById('player-form').reset();
       document.getElementById('player-id').value = '';
+      _pushM('player-modal');
       document.getElementById('player-modal').classList.remove('hidden');
     }
 
     function closePlayerModal() {
       document.getElementById('player-modal').classList.add('hidden');
+      _notifyClose('player-modal');
     }
 
     function openEditMatchModal(match) {
@@ -2867,17 +2914,20 @@
       renderScorersList();
       renderAttendeesList();
       updateScorerLimitMessage();
+      _pushM('match-modal');
       document.getElementById('match-modal').classList.remove('hidden');
     }
 
     function openDeleteMatchModal(match) {
       matchToDelete = match;
+      _pushM('delete-modal');
       document.getElementById('delete-modal').classList.remove('hidden');
     }
 
     function closeDeleteMatchModal() {
       matchToDelete = null;
       document.getElementById('delete-modal').classList.add('hidden');
+      _notifyClose('delete-modal');
     }
 
     function openEditPlayerModal(player) {
@@ -2887,17 +2937,20 @@
       document.getElementById('player-category').value = getPlayerBaseCategory(player) || '';
       document.getElementById('player-number').value = String(player.number ?? '');
       document.getElementById('player-name').value = player.name || '';
+      _pushM('player-modal');
       document.getElementById('player-modal').classList.remove('hidden');
     }
 
     function openDeletePlayerModal(player) {
       playerToDelete = player;
+      _pushM('player-delete-modal');
       document.getElementById('player-delete-modal').classList.remove('hidden');
     }
 
     function closeDeletePlayerModal() {
       playerToDelete = null;
       document.getElementById('player-delete-modal').classList.add('hidden');
+      _notifyClose('player-delete-modal');
     }
 
     async function refreshAll() {
@@ -3017,6 +3070,7 @@
 
     function closeConfirmModal(result = false) {
       document.getElementById('confirm-modal')?.classList.add('hidden');
+      _notifyClose('confirm-modal');
       if (confirmResolver) {
         confirmResolver(result);
         confirmResolver = null;
@@ -3039,6 +3093,7 @@
       cancelBtn.textContent = cancelText;
       iconEl.textContent = icon;
       okBtn.className = `flex-1 text-white font-bold py-3 rounded-xl transition-colors ${tone === 'danger' ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-600 hover:bg-emerald-700'}`;
+      _pushM('confirm-modal');
       modal.classList.remove('hidden');
       return new Promise(resolve => {
         confirmResolver = resolve;
@@ -4201,6 +4256,7 @@ ${error?.message || ''}`);
       closeSettingsMenu();
       const modal = document.getElementById('admin-link-modal');
       if (!modal) return;
+      _pushM('admin-link-modal');
       modal.classList.remove('hidden');
       const teams = loadTeams();
       const activeId = getActiveTeamId();
@@ -4221,6 +4277,7 @@ ${error?.message || ''}`);
 
     function closeAdminLinkModal() {
       document.getElementById('admin-link-modal')?.classList.add('hidden');
+      _notifyClose('admin-link-modal');
     }
 
     function updateAdminLink() {
@@ -4266,6 +4323,7 @@ ${error?.message || ''}`);
       closeSettingsMenu();
       const modal = document.getElementById('parent-link-modal');
       if (!modal) return;
+      _pushM('parent-link-modal');
       modal.classList.remove('hidden');
       // チーム選択ドロップダウンを構築
       const teams = loadTeams();
@@ -4286,6 +4344,7 @@ ${error?.message || ''}`);
 
     function closeParentLinkModal() {
       document.getElementById('parent-link-modal')?.classList.add('hidden');
+      _notifyClose('parent-link-modal');
     }
 
     function updateParentLink() {
@@ -4385,11 +4444,13 @@ ${error?.message || ''}`);
         }
         modal.querySelector('h2').textContent = '⚙️ 接続設定';
       }
+      _pushM('setup-modal');
       modal.classList.remove('hidden');
     }
 
     function closeSetupModal() {
       document.getElementById('setup-modal')?.classList.add('hidden');
+      _notifyClose('setup-modal');
     }
 
     function setPresetColor(hex) {
@@ -5013,7 +5074,7 @@ ${error?.message || ''}`);
             <h2 class="text-xl font-black">⚙️ 初期設定</h2>
             <p class="text-sm text-white/80 mt-1">Supabaseの接続情報とチーム名を入力してください</p>
           </div>
-          <button onclick="document.getElementById('setup-modal').classList.add('hidden')" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
+          <button onclick="closeSetupModal()" class="text-white/70 hover:text-white text-2xl leading-none ml-3 shrink-0">×</button>
         </div>
         <div class="p-6 space-y-4">
           <div>
