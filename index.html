@@ -4785,10 +4785,12 @@ ${error?.message || ''}`);
     // アプリ起動
     document.addEventListener('DOMContentLoaded', async () => {
       try {
-        // パスワードリセット検出
-        getAuthClient().auth.onAuthStateChange((event) => {
-          if (event === 'PASSWORD_RECOVERY') { showResetPasswordModal(); }
-        });
+        // パスワードリセット検出（ファミリーモードはURLハッシュ干渉を防ぐため除外）
+        if (!isFamilyMode) {
+          getAuthClient().auth.onAuthStateChange((event) => {
+            if (event === 'PASSWORD_RECOVERY') { showResetPasswordModal(); }
+          });
+        }
 
         // セットアップガイドからのリンク（?setup=1）
         isFromSetupGuide = new URLSearchParams(window.location.search).get('setup') === '1';
