@@ -4304,16 +4304,13 @@ ${error?.message || ''}`);
       const url = document.getElementById('admin-link-url')?.value;
       if (!url) return;
       const msg = document.getElementById('admin-link-copy-msg');
-      if (msg) { msg.textContent = '🔄 短縮URL生成中...'; msg.classList.remove('hidden'); }
-      const short = await shortenUrl(url);
-      const finalUrl = short || url;
       try {
-        await navigator.clipboard.writeText(finalUrl);
+        await navigator.clipboard.writeText(url);
       } catch(e) {
         document.getElementById('admin-link-url')?.select();
       }
       if (msg) {
-        msg.textContent = short ? `✅ 短縮URLをコピー: ${short}` : '✅ クリップボードにコピーしました';
+        msg.textContent = '✅ クリップボードにコピーしました';
         msg.classList.remove('hidden');
         setTimeout(() => msg.classList.add('hidden'), 3000);
       }
@@ -4367,42 +4364,17 @@ ${error?.message || ''}`);
       document.getElementById('parent-link-copy-msg')?.classList.add('hidden');
     }
 
-    async function shortenUrl(url) {
-      // TinyURL（CORS対応・無料）
-      try {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 6000);
-        const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
-        clearTimeout(t);
-        const text = await res.text();
-        if (text.startsWith('https://tinyurl.com/')) return text.trim();
-      } catch(e) {}
-      // is.gd（フォールバック）
-      try {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 6000);
-        const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
-        clearTimeout(t);
-        const text = await res.text();
-        if (text.startsWith('https://is.gd/')) return text.trim();
-      } catch(e) {}
-      return null;
-    }
-
     async function copyParentLink() {
       const url = document.getElementById('parent-link-url')?.value;
       if (!url) return;
       const msg = document.getElementById('parent-link-copy-msg');
-      if (msg) { msg.textContent = '🔄 短縮URL生成中...'; msg.classList.remove('hidden'); }
-      const short = await shortenUrl(url);
-      const finalUrl = short || url;
       try {
-        await navigator.clipboard.writeText(finalUrl);
+        await navigator.clipboard.writeText(url);
       } catch(e) {
         document.getElementById('parent-link-url')?.select();
       }
       if (msg) {
-        msg.textContent = short ? `✅ 短縮URLをコピー: ${short}` : '✅ クリップボードにコピーしました';
+        msg.textContent = '✅ クリップボードにコピーしました';
         msg.classList.remove('hidden');
         setTimeout(() => msg.classList.add('hidden'), 3000);
       }
